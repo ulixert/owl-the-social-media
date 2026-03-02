@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import { Flex } from '@mantine/core';
@@ -31,7 +33,9 @@ export function OriginalPost({
   return (
     <PostMain>
       <Flex gap={12}>
-        <UserAvatar username={username} avatar={avatar} />
+        <Link to={`/user/${username}`}>
+          <UserAvatar username={username} avatar={avatar} />
+        </Link>
         <PostHeader
           username={username}
           createdAt={getPostTime(new Date(postTime))}

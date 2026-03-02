@@ -18,6 +18,7 @@ export function PostAction({
 
   function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
+    e.stopPropagation();
     onClick();
   }
 
