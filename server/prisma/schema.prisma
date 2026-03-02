@@ -7,12 +7,11 @@
 generator client {
   provider        = "prisma-client-js"
   output = "../node_modules/.prisma/client"
-  previewFeatures = ["typedSql", "omitApi"]
+  previewFeatures = ["typedSql"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
