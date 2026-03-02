@@ -20,7 +20,7 @@ export function ProfilePage() {
   return (
     <>
       <UserHeader
-        tab="posts"
+        tab={activeTab}
         onTabChange={(tab) => navigate(`/profile/${tab}`)}
       />
       <PostList endpoint={endpoint} />
