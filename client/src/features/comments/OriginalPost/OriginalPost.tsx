@@ -33,7 +33,7 @@ export function OriginalPost({
       <Flex gap={12}>
         <UserAvatar username={username} avatar={avatar} />
         <PostHeader
-          userName={username}
+          username={username}
           createdAt={getPostTime(new Date(postTime))}
         />
       </Flex>

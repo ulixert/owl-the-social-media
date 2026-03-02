@@ -43,7 +43,7 @@ export function PostItem({
           <PostMain>
             <PostHeader
               createdAt={getPostTime(new Date(postTime))}
-              userName={postAuthor}
+              username={postAuthor}
             />
             <PostContent postText={postText} postImages={postImages} />
             <PostActions

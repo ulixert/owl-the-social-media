@@ -13,12 +13,12 @@ export const UserRoutes = [
       if (!username) {
         return redirect('/login');
       }
-      return redirect(`/${username}/${tab}`);
+      return redirect(`/user/${username}/${tab}`);
     },
     hydrateFallbackElement: <Loading />,
   },
   {
-    path: ':username/:tab?',
+    path: 'user/:username/:tab?',
     async lazy() {
       const { ProfilePage } = await import('../pages/ProfilePage.tsx');
       return { Component: ProfilePage };

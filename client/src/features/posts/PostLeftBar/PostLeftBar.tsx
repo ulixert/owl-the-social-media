@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { Stack } from '@mantine/core';
 
@@ -9,7 +11,9 @@ type PostLeftBarProps = {
 export function PostLeftBar({ username, avatar }: PostLeftBarProps) {
   return (
     <Stack align="center">
-      <UserAvatar username={username} avatar={avatar} />
+      <Link to={`/user/${username}`}>
+        <UserAvatar username={username} avatar={avatar} />
+      </Link>
     </Stack>
   );
 }
