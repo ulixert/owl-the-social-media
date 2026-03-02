@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { PostCreateSchema } from 'validation';
 
-import { prisma } from '../../db/index.js';
+import { prisma } from '../../db';
 import {
   createPostPramsSchema,
   postParamsSchema,

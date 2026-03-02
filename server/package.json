@@ -17,24 +17,26 @@
   "license": "MIT",
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",
-    "@prisma/client": "5.22.0",
+    "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/client": "^7.4.2",
     "cookie-parser": "^1.4.7",
     "express": "^4.22.1",
     "jsonwebtoken": "^9.0.3",
+    "pg": "^8.19.0",
     "validation": "workspace:^",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@prisma/config": "^7.4.2",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.19.13",
+    "@types/pg": "^8.18.0",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
     "eslint": "^9.39.3",
     "globals": "^15.15.0",
-    "prisma": "^5.22.0",
+    "prisma": "^7.4.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

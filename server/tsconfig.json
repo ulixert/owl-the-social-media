@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
     "lib": ["esNext"],
-    "module": "NodeNext",
+    "module": "ESNext",
     "target": "ESNext",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "bundler",
     "sourceMap": true,
     /* Linting */
     "strict": true,

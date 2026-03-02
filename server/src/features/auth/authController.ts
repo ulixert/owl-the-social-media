@@ -4,7 +4,7 @@ import { LoginSchema, UserCreateSchema } from 'validation';
 
 import argon2 from '@node-rs/argon2';
 
-import { prisma } from '../../db/index.js';
+import { prisma } from '../../db';
 import { jwtVerify } from '../../middlewares/utils/jwtVerify.js';
 import {
   generateAccessToken,

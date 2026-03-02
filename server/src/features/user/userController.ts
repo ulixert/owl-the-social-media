@@ -1,9 +1,12 @@
 import { Request, Response } from 'express';
 import { UserUpdateSchema } from 'validation';
 
-import { prisma } from '../../db/index.js';
+import { prisma } from '../../db';
 
-export async function followAndUnfollowUser(req: Request, res: Response) {
+export async function followAndUnfollowUser(
+  req: Request<{ id: string }>,
+  res: Response,
+) {
   try {
     const { id } = req.params;
     const currentUserId = req.user!.id;
@@ -127,7 +130,10 @@ export async function updateUserProfile(req: Request, res: Response) {
   }
 }
 
-export async function getUserProfile(req: Request, res: Response) {
+export async function getUserProfile(
+  req: Request<{ username: string }>,
+  res: Response,
+) {
   try {
     const { username } = req.params;
     const user = await prisma.user.findUnique({

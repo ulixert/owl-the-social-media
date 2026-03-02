@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-import { prisma } from '../../db/index.js';
+import { prisma } from '../../db';
 import { postQuerySchema } from '../../types/validation/schemas.js';
 
 export async function getFollowingPosts(req: Request, res: Response) {

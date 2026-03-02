@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { prisma } from '../db/index.js';
+import { prisma } from '../db';
 import { JWTError } from '../errors/errors.js';
 import { jwtVerify } from './utils/jwtVerify.js';
 
