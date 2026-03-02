@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { getPostTime } from '@/utils/getPostTime.ts';
 import { Divider, Flex } from '@mantine/core';
@@ -34,9 +34,16 @@ export function PostItem({
   commentsCount,
   repostsCount,
 }: PostProps) {
+  const navigate = useNavigate();
   return (
     <>
-      <Link to={`/posts/${postId}`} className={classes.post}>
+      <div
+        role="link"
+        tabIndex={0}
+        onClick={() => navigate(`/posts/${postId}`)}
+        onKeyDown={(e) => e.key === 'Enter' && navigate(`/posts/${postId}`)}
+        className={classes.post}
+      >
         <Flex gap={12}>
           <PostLeftBar username={postAuthor} avatar={postAuthorAvatar} />
 
@@ -53,7 +60,7 @@ export function PostItem({
             />
           </PostMain>
         </Flex>
-      </Link>
+      </div>
 
       <Divider className={classes.divider} />
     </>

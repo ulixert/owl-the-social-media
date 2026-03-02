@@ -14,7 +14,11 @@ export function PostHeader({ username, createdAt }: PostHeaderProps) {
   return (
     <Flex justify="space-between" w="100%" align="flex-start">
       <Flex w="100%" align="center" gap={10}>
-        <Link to={`/user/${username}`} className={classes.username}>
+        <Link
+          to={`/user/${username}`}
+          className={classes.username}
+          onClick={(e) => e.stopPropagation()}
+        >
           <Text size="sm" fw="600">
             {username}
           </Text>

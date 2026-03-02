@@ -11,7 +11,7 @@ type PostLeftBarProps = {
 export function PostLeftBar({ username, avatar }: PostLeftBarProps) {
   return (
     <Stack align="center">
-      <Link to={`/user/${username}`}>
+      <Link to={`/user/${username}`} onClick={(e) => e.stopPropagation()}>
         <UserAvatar username={username} avatar={avatar} />
       </Link>
     </Stack>
