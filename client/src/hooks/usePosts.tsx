@@ -18,16 +18,14 @@ type PostsResponse = {
   nextCursor: number | null;
 };
 
-export function usePosts() {
+export function usePosts(endpoint = location.pathname) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const location = useLocation();
 
   const { data, isPending, isError, hasNextPage, fetchNextPage, isFetching } =
     useInfiniteQuery({
-      queryKey: ['posts', isAuthenticated, location.pathname],
+      queryKey: ['posts', isAuthenticated, location.pathname, endpoint],
       queryFn: async ({ pageParam }): Promise<PostsResponse> => {
-        let endpoint = location.pathname;
-
         if (endpoint === '/') {
           endpoint = isAuthenticated ? '/for-you' : '/hot';
         }

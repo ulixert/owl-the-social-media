@@ -13,9 +13,14 @@ import { IconBrandInstagram } from '@tabler/icons-react';
 import { UserMoreMenu } from '../UserMoreMenu/UserMoreMenu.tsx';
 import classes from './UserHeader.module.css';
 
-export function ProfileHeader() {
+type UserHeaderProps = {
+  tab: 'posts' | 'replies';
+  onTabChange: (tab: string) => void;
+};
+
+export function UserHeader({ tab, onTabChange }: UserHeaderProps) {
   return (
-    <Stack gap={16} align="start">
+    <Stack gap={16} align="start" className={classes.container}>
       <Flex justify="space-between" w="100%">
         <Box>
           <Text size="xl">Thomas</Text>
@@ -54,9 +59,14 @@ export function ProfileHeader() {
         </Flex>
       </Flex>
 
-      <Tabs defaultValue="post" w="100%">
+      <Tabs
+        defaultValue="posts"
+        w="100%"
+        value={tab}
+        onChange={(v) => onTabChange(v!)}
+      >
         <Tabs.List>
-          <Tabs.Tab value="post" fw={600} className={classes.tab} py={12}>
+          <Tabs.Tab value="posts" fw={600} className={classes.tab} py={12}>
             Posts
           </Tabs.Tab>
           <Tabs.Tab value="replies" className={classes.tab} fw={500} c="gray.6">

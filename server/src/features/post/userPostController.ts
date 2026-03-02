@@ -3,7 +3,10 @@ import { Request, Response } from 'express';
 import { prisma } from '../../db/index.js';
 import { postQuerySchema } from '../../types/validation/schemas.js';
 
-export async function getUserPosts(req: Request, res: Response) {
+export async function getUserPosts(
+  req: Request<{ username: string }>,
+  res: Response,
+) {
   try {
     const input = postQuerySchema.safeParse(req.query);
     if (!input.success) {
@@ -44,7 +47,10 @@ export async function getUserPosts(req: Request, res: Response) {
   }
 }
 
-export async function getUserReplies(req: Request, res: Response) {
+export async function getUserReplies(
+  req: Request<{ username: string }>,
+  res: Response,
+) {
   try {
     const input = postQuerySchema.safeParse(req.query);
     if (!input.success) {
