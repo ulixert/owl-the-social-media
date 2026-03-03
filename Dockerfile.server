@@ -1,0 +1,38 @@
+# --- Base ---
+FROM node:lts-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+# --- Build Stage ---
+FROM base AS build
+WORKDIR /repo
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm -r --sort run build
+
+## added
+RUN DATABASE_URL="postgresql://x:x@localhost:5432/x" pnpm --filter server exec prisma generate
+
+# Deploy pruned production app (includes server + validation deps)
+RUN pnpm --filter server --prod deploy --legacy /pruned
+
+# --- Runtime Stage ---
+FROM node:lts-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+
+RUN apk add --no-cache openssl ca-certificates
+
+# Copy pruned app (contains its own node_modules and package.json)
+COPY --from=build /pruned ./
+
+# Copy built output + prisma schema/migrations
+COPY --from=build /repo/server/dist ./dist
+COPY --from=build /repo/server/prisma ./prisma
+
+#added
+COPY --from=build /repo/server/generated/prisma ./generated/prisma
+
+EXPOSE 3000
+CMD ["node", "dist/server.mjs"]

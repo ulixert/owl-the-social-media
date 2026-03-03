@@ -1,0 +1,25 @@
+# Dockerfile.client
+FROM node:lts-alpine AS build
+WORKDIR /repo
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
+COPY client/package.json client/package.json
+COPY packages/validation/package.json packages/validation/package.json
+RUN pnpm fetch
+
+COPY . .
+RUN pnpm install --frozen-lockfile
+
+ARG VITE_API_PREFIX=/api/v1
+ENV VITE_API_PREFIX=$VITE_API_PREFIX
+
+# Build validation then client (topological order does it, but explicit is fine)
+RUN pnpm -r --sort run build
+
+FROM nginx:alpine
+COPY --from=build /repo/client/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

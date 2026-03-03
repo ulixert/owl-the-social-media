@@ -18,7 +18,7 @@ process.on('uncaughtException', (err) => {
   });
 });
 
-const PORT = process.env.PORT ?? 3001;
-const server = app.listen(PORT, () =>
-  console.log(`Server started at http://localhost:${PORT}`),
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
+const server = app.listen(PORT, '0.0.0.0', () =>
+  console.log(`Server listening on ${PORT}`),
 );

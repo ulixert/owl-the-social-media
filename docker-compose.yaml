@@ -1,44 +1,65 @@
 services:
   db:
-    env_file:
-      - .env
-    image: postgres
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    networks: [appnet]
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-    networks:
-      - postgres
 
   server:
+    image: owl-server:prod
+    env_file:
+      - ./server/.prod.env
     build:
       context: .
-      dockerfile: Dockerfile
-      target: server
-    ports:
-      - '3000:3000'
+      dockerfile: Dockerfile.server
     depends_on:
-      - db
-    networks:
-      - app
-      - postgres
+      db:
+        condition: service_healthy
+    networks: [appnet]
+    restart: unless-stopped
+
+  # Run migrations on deploy:
+  # docker compose run --rm migrate
+  migrate:
+    image: owl-server:prod
+    env_file:
+      - ./server/.prod.env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [appnet]
+    restart: "no"
+    working_dir: /app
+    command: ["npx", "prisma", "migrate", "deploy"]
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    networks: [appnet]
+    restart: unless-stopped
 
   nginx:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: nginx
+    image: nginx:alpine
     ports:
-      - '8080:80'
+      - "8001:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
     depends_on:
+      - web
       - server
-    networks:
-      - app
+    networks: [appnet]
+    restart: unless-stopped
 
 networks:
-  app:
-  postgres:
-
+  appnet:

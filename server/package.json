@@ -20,9 +20,11 @@
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^17.3.1",
     "express": "^4.22.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.19.0",
+    "prisma": "^7.4.2",
     "validation": "workspace:^",
     "zod": "^3.25.76"
   },
@@ -36,7 +38,6 @@
     "@typescript-eslint/parser": "^8.56.1",
     "eslint": "^9.39.3",
     "globals": "^15.15.0",
-    "prisma": "^7.4.2",
     "tsdown": "0.21.0-beta.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
