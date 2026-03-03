@@ -7,8 +7,8 @@
     "dev-no-watch": "tsx --env-file=.env src/server.ts",
     "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
-    "build": "tsc",
-    "start": "node --env-file=.prod.env dist/server.js",
+    "build": "tsdown",
+    "start": "node --env-file=.prod.env dist/server.mjs",
     "test": "echo \\\"Error: no src/test specified\\\" && exit 1"
   },
   "type": "module",
@@ -37,6 +37,7 @@
     "eslint": "^9.39.3",
     "globals": "^15.15.0",
     "prisma": "^7.4.2",
+    "tsdown": "0.21.0-beta.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
