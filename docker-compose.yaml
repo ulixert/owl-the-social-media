@@ -28,8 +28,6 @@ services:
     networks: [appnet]
     restart: unless-stopped
 
-  # Run migrations on deploy:
-  # docker compose run --rm migrate
   migrate:
     image: owl-server:prod
     env_file:
@@ -53,13 +51,34 @@ services:
     image: nginx:alpine
     ports:
       - "8001:80"
+      - "8443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
     depends_on:
       - web
       - server
     networks: [appnet]
     restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+
+  certbot-renew:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: /bin/sh -c
+    command: >
+      "trap exit TERM; while :; do
+        certbot renew --webroot -w /var/www/certbot;
+        sleep 12h;
+      done"
 
 networks:
   appnet:

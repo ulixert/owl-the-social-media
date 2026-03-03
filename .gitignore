@@ -11,3 +11,8 @@ data
 
 .nx/cache
 .nx/workspace-data
+
+certbot/conf/*
+certbot/www/*
+!certbot/conf/.gitkeep
+!certbot/www/.gitkeep
