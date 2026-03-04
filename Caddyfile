@@ -1,4 +1,6 @@
 :80 {
+    tls /etc/caddy/origin.pem /etc/caddy/origin-key.pem
+
 	# Proxy API requests to Express
 	handle /api/v1/* {
 		reverse_proxy server:3000
