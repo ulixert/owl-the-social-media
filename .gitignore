@@ -18,3 +18,4 @@ certbot/www/*
 !certbot/www/.gitkeep
 
 .data
+certs/
