@@ -9,10 +9,12 @@ FROM base AS build
 WORKDIR /repo
 COPY . .
 RUN pnpm install --frozen-lockfile
-RUN pnpm -r --sort run build
 
-## added
+# dummy DATABASE_URL for prisma.config.ts
 RUN DATABASE_URL="postgresql://x:x@localhost:5432/x" pnpm --filter server exec prisma generate
+
+RUN pnpm --filter validation run build
+RUN pnpm --filter server run build
 
 # Deploy pruned production app (includes server + validation deps)
 RUN pnpm --filter server --prod deploy --legacy /pruned

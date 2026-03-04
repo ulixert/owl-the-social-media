@@ -1,0 +1,17 @@
+owls-app.com, www.owls-app.com {
+	# Proxy API requests to Express
+	handle /api/v1/* {
+		reverse_proxy server:3000
+	}
+
+	# Serve SPA — try_files equivalent for React Router
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Cache static assets
+	@static path *.css *.js *.mjs *.map *.ico *.png *.jpg *.jpeg *.gif *.svg *.webp *.ttf *.woff *.woff2
+	header @static Cache-Control "public, max-age=604800, immutable"
+}

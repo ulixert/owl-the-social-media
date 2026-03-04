@@ -16,10 +16,11 @@ RUN pnpm install --frozen-lockfile
 ARG VITE_API_PREFIX=/api/v1
 ENV VITE_API_PREFIX=$VITE_API_PREFIX
 
-# Build validation then client (topological order does it, but explicit is fine)
-RUN pnpm -r --sort run build
+RUN pnpm --filter validation run build
+RUN pnpm --filter client run build
 
-FROM nginx:alpine
-COPY --from=build /repo/client/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# --- Caddy stage ---
+FROM caddy:2-alpine
+COPY --from=build /repo/client/dist /srv
+COPY Caddyfile /etc/caddy/Caddyfile
+EXPOSE 80 443
