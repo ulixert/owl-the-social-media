@@ -29,6 +29,21 @@ export const PostRoutes = [
     hydrateFallbackElement: <Loading />,
   })),
   {
+    path: 'create',
+    async lazy() {
+      const { CreatePostPage } = await import('../pages/CreatePostPage.tsx');
+      const { ProtectedRoute } = await import('./ProtectedRoute.tsx');
+      return {
+        Component: () => (
+          <ProtectedRoute>
+            <CreatePostPage />
+          </ProtectedRoute>
+        ),
+      };
+    },
+    hydrateFallbackElement: <Loading />,
+  },
+  {
     path: 'posts/:postId',
     async lazy() {
       const { PostPage } = await import('../pages/PostPage.tsx');
