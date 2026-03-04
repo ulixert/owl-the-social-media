@@ -1,4 +1,4 @@
-owls-app.com, www.owls-app.com {
+:80 {
 	# Proxy API requests to Express
 	handle /api/v1/* {
 		reverse_proxy server:3000

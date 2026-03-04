@@ -13,9 +13,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./.data/postgres:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - pg_data:/var/lib/postgresql/data
 
   server:
     image: owl-server:prod
@@ -47,11 +45,7 @@ services:
       context: .
       dockerfile: Dockerfile.client
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
+      - "8001:80"
     depends_on:
       - server
     networks: [appnet]
@@ -62,5 +56,3 @@ networks:
 
 volumes:
   pg_data:
-  caddy_data:
-  caddy_config:
