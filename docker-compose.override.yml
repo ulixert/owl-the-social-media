@@ -1,6 +1,10 @@
 services:
-  caddy:
-    volumes:
-      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
+  server:
+    env_file:
+      - .env.local
+
+  db:
+    env_file:
+      - .env.local
     ports:
-      - "80:80"
+      - "5432:5432"
