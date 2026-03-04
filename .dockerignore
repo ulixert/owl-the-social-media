@@ -1,12 +1,9 @@
 node_modules
-**/node_modules
 dist
-**/dist
 .git
 .env
 .prod.env
-**/.env
-**/.prod.env
 npm-debug.log
 pnpm-debug.log
 .DS_Store
+.data/
