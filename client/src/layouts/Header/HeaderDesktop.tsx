@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-
 import { ReturnButton } from '@/components/ReturnButton/ReturnButton.tsx';
-import { Box, Flex, Tabs, Text } from '@mantine/core';
+import { LoginButton } from '@/components/LoginButton/LoginButton.tsx';
+import { Flex, Tabs, Text, Box } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useTitleStore } from '@stores/titleStore.ts';
 
@@ -13,11 +13,8 @@ export function HeaderDesktop() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isHomeFeed = ['/', '/for-you', '/following'].includes(
-    location.pathname,
-  );
-  const activeTab =
-    location.pathname === '/following' ? 'following' : 'for-you';
+  const isHomeFeed = ['/', '/for-you', '/following'].includes(location.pathname);
+  const activeTab = location.pathname === '/following' ? 'following' : 'for-you';
 
   const handleTabChange = (value: string | null) => {
     if (value) {
@@ -26,19 +23,15 @@ export function HeaderDesktop() {
   };
 
   return (
-    <Flex
-      justify="center"
-      align="center"
-      h="100%"
-      px="md"
-      className={classes.container}
-    >
+    <Flex justify="center" align="center" h="100%" px="md" className={classes.container}>
       {!isHomeFeed && (
         <>
           <Box className={classes.backButton}>
             <ReturnButton />
           </Box>
-          <Text className={classes.title}>{title}</Text>
+          <Text className={classes.title}>
+            {title}
+          </Text>
         </>
       )}
 
@@ -61,7 +54,14 @@ export function HeaderDesktop() {
       )}
 
       {isHomeFeed && !isAuthenticated && (
-        <Text className={classes.title}>Home</Text>
+        <>
+          <Text className={classes.title}>
+            Home
+          </Text>
+          <Box className={classes.rightButton}>
+            <LoginButton />
+          </Box>
+        </>
       )}
     </Flex>
   );

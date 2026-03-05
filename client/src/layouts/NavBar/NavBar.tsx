@@ -55,6 +55,7 @@ export function NavBar() {
           <Menu.Dropdown>
             {isAuthenticated && (
               <>
+                <Menu.Label>Collections</Menu.Label>
                 <Menu.Item
                   leftSection={
                     <IconBookmark style={{ width: rem(16), height: rem(16) }} />

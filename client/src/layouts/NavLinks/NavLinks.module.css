@@ -32,8 +32,11 @@
   &[data-active] {
     &,
     &:hover {
-      background-color: var(--mantine-color-yellow-light);
-      color: var(--mantine-color-yellow-light-color);
+      background-color: light-dark(
+        var(--mantine-color-gray-1),
+        var(--mantine-color-dark-4)
+      );
+      color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
     }
   }
 }

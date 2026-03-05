@@ -76,7 +76,7 @@ export function UserHoverCard({ username, children }: UserHoverCardProps) {
                   size="sm"
                   radius="md"
                   variant={user.isFollowing ? 'outline' : 'filled'}
-                  color={user.isFollowing ? 'gray' : 'dark'}
+                  color={user.isFollowing ? 'gray' : 'yellow'}
                   onClick={handleFollow}
                   loading={followMutation.isPending}
                   fw={600}

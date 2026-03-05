@@ -2,10 +2,8 @@ import { Suspense } from 'react';
 import { Outlet, useNavigation } from 'react-router-dom';
 
 import { Loading } from '@/components/Loading/Loading.tsx';
-import { LoginButton } from '@/components/LoginButton/LoginButton.tsx';
 import { AppShell, Container } from '@mantine/core';
 import { ModalsProvider } from '@mantine/modals';
-import { useAuthStore } from '@stores/authStore.ts';
 
 import { Footer } from '../Footer/Footer.tsx';
 import { Header } from '../Header/Header.tsx';
@@ -13,7 +11,6 @@ import { NavBar } from '../NavBar/NavBar.tsx';
 import classes from './AppLayout.module.css';
 
 export function AppLayout() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const navigation = useNavigation();
 
   return (
@@ -26,8 +23,6 @@ export function AppLayout() {
         transitionDuration={500}
         transitionTimingFunction="ease"
       >
-        {!isAuthenticated && <LoginButton />}
-
         <AppShell.Navbar
           p="md"
           visibleFrom="sm"
@@ -49,7 +44,7 @@ export function AppLayout() {
           </AppShell.Main>
         </Container>
 
-        <AppShell.Footer hiddenFrom="sm" withBorder={false}>
+        <AppShell.Footer hiddenFrom="sm" withBorder={false} className={classes.footer}>
           <Footer />
         </AppShell.Footer>
       </AppShell>

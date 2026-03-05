@@ -1,14 +1,13 @@
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
+import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
 import { UserProfile } from '@/hooks/useUserProfile.ts';
 import { Anchor, Box, Button, Flex, Stack, Tabs, Text } from '@mantine/core';
-import { IconBrandInstagram } from '@tabler/icons-react';
-import { useAuthStore } from '@stores/authStore.ts';
-import { useFollowMutation } from '../hooks/useFollowMutation.ts';
-import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
 import { modals } from '@mantine/modals';
-import { EditProfileModal } from '../components/EditProfileModal/EditProfileModal.tsx';
+import { useAuthStore } from '@stores/authStore.ts';
 
 import { UserMoreMenu } from '../UserMoreMenu/UserMoreMenu.tsx';
+import { EditProfileModal } from '../components/EditProfileModal/EditProfileModal.tsx';
+import { useFollowMutation } from '../hooks/useFollowMutation.ts';
 import classes from './UserHeader.module.css';
 
 type UserHeaderProps = {
@@ -29,7 +28,9 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
     modals.open({
       id: modalId,
       title: 'Edit profile',
-      children: <EditProfileModal user={user} onClose={() => modals.close(modalId)} />,
+      children: (
+        <EditProfileModal user={user} onClose={() => modals.close(modalId)} />
+      ),
       radius: 'lg',
       centered: true,
       padding: 'xl',
@@ -55,9 +56,6 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
             <Text size="sm" c="gray.6">
               @{user.username}
             </Text>
-            <Button size="xs" className={classes.net} radius="lg" component="a">
-              Owl.net
-            </Button>
           </Flex>
         </Box>
         <Box>
@@ -86,9 +84,6 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
           </Anchor>
         </Flex>
         <Flex gap={12}>
-          <Box className={classes.iconContainer}>
-            <IconBrandInstagram size={24} cursor="pointer" />
-          </Box>
           <UserMoreMenu />
         </Flex>
       </Flex>
@@ -97,7 +92,7 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
         <Button
           fullWidth
           variant={user.isFollowing ? 'outline' : 'filled'}
-          color={user.isFollowing ? 'gray' : 'dark'}
+          color={user.isFollowing ? 'gray' : 'yellow'}
           radius="md"
           onClick={handleFollow}
           loading={followMutation.isPending}

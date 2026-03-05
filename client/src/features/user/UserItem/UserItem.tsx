@@ -76,7 +76,7 @@ export function UserItem({ user }: UserItemProps) {
                 size="compact-xs"
                 radius="md"
                 variant={user.isFollowing ? 'outline' : 'filled'}
-                color={user.isFollowing ? 'gray' : 'dark'}
+                color={user.isFollowing ? 'gray' : 'yellow'}
                 onClick={handleFollow}
                 loading={followMutation.isPending}
                 px="md"

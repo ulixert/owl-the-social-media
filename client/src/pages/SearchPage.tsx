@@ -120,7 +120,7 @@ export function SearchPage() {
           autoFocus
           styles={{
             input: {
-              backgroundColor: 'var(--mantine-color-gray-1)',
+              backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6))',
               border: 'none',
             },
           }}
