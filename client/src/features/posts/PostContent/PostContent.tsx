@@ -1,6 +1,17 @@
 import { useState } from 'react';
-import { Box, Grid, Image, SimpleGrid, Stack, Text, Modal, ActionIcon, Group } from '@mantine/core';
-import { IconX, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+
+import {
+  ActionIcon,
+  Box,
+  Grid,
+  Group,
+  Image,
+  Modal,
+  SimpleGrid,
+  Stack,
+  Text,
+} from '@mantine/core';
+import { IconChevronLeft, IconChevronRight, IconX } from '@tabler/icons-react';
 
 type PostContentProps = {
   postText?: string;
@@ -40,7 +51,10 @@ export function PostContent({ postText, postImages }: PostContentProps) {
           h="auto"
           mah={500}
           fit="contain"
-          style={{ backgroundColor: 'var(--mantine-color-gray-1)', cursor: 'pointer' }}
+          style={{
+            backgroundColor: 'var(--mantine-color-gray-1)',
+            cursor: 'pointer',
+          }}
           fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
           onClick={(e) => handleImageClick(e, 0)}
         />
@@ -214,7 +228,10 @@ export function PostContent({ postText, postImages }: PostContentProps) {
                   h={8}
                   style={{
                     borderRadius: '50%',
-                    backgroundColor: idx === selectedIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                    backgroundColor:
+                      idx === selectedIndex
+                        ? 'white'
+                        : 'rgba(255, 255, 255, 0.5)',
                     transition: 'background-color 200ms ease',
                   }}
                 />
@@ -237,4 +254,3 @@ export function PostContent({ postText, postImages }: PostContentProps) {
     </Box>
   );
 }
-

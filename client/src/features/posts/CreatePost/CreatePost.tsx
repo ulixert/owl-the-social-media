@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react';
-import { PostCreateSchema } from 'validation';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { PostCreateSchema } from 'validation';
 
 import { axiosInstance } from '@/api/axiosConfig.ts';
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
+import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import {
@@ -27,11 +28,10 @@ import {
   TextInput,
   Textarea,
 } from '@mantine/core';
+import { modals } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
 import { IconPhoto, IconX } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
-import { modals } from '@mantine/modals';
 
 import classes from './CreatePost.module.css';
 
@@ -136,7 +136,7 @@ export function CreatePost({
         if (isModal) {
           modals.closeAll();
         }
-        navigate(`/posts/${post.id}`);
+        void navigate(`/posts/${post.id}`);
       },
       onError: () => {
         showErrorNotification({

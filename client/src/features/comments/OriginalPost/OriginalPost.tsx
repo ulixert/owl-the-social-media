@@ -1,10 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
+import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import { Flex } from '@mantine/core';
-import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 
 import { PostActions } from '../../posts/PostActions/PostActions.tsx';
 import { PostContent } from '../../posts/PostContent/PostContent.tsx';
