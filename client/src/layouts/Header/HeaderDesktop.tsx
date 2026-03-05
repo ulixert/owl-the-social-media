@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ReturnButton } from '@/components/ReturnButton/ReturnButton.tsx';
-import { Flex, Tabs, Text } from '@mantine/core';
+import { Flex, Tabs, Text, Box } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useTitleStore } from '@stores/titleStore.ts';
 
@@ -22,14 +22,16 @@ export function HeaderDesktop() {
   };
 
   return (
-    <Flex justify="center" align="center" h="100%" px="md">
+    <Flex justify="center" align="center" h="100%" px="md" className={classes.container}>
       {!isHomeFeed && (
-        <Flex align="center" gap="sm" w="100%">
-          <ReturnButton />
-          <Text fw={700} size="lg">
+        <>
+          <Box pos="absolute" left={16}>
+            <ReturnButton />
+          </Box>
+          <Text className={classes.title}>
             {title}
           </Text>
-        </Flex>
+        </>
       )}
 
       {isHomeFeed && isAuthenticated && (
@@ -37,7 +39,7 @@ export function HeaderDesktop() {
           value={activeTab}
           onChange={handleTabChange}
           className={classes.tabs}
-          variant="default"
+          variant="unstyled"
         >
           <Tabs.List grow>
             <Tabs.Tab value="for-you" className={classes.tab}>
@@ -51,7 +53,7 @@ export function HeaderDesktop() {
       )}
 
       {isHomeFeed && !isAuthenticated && (
-        <Text fw={700} size="lg">
+        <Text className={classes.title}>
           Home
         </Text>
       )}

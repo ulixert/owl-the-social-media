@@ -10,7 +10,14 @@ import {
   rem,
 } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
-import { IconLogout, IconSun, IconMoon, IconMenu2 } from '@tabler/icons-react';
+import {
+  IconLogout,
+  IconSun,
+  IconMoon,
+  IconMenu2,
+  IconBookmark,
+} from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 
 import { NavLinks } from '../NavLinks/NavLinks.tsx';
 import classes from './NavBar.module.css';
@@ -19,6 +26,7 @@ export function NavBar() {
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('light');
   const mutation = useLogoutMutation();
+  const navigate = useNavigate();
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -45,6 +53,20 @@ export function NavBar() {
           </Menu.Target>
 
           <Menu.Dropdown>
+            {isAuthenticated && (
+              <>
+                <Menu.Item
+                  leftSection={
+                    <IconBookmark style={{ width: rem(16), height: rem(16) }} />
+                  }
+                  onClick={() => navigate('/saved')}
+                >
+                  Saved
+                </Menu.Item>
+                <Menu.Divider />
+              </>
+            )}
+
             <Menu.Label>Appearance</Menu.Label>
             <Menu.Item
               leftSection={
@@ -65,7 +87,9 @@ export function NavBar() {
                 <Menu.Label>Account</Menu.Label>
                 <Menu.Item
                   color="red"
-                  leftSection={<IconLogout style={{ width: rem(16), height: rem(16) }} />}
+                  leftSection={
+                    <IconLogout style={{ width: rem(16), height: rem(16) }} />
+                  }
                   onClick={() => mutation.mutate()}
                 >
                   Logout

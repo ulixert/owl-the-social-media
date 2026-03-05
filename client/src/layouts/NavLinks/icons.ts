@@ -1,5 +1,4 @@
 import {
-  IconBookmark,
   IconHeart,
   IconHome,
   IconPlus,
@@ -12,6 +11,5 @@ export const icons = [
   { icon: IconSearch, path: '/search', needLogin: false, type: 'link' },
   { icon: IconPlus, path: '/create', needLogin: true, type: 'action' },
   { icon: IconHeart, path: '/liked', needLogin: true, type: 'link' },
-  { icon: IconBookmark, path: '/saved', needLogin: true, type: 'link' },
   { icon: IconUser, path: '/profile', needLogin: true, type: 'link' },
 ] as const;

@@ -22,7 +22,7 @@ export function AppLayout() {
 
       <AppShell
         layout="alt"
-        padding="md"
+        padding={0}
         transitionDuration={500}
         transitionTimingFunction="ease"
       >

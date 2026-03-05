@@ -23,13 +23,13 @@ export function HeaderMobile() {
   };
 
   return (
-    <Flex justify="center" align="center" h="100%" px="md" pos="relative">
+    <Flex justify="center" align="center" h="100%" px="md" className={classes.container}>
       {!isHomeFeed && (
         <>
           <Box pos="absolute" left={16}>
             <ReturnButton />
           </Box>
-          <Text fw={700} size="lg">
+          <Text className={classes.title}>
             {title}
           </Text>
         </>
@@ -40,7 +40,7 @@ export function HeaderMobile() {
           <Box pos="absolute" left={16}>
             <Logo size={24} />
           </Box>
-          <Text fw={700} size="lg">
+          <Text className={classes.title}>
             Home
           </Text>
         </>
@@ -51,8 +51,7 @@ export function HeaderMobile() {
           value={activeTab}
           onChange={handleTabChange}
           className={classes.tabs}
-          variant="default"
-          w="100%"
+          variant="unstyled"
         >
           <Tabs.List grow>
             <Tabs.Tab value="for-you" className={classes.tab}>

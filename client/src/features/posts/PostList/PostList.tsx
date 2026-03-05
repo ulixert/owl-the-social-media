@@ -31,7 +31,7 @@ export function PostList({ endpoint }: PostListProps) {
   }
 
   return (
-    <Stack>
+    <Stack p="md">
       {data?.pages.map((page) =>
         page.posts.map((post) => <PostItem key={post.id} post={post} />),
       )}

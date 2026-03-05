@@ -31,7 +31,7 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
   };
 
   return (
-    <Stack gap={16} align="start" className={classes.container}>
+    <Stack gap={16} align="start" className={classes.container} px="md" pt="md">
       <Flex justify="space-between" w="100%">
         <Box>
           <Text size="xl" fw={700}>
