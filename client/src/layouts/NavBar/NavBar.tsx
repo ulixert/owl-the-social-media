@@ -5,12 +5,15 @@ import {
   Stack,
   useComputedColorScheme,
   useMantineColorScheme,
+  Menu,
+  UnstyledButton,
+  rem,
 } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
-import { IconLogout, IconSun } from '@tabler/icons-react';
+import { IconLogout, IconSun, IconMoon, IconMenu2 } from '@tabler/icons-react';
 
 import { NavLinks } from '../NavLinks/NavLinks.tsx';
-import { NavBarButton } from './NavBarButton.tsx';
+import classes from './NavBar.module.css';
 
 export function NavBar() {
   const { setColorScheme } = useMantineColorScheme();
@@ -34,10 +37,43 @@ export function NavBar() {
       </Stack>
 
       <Stack justify="center" align="center" gap={0} mt={40}>
-        <NavBarButton icon={IconSun} onClick={handleColorSchemeChange} />
-        {isAuthenticated && (
-          <NavBarButton icon={IconLogout} onClick={mutation.mutate} />
-        )}
+        <Menu position="right-end" shadow="md" width={200}>
+          <Menu.Target>
+            <UnstyledButton className={classes.link}>
+              <IconMenu2 style={{ width: rem(30), height: rem(30) }} stroke={1.5} />
+            </UnstyledButton>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            <Menu.Label>Appearance</Menu.Label>
+            <Menu.Item
+              leftSection={
+                computedColorScheme === 'light' ? (
+                  <IconMoon style={{ width: rem(16), height: rem(16) }} />
+                ) : (
+                  <IconSun style={{ width: rem(16), height: rem(16) }} />
+                )
+              }
+              onClick={handleColorSchemeChange}
+            >
+              Switch to {computedColorScheme === 'light' ? 'Dark' : 'Light'} mode
+            </Menu.Item>
+
+            {isAuthenticated && (
+              <>
+                <Menu.Divider />
+                <Menu.Label>Account</Menu.Label>
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconLogout style={{ width: rem(16), height: rem(16) }} />}
+                  onClick={() => mutation.mutate()}
+                >
+                  Logout
+                </Menu.Item>
+              </>
+            )}
+          </Menu.Dropdown>
+        </Menu>
       </Stack>
     </>
   );

@@ -1,5 +1,12 @@
 .container {
   position: relative;
+  height: 60px;
+}
+
+@media (max-width: 48em) {
+  .container {
+    height: 50px;
+  }
 }
 
 .dropdownIcon {
@@ -19,3 +26,15 @@
   display: flex;
   align-content: center;
 }
+
+.tabs {
+  width: 100%;
+  max-width: 400px;
+}
+
+.tab {
+  flex: 1;
+  font-weight: 600;
+  height: 48px;
+}
+

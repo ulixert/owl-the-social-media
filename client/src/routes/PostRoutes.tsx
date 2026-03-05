@@ -11,7 +11,22 @@ export const PostRoutes = [
     },
     hydrateFallbackElement: <Loading />,
   },
-  ...['for-you', 'following', 'liked', 'saved'].map((path) => ({
+  ...['for-you', 'following'].map((path) => ({
+    path,
+    async lazy() {
+      const { HomePage } = await import('../pages/HomePage.tsx');
+      const { ProtectedRoute } = await import('./ProtectedRoute.tsx');
+      return {
+        Component: () => (
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        ),
+      };
+    },
+    hydrateFallbackElement: <Loading />,
+  })),
+  ...['liked', 'saved'].map((path) => ({
     path,
     async lazy() {
       const { PostList } = await import(
