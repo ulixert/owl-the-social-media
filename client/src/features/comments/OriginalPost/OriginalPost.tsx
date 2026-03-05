@@ -23,7 +23,7 @@ export function OriginalPost({ post }: OriginalPostProps) {
     if ((e.target as HTMLElement).closest('a, button')) {
       return;
     }
-    navigate(`/posts/${post.id}`);
+    void navigate(`/posts/${post.id}`);
   };
 
   return (
