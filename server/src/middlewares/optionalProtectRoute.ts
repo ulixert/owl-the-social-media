@@ -4,7 +4,7 @@ import { jwtVerify } from './utils/jwtVerify.js';
 
 export async function optionalProtectRoute(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ) {
   try {

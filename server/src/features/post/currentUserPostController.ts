@@ -71,12 +71,43 @@ export async function getFollowingPosts(req: Request, res: Response) {
 export async function getRecommendedPosts(req: Request, res: Response) {
   try {
     const { cursor, limit = 10 } = req.query;
+    const currentUserId = req.user?.id;
+
+    let followedIds: number[] = [];
+    let likedByFollowedPostIds: number[] = [];
+
+    if (currentUserId) {
+      const followedUsers = await prisma.userFollows.findMany({
+        where: { followerId: currentUserId },
+        select: { followingId: true },
+      });
+      followedIds = followedUsers.map((f) => f.followingId);
+
+      if (followedIds.length > 0) {
+        const likesByFollowed = await prisma.like.findMany({
+          where: { userId: { in: followedIds } },
+          select: { postId: true },
+          take: 50,
+          orderBy: { createdAt: 'desc' },
+        });
+        likedByFollowedPostIds = likesByFollowed.map((l) => l.postId);
+      }
+    }
+
+    const whereClause = currentUserId
+      ? {
+          isDeleted: false,
+          OR: [
+            { postedById: { in: followedIds } },
+            { id: { in: likedByFollowedPostIds } },
+            { likesCount: { gte: 3 } }, // Fallback to somewhat popular posts
+          ],
+        }
+      : { isDeleted: false };
 
     // Fetch recommended posts
     const recommendedPosts = await prisma.post.findMany({
-      where: {
-        isDeleted: false, // Exclude deleted posts
-      },
+      where: whereClause,
       orderBy: [
         { createdAt: 'desc' },
         { likesCount: 'desc' },

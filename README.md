@@ -19,13 +19,15 @@ Owl is a full-stack web application that includes user authentication, token man
 
 ## Features
 
-- User authentication (login, signup, logout)
-- Access token and refresh token management
-- Protected routes
-- Token refresh mechanism
-- State management using Zustand
-- API integration with Axios
-- Docker support for containerization
+- **User Authentication:** Secure login, signup, and logout with JWT management.
+- **Dynamic Feeds:** "For You" personalized discovery and "Following" chronological feeds.
+- **Social Interactions:** Like/unlike posts and Follow/Unfollow users with real-time UI updates.
+- **Rich Media:** Multi-image post support with dynamic grid layouts (1-4 images).
+- **Image Viewer:** Full-screen, interactive image gallery with keyboard navigation.
+- **User Profiles:** Comprehensive profiles showing following/followers counts, total likes, and post history.
+- **User Hover Cards:** Quick profile previews on hover throughout the platform.
+- **Protected Actions:** Seamless authentication prompts for social interactions.
+- **State Management:** Efficient global state using Zustand and React Query.
 
 ## Technologies Used
 
@@ -155,26 +157,32 @@ This will start both the server and the client in production mode.
 
 ## API Endpoints
 
-All API endpoints are prefixed with `/api`.
+All API endpoints are prefixed with `/api/v1`.
 
 - **Authentication:**
-
-  - **POST** `/api/signup` - User signup
-  - **POST** `/api/login` - User login
-  - **POST** `/api/logout` - User logout
-  - **GET** `/api/refresh-token` - Refresh access token
+  - **POST** `/auth/signup` - User signup
+  - **POST** `/auth/login` - User login
+  - **POST** `/auth/logout` - User logout
+  - **GET** `/auth/refresh-token` - Refresh access token
 
 - **Users:**
-
-  - **GET** `/api/users/:id` - Get user by ID
-  - **DELETE** `/api/users/:id` - Delete user account
+  - **GET** `/users/:username` - Get user profile (includes follow status and stats)
+  - **PUT** `/users/follow/:id` - Follow/Unfollow a user (protected)
+  - **PUT** `/users/me/profile` - Update own profile (protected)
+  - **GET** `/users/me/data` - Get own basic data (protected)
 
 - **Posts:**
-
-  - **GET** `/api/posts` - Get all posts
-  - **POST** `/api/posts` - Create a new post (requires authentication)
-  - **PUT** `/api/posts/:id` - Update a post
-  - **DELETE** `/api/posts/:id` - Delete a post
+  - **GET** `/posts/hot` - Get trending posts
+  - **GET** `/posts/for-you` - Personalized discovery feed (protected)
+  - **GET** `/posts/following` - Chronological follow feed (protected)
+  - **GET** `/posts/:postId` - Get single post details
+  - **GET** `/posts/:postId/comments` - Get child posts (comments)
+  - **POST** `/posts` - Create a new post (protected)
+  - **POST** `/posts/:parentPostId` - Reply to a post (protected)
+  - **PUT** `/posts/:postId/like` - Like/Unlike a post (protected)
+  - **DELETE** `/posts/:postId` - Delete a post (protected)
+  - **GET** `/posts/user/:username/posts` - Get user posts
+  - **GET** `/posts/user/:username/replies` - Get user replies
 
 ## Authentication Flow
 
@@ -198,6 +206,21 @@ All API endpoints are prefixed with `/api`.
    - When the access token expires, the client uses the refresh token to obtain a new access token.
    - The refresh token is sent in an HTTP-only cookie to the `/api/refresh-token` endpoint.
 
+## Feed Algorithm
+
+Owl uses a heuristic discovery engine to power its feeds:
+
+### "Following" Feed
+A strictly chronological stream of posts from accounts you follow, including your own posts.
+
+### "For You" Feed
+A personalized recommendation engine that blends content using a three-tier candidate generation strategy:
+1. **In-Network:** Content from people you directly follow.
+2. **Extended Social Graph:** Posts that have been liked by people you follow (finding content your circle finds interesting).
+3. **Global Discovery:** A fallback to trending/popular posts (3+ likes) to ensure fresh content.
+
+The resulting candidates are deduplicated and sorted chronologically to ensure a stable, non-shifting user experience.
+
 ## TODOs
 
 - [ ] **Navigation Enhancements**
@@ -210,7 +233,7 @@ All API endpoints are prefixed with `/api`.
   - Add refresh functionality to update data without reloading the page.
   - Implement a theme toggle button for light and dark modes.
 
-- [ ] **Media Support**
+- [x] **Media Support**
 
   - Enable uploading and displaying multiple images in posts.
 
@@ -225,7 +248,7 @@ All API endpoints are prefixed with `/api`.
   - Add chat functionality for real-time messaging between users.
 
 - [ ] **Feature Enhancements**
-  - Show suggested content based on user interactions and preferences.
+  - [x] Show suggested content based on user interactions and preferences.
   - Integrate topic categorization for posts using tags or categories.
 
 ## Contributing
