@@ -49,8 +49,7 @@ export function OriginalPost({ post }: OriginalPostProps) {
             </Link>
           </UserHoverCard>
           <PostHeader
-            username={post.postedBy.username}
-            name={post.postedBy.name}
+            post={post}
             createdAt={getPostTime(new Date(post.createdAt))}
             replyToUsername={post.parentPost?.postedBy.username}
           />

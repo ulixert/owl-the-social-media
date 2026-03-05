@@ -28,6 +28,7 @@ export async function getFollowingPosts(req: Request, res: Response) {
     const posts = await prisma.post.findMany({
       where: {
         postedById: { in: followedIds },
+        isDeleted: false,
       },
       orderBy: { createdAt: 'desc' },
       take: limit,
@@ -195,7 +196,7 @@ export async function getLikedPosts(req: Request, res: Response) {
     const postIds = likedPosts.map((like) => like.postId);
 
     const posts = await prisma.post.findMany({
-      where: { id: { in: postIds } },
+      where: { id: { in: postIds }, isDeleted: false },
       orderBy: [
         { likesCount: 'desc' },
         { commentsCount: 'desc' },
@@ -268,7 +269,7 @@ export async function getSavedPosts(req: Request, res: Response) {
     const postIds = savedPosts.map((save) => save.postId);
 
     const posts = await prisma.post.findMany({
-      where: { id: { in: postIds } },
+      where: { id: { in: postIds }, isDeleted: false },
       orderBy: [
         { likesCount: 'desc' },
         { commentsCount: 'desc' },

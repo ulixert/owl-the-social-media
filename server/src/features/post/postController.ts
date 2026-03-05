@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PostCreateSchema } from 'validation';
+import { PostCreateSchema, PostUpdateSchema } from 'validation';
 import { z } from 'zod';
 
 import { prisma } from '../../db';
@@ -19,6 +19,7 @@ export async function getHotPosts(req: Request, res: Response) {
     const { cursor, limit } = input.data;
 
     const posts = await prisma.post.findMany({
+      where: { isDeleted: false },
       orderBy: [
         { createdAt: 'desc' },
         { likesCount: 'desc' },
@@ -149,7 +150,7 @@ export async function getChildPosts(req: Request, res: Response) {
     const { cursor, limit } = input.data;
 
     const childPosts = await prisma.post.findMany({
-      where: { parentPostId: postId },
+      where: { parentPostId: postId, isDeleted: false },
       orderBy: { createdAt: 'desc' },
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,
@@ -310,6 +311,73 @@ export async function deletePost(req: Request, res: Response) {
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in deletePost: ', error);
+  }
+}
+
+export async function updatePost(req: Request, res: Response) {
+  try {
+    const params = postParamsSchema.safeParse(req.params);
+    if (!params.success) {
+      res.status(400).json({ error: 'Invalid post data' });
+      return;
+    }
+
+    const postId = params.data.postId;
+
+    // Validate input
+    const input = PostUpdateSchema.safeParse(req.body);
+    if (!input.success) {
+      res.status(400).json({ error: input.error.errors[0]?.message ?? 'Invalid input' });
+      return;
+    }
+
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { postedById: true },
+    });
+
+    if (!post) {
+      res.status(404).json({ error: 'Post not found' });
+      return;
+    }
+
+    // Check if the user is authorized to update the post
+    const currentUserId = req.user!.id;
+    if (post.postedById !== currentUserId) {
+      res
+        .status(403)
+        .json({ error: 'You are not authorized to update this post' });
+      return;
+    }
+
+    const updatedPost = await prisma.post.update({
+      where: { id: postId },
+      data: input.data,
+      include: {
+        postedBy: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(200).json({ post: updatedPost });
+  } catch (error) {
+    res.status(500).json({ error: 'An unknown error occurred' });
+    console.error('Error in updatePost: ', error);
   }
 }
 

@@ -21,6 +21,7 @@ import {
   getPostById,
   searchPosts,
   searchUsers,
+  updatePost,
 } from './postController.js';
 import { getUserPosts, getUserReplies } from './userPostController.js';
 
@@ -41,6 +42,7 @@ postRouter.get('/:postId/comments', optionalProtectRoute, getChildPosts);
 postRouter.post('/:parentPostId', protectRoute, createPost);
 postRouter.post('/', protectRoute, createPost);
 
+postRouter.put('/:postId', protectRoute, updatePost);
 postRouter.delete('/:postId', protectRoute, deletePost);
 
 // Like, save, and repost routes

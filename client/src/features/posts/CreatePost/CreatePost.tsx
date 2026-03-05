@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { PostCreateSchema } from 'validation';
+import { PostCreateSchema, PostUpdateSchema } from 'validation';
 
 import { axiosInstance } from '@/api/axiosConfig.ts';
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
@@ -51,6 +51,7 @@ type CreatePostResponse = {
 
 type CreatePostProps = {
   parentPost?: Post;
+  editingPost?: Post;
   onSuccess?: (post: CreatedPost) => void;
   onCancel?: () => void;
   isModal?: boolean;
@@ -58,6 +59,7 @@ type CreatePostProps = {
 
 export function CreatePost({
   parentPost,
+  editingPost,
   onSuccess,
   onCancel,
   isModal,
@@ -67,8 +69,8 @@ export function CreatePost({
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [text, setText] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [text, setText] = useState(editingPost?.text || '');
+  const [images, setImages] = useState<string[]>(editingPost?.images || []);
   const [imageUrl, setImageUrl] = useState('');
   const [imagePopoverOpen, setImagePopoverOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,19 +117,44 @@ export function CreatePost({
         if (input.text) body.text = input.text;
         if (input.images && input.images.length > 0) body.images = input.images;
 
+        if (editingPost) {
+          const res = await axiosInstance.put<CreatePostResponse>(
+            `/posts/${editingPost.id}`,
+            body,
+          );
+          return res.data.post;
+        }
+
         const url = parentPost ? `/posts/${parentPost.id}` : '/posts';
         const res = await axiosInstance.post<CreatePostResponse>(url, body);
         return res.data.post;
       },
       onSuccess: (post) => {
         showSuccessNotification({
-          title: parentPost ? 'Reply posted' : 'Posted',
-          message: parentPost ? 'Your reply is live.' : 'Your post is live.',
+          title: editingPost
+            ? 'Post updated'
+            : parentPost
+              ? 'Reply posted'
+              : 'Posted',
+          message: editingPost
+            ? 'Your post has been updated.'
+            : parentPost
+              ? 'Your reply is live.'
+              : 'Your post is live.',
         });
         void queryClient.invalidateQueries({ queryKey: ['posts'] });
-        if (parentPost) {
+        if (parentPost || editingPost?.parentPostId) {
           void queryClient.invalidateQueries({
-            queryKey: ['childPosts', location.pathname, parentPost.id],
+            queryKey: [
+              'childPosts',
+              location.pathname,
+              parentPost?.id || editingPost?.parentPostId,
+            ],
+          });
+        }
+        if (editingPost) {
+          void queryClient.invalidateQueries({
+            queryKey: ['post', editingPost.id],
           });
         }
         setText('');
@@ -136,11 +163,13 @@ export function CreatePost({
         if (isModal) {
           modals.closeAll();
         }
-        void navigate(`/posts/${post.id}`);
+        if (!editingPost) {
+          void navigate(`/posts/${post.id}`);
+        }
       },
       onError: () => {
         showErrorNotification({
-          title: 'Could not post',
+          title: editingPost ? 'Could not update' : 'Could not post',
           message: 'Something went wrong. Please try again.',
         });
       },
@@ -154,7 +183,8 @@ export function CreatePost({
     if (text.trim()) payload.text = text.trim();
     if (images.length > 0) payload.images = images;
 
-    const parsed = PostCreateSchema.safeParse(payload);
+    const schema = editingPost ? PostUpdateSchema : PostCreateSchema;
+    const parsed = schema.safeParse(payload);
     if (!parsed.success) {
       setError(parsed.error.errors[0]?.message ?? 'Invalid input');
       return;
@@ -165,31 +195,23 @@ export function CreatePost({
 
   const postDisabled = isEmpty || isOverLimit || createPostMutation.isPending;
 
+  const buttonLabel = editingPost ? 'Save' : parentPost ? 'Reply' : 'Post';
+
   return (
     <Box>
       {isModal && (
-        <Group justify="space-between" mb="sm">
+        <Box mb="md">
           <ActionIcon
             variant="subtle"
             color="gray"
             size="lg"
             onClick={onCancel}
             aria-label="Cancel"
+            style={{ marginLeft: -8 }}
           >
             <IconX size={20} />
           </ActionIcon>
-
-          <Button
-            radius="xl"
-            size="compact-sm"
-            color="yellow"
-            onClick={handlePost}
-            disabled={postDisabled}
-            loading={createPostMutation.isPending}
-          >
-            {parentPost ? 'Reply' : 'Post'}
-          </Button>
-        </Group>
+        </Box>
       )}
 
       {isModal && parentPost && (
@@ -307,7 +329,7 @@ export function CreatePost({
                     color="dark"
                     pos="absolute"
                     top={6}
-                    right={6}
+                    left={6}
                     onClick={() => removeImage(images[0])}
                     aria-label="Remove image"
                     className={classes.imageClose}
@@ -333,7 +355,7 @@ export function CreatePost({
                         color="dark"
                         pos="absolute"
                         top={6}
-                        right={6}
+                        left={6}
                         onClick={() => removeImage(url)}
                         aria-label="Remove image"
                         className={classes.imageClose}
@@ -385,7 +407,7 @@ export function CreatePost({
                           color="dark"
                           pos="absolute"
                           top={6}
-                          right={6}
+                          left={6}
                           onClick={() => removeImage(images[1])}
                           aria-label="Remove image"
                           className={classes.imageClose}
@@ -406,7 +428,7 @@ export function CreatePost({
                           color="dark"
                           pos="absolute"
                           top={6}
-                          right={6}
+                          left={6}
                           onClick={() => removeImage(images[2])}
                           aria-label="Remove image"
                           className={classes.imageClose}
@@ -435,7 +457,7 @@ export function CreatePost({
                         color="dark"
                         pos="absolute"
                         top={6}
-                        right={6}
+                        left={6}
                         onClick={() => removeImage(url)}
                         aria-label="Remove image"
                         className={classes.imageClose}
@@ -498,19 +520,21 @@ export function CreatePost({
               </Text>
             )}
 
-            {!isModal && (
+            <Group gap="sm" ml="auto">
+              <Text size="xs" c={isOverLimit ? 'red' : 'dimmed'}>
+                {text.length}/{MAX_CHARS}
+              </Text>
               <Button
                 radius="xl"
                 size="compact-sm"
                 color="yellow"
-                ml="auto"
                 onClick={handlePost}
                 disabled={postDisabled}
                 loading={createPostMutation.isPending}
               >
-                {parentPost ? 'Reply' : 'Post'}
+                {buttonLabel}
               </Button>
-            )}
+            </Group>
           </Group>
         </Box>
       </Flex>

@@ -2,11 +2,12 @@ import { useNavigate } from 'react-router-dom';
 
 import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
 import { UnstyledButton, rem } from '@mantine/core';
+import { modals } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useTitleStore } from '@stores/titleStore.ts';
 import { IconHome } from '@tabler/icons-react';
 
-import { useCreatePostModal } from '@/features/posts/hooks/useCreatePostModal.tsx';
+import { CreatePost } from '@/features/posts/CreatePost/CreatePost.tsx';
 import classes from './NavLinks.module.css';
 
 type NavLinkProps = {
@@ -30,7 +31,6 @@ export function NavLink({
   const navigate = useNavigate();
   const setTitle = useTitleStore((state) => state.setTitle);
   const openLoginModal = useOpenLoginModal();
-  const { openCreatePostModal } = useCreatePostModal();
 
   function handleClick() {
     onClick();
@@ -42,7 +42,22 @@ export function NavLink({
 
     if (type === 'action') {
       if (path === '/create') {
-        openCreatePostModal();
+        const modalId = 'create-post-modal';
+        modals.open({
+          id: modalId,
+          children: (
+            <CreatePost
+              isModal
+              onCancel={() => modals.close(modalId)}
+              onSuccess={() => modals.close(modalId)}
+            />
+          ),
+          size: 'lg',
+          radius: 'lg',
+          withCloseButton: false,
+          centered: true,
+          padding: 'md',
+        });
       }
     } else {
       void navigate(path);

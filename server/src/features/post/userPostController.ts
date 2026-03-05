@@ -18,7 +18,7 @@ export async function getUserPosts(
     const { cursor, limit } = input.data;
 
     const posts = await prisma.post.findMany({
-      where: { postedBy: { username }, parentPostId: null },
+      where: { postedBy: { username }, parentPostId: null, isDeleted: false },
       orderBy: { createdAt: 'desc' },
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,
@@ -83,7 +83,7 @@ export async function getUserReplies(
     const { cursor, limit } = input.data;
 
     const posts = await prisma.post.findMany({
-      where: { postedBy: { username }, parentPostId: { not: null } },
+      where: { postedBy: { username }, parentPostId: { not: null }, isDeleted: false },
       orderBy: { createdAt: 'desc' },
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,
