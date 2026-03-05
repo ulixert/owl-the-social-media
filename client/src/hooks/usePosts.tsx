@@ -11,6 +11,7 @@ export type Post = PostType & {
     username: string;
     profilePic: string | null;
   };
+  isLiked: boolean;
 };
 
 type PostsResponse = {

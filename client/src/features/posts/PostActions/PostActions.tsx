@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import { Post } from '@/hooks/usePosts.tsx';
 import { Center, Group, Text } from '@mantine/core';
 import {
@@ -14,17 +12,17 @@ import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
 import { useCreatePostModal } from '../hooks/useCreatePostModal.tsx';
 import { PostAction } from './PostAction.tsx';
 import classes from './PostActions.module.css';
+import { useLikeMutation } from '../hooks/useLikeMutation.ts';
 
 type ActionsProps = {
   post: Post;
 };
 
 export function PostActions({ post }: ActionsProps) {
-  const [liked, setLiked] = useState(false);
-  const currentLikesCount = liked ? post.likesCount + 1 : post.likesCount;
   const { openCreatePostModal } = useCreatePostModal();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openLoginModal = useOpenLoginModal();
+  const likeMutation = useLikeMutation(post.id);
 
   const handleProtectedAction = (action: () => void) => {
     if (!isAuthenticated) {
@@ -39,13 +37,13 @@ export function PostActions({ post }: ActionsProps) {
       <Center>
         <PostAction
           color="red"
-          onClick={() => handleProtectedAction(() => setLiked(!liked))}
+          onClick={() => handleProtectedAction(() => likeMutation.mutate())}
           type="like"
         >
-          <IconHeart className={liked ? classes.liked : ''} />
+          <IconHeart className={post.isLiked ? classes.liked : ''} />
         </PostAction>
         <Text className={classes.count}>
-          {currentLikesCount === 0 ? '' : currentLikesCount}
+          {post.likesCount === 0 ? '' : post.likesCount}
         </Text>
       </Center>
 

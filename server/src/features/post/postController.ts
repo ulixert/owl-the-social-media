@@ -34,11 +34,26 @@ export async function getHotPosts(req: Request, res: Response) {
             profilePic: true,
           },
         },
+        likes: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
       },
     });
 
+    const postsWithIsLiked = posts.map((post) => {
+      const { likes, ...rest } = post;
+      return {
+        ...rest,
+        isLiked: likes ? likes.length > 0 : false,
+      };
+    });
+
     const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
-    res.status(200).json({ posts, nextCursor });
+    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in getHotPosts: ', error);
@@ -66,6 +81,13 @@ export async function getPostById(req: Request, res: Response) {
             profilePic: true,
           },
         },
+        likes: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
       },
     });
 
@@ -74,7 +96,13 @@ export async function getPostById(req: Request, res: Response) {
       return;
     }
 
-    res.status(200).json({ post });
+    const { likes, ...rest } = post;
+    const postWithIsLiked = {
+      ...rest,
+      isLiked: likes ? (likes as any[]).length > 0 : false,
+    };
+
+    res.status(200).json({ post: postWithIsLiked });
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred' });
     console.error('Error in getPostById: ', error);
@@ -113,12 +141,27 @@ export async function getChildPosts(req: Request, res: Response) {
             profilePic: true,
           },
         },
+        likes: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
       },
+    });
+
+    const postsWithIsLiked = childPosts.map((post) => {
+      const { likes, ...rest } = post;
+      return {
+        ...rest,
+        isLiked: likes ? likes.length > 0 : false,
+      };
     });
 
     const nextCursor =
       childPosts.length > 0 ? childPosts[childPosts.length - 1].id : null;
-    res.status(200).json({ childPosts, nextCursor });
+    res.status(200).json({ childPosts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred' });
     console.error('Error in getChildPosts: ', error);

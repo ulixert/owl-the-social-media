@@ -35,12 +35,27 @@ export async function getUserPosts(
             profilePic: true,
           },
         },
+        likes: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
       },
+    });
+
+    const postsWithIsLiked = posts.map((post) => {
+      const { likes, ...rest } = post;
+      return {
+        ...rest,
+        isLiked: likes ? likes.length > 0 : false,
+      };
     });
 
     const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts, nextCursor });
+    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in getUserPosts: ', error);
@@ -79,6 +94,13 @@ export async function getUserReplies(
             profilePic: true,
           },
         },
+        likes: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
         parentPost: {
           select: {
             id: true,
@@ -96,9 +118,17 @@ export async function getUserReplies(
       },
     });
 
+    const postsWithIsLiked = posts.map((post) => {
+      const { likes, ...rest } = post;
+      return {
+        ...rest,
+        isLiked: likes ? likes.length > 0 : false,
+      };
+    });
+
     const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts, nextCursor });
+    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in getUserReplies: ', error);
