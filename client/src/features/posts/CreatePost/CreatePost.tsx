@@ -16,6 +16,7 @@ import {
   CloseButton,
   Divider,
   Flex,
+  Grid,
   Group,
   Image,
   Popover,
@@ -243,14 +244,14 @@ export function CreatePost({
           />
 
           {images.length > 0 && (
-            <SimpleGrid cols={images.length === 1 ? 1 : 2} spacing="xs" mt="xs">
-              {images.map((url) => (
-                <Box key={url} pos="relative" className={classes.imageWrap}>
+            <Box mt="xs">
+              {images.length === 1 && (
+                <Box pos="relative" className={classes.imageWrap}>
                   <Image
-                    src={url}
+                    src={images[0]}
                     alt="attachment"
                     radius="lg"
-                    h={images.length === 1 ? 260 : 160}
+                    h={260}
                     fit="cover"
                     fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
                   />
@@ -261,13 +262,143 @@ export function CreatePost({
                     pos="absolute"
                     top={6}
                     right={6}
-                    onClick={() => removeImage(url)}
+                    onClick={() => removeImage(images[0])}
                     aria-label="Remove image"
                     className={classes.imageClose}
                   />
                 </Box>
-              ))}
-            </SimpleGrid>
+              )}
+
+              {images.length === 2 && (
+                <SimpleGrid cols={2} spacing="xs">
+                  {images.map((url) => (
+                    <Box key={url} pos="relative" className={classes.imageWrap}>
+                      <Image
+                        src={url}
+                        alt="attachment"
+                        radius="lg"
+                        h={200}
+                        fit="cover"
+                        fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
+                      />
+                      <CloseButton
+                        size="sm"
+                        variant="filled"
+                        color="dark"
+                        pos="absolute"
+                        top={6}
+                        right={6}
+                        onClick={() => removeImage(url)}
+                        aria-label="Remove image"
+                        className={classes.imageClose}
+                      />
+                    </Box>
+                  ))}
+                </SimpleGrid>
+              )}
+
+              {images.length === 3 && (
+                <Grid gutter="xs">
+                  <Grid.Col span={6}>
+                    <Box pos="relative" className={classes.imageWrap}>
+                      <Image
+                        src={images[0]}
+                        alt="attachment"
+                        radius="lg"
+                        h={245}
+                        fit="cover"
+                        fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
+                      />
+                      <CloseButton
+                        size="sm"
+                        variant="filled"
+                        color="dark"
+                        pos="absolute"
+                        top={6}
+                        right={6}
+                        onClick={() => removeImage(images[0])}
+                        aria-label="Remove image"
+                        className={classes.imageClose}
+                      />
+                    </Box>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Stack gap="xs">
+                      <Box pos="relative" className={classes.imageWrap}>
+                        <Image
+                          src={images[1]}
+                          alt="attachment"
+                          radius="lg"
+                          h={118}
+                          fit="cover"
+                          fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
+                        />
+                        <CloseButton
+                          size="sm"
+                          variant="filled"
+                          color="dark"
+                          pos="absolute"
+                          top={6}
+                          right={6}
+                          onClick={() => removeImage(images[1])}
+                          aria-label="Remove image"
+                          className={classes.imageClose}
+                        />
+                      </Box>
+                      <Box pos="relative" className={classes.imageWrap}>
+                        <Image
+                          src={images[2]}
+                          alt="attachment"
+                          radius="lg"
+                          h={118}
+                          fit="cover"
+                          fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
+                        />
+                        <CloseButton
+                          size="sm"
+                          variant="filled"
+                          color="dark"
+                          pos="absolute"
+                          top={6}
+                          right={6}
+                          onClick={() => removeImage(images[2])}
+                          aria-label="Remove image"
+                          className={classes.imageClose}
+                        />
+                      </Box>
+                    </Stack>
+                  </Grid.Col>
+                </Grid>
+              )}
+
+              {images.length >= 4 && (
+                <SimpleGrid cols={2} spacing="xs">
+                  {images.slice(0, 4).map((url) => (
+                    <Box key={url} pos="relative" className={classes.imageWrap}>
+                      <Image
+                        src={url}
+                        alt="attachment"
+                        radius="lg"
+                        h={120}
+                        fit="cover"
+                        fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
+                      />
+                      <CloseButton
+                        size="sm"
+                        variant="filled"
+                        color="dark"
+                        pos="absolute"
+                        top={6}
+                        right={6}
+                        onClick={() => removeImage(url)}
+                        aria-label="Remove image"
+                        className={classes.imageClose}
+                      />
+                    </Box>
+                  ))}
+                </SimpleGrid>
+              )}
+            </Box>
           )}
 
           <Group gap="xs" mt="sm">
