@@ -9,11 +9,12 @@ export function useFollowMutation(userId: number, username: string) {
     mutationFn: async () => {
       await axiosInstance.put(`/users/follow/${userId}`);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidate both the profile and any other queries that might depend on this
-      void queryClient.invalidateQueries({ queryKey: ['userProfile', username] });
+      await queryClient.invalidateQueries({ queryKey: ['userProfile', username] });
       // If we have a feed that shows follow status, we might need to invalidate that too
-      void queryClient.invalidateQueries({ queryKey: ['posts'] });
+      await queryClient.invalidateQueries({ queryKey: ['posts'] });
+      await queryClient.invalidateQueries({ queryKey: ['search'] });
     },
     onError: () => {
       showErrorNotification({
