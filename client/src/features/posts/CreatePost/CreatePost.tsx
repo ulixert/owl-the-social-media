@@ -270,6 +270,14 @@ export function CreatePost({
             maxRows={16}
             value={text}
             onChange={(e) => setText(e.currentTarget.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!postDisabled) {
+                  handlePost();
+                }
+              }
+            }}
             styles={{
               input: {
                 fontSize: 'var(--mantine-font-size-sm)',
