@@ -17,7 +17,6 @@ import {
   IconUser,
 } from '@tabler/icons-react';
 
-import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import classes from './NavLinks.module.css';
 
 export function ProfileNavLink({ active }: { active?: boolean }) {
