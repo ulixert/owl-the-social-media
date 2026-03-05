@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Box, Grid, Image, SimpleGrid, Stack, Text, Modal, ActionIcon } from '@mantine/core';
-import { IconX } from '@tabler/icons-react';
+import { Box, Grid, Image, SimpleGrid, Stack, Text, Modal, ActionIcon, Group } from '@mantine/core';
+import { IconX, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 
 type PostContentProps = {
   postText?: string;
@@ -9,13 +9,24 @@ type PostContentProps = {
 
 export function PostContent({ postText, postImages }: PostContentProps) {
   const [opened, setOpened] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const imageCount = postImages?.length ?? 0;
 
-  const handleImageClick = (e: React.MouseEvent, url: string) => {
+  const handleImageClick = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
     e.stopPropagation();
-    setSelectedImage(url);
+    setSelectedIndex(index);
     setOpened(true);
+  };
+
+  const handlePrevious = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : imageCount - 1));
+  };
+
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedIndex((prev) => (prev < imageCount - 1 ? prev + 1 : 0));
   };
 
   const renderImages = () => {
@@ -31,7 +42,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
           fit="contain"
           style={{ backgroundColor: 'var(--mantine-color-gray-1)', cursor: 'pointer' }}
           fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-          onClick={(e) => handleImageClick(e, postImages[0])}
+          onClick={(e) => handleImageClick(e, 0)}
         />
       );
     }
@@ -39,7 +50,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
     if (imageCount === 2) {
       return (
         <SimpleGrid cols={2} spacing="xs">
-          {postImages.map((url) => (
+          {postImages.map((url, index) => (
             <Image
               key={url}
               src={url}
@@ -48,7 +59,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
               fit="cover"
               fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
               style={{ cursor: 'pointer' }}
-              onClick={(e) => handleImageClick(e, url)}
+              onClick={(e) => handleImageClick(e, index)}
             />
           ))}
         </SimpleGrid>
@@ -66,7 +77,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
               fit="cover"
               fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
               style={{ cursor: 'pointer' }}
-              onClick={(e) => handleImageClick(e, postImages[0])}
+              onClick={(e) => handleImageClick(e, 0)}
             />
           </Grid.Col>
           <Grid.Col span={6}>
@@ -78,7 +89,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
                 fit="cover"
                 fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
                 style={{ cursor: 'pointer' }}
-                onClick={(e) => handleImageClick(e, postImages[1])}
+                onClick={(e) => handleImageClick(e, 1)}
               />
               <Image
                 src={postImages[2]}
@@ -87,7 +98,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
                 fit="cover"
                 fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
                 style={{ cursor: 'pointer' }}
-                onClick={(e) => handleImageClick(e, postImages[2])}
+                onClick={(e) => handleImageClick(e, 2)}
               />
             </Stack>
           </Grid.Col>
@@ -98,7 +109,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
     // 4 or more images
     return (
       <SimpleGrid cols={2} spacing="xs">
-        {postImages.slice(0, 4).map((url) => (
+        {postImages.slice(0, 4).map((url, index) => (
           <Image
             key={url}
             src={url}
@@ -107,7 +118,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
             fit="cover"
             fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
             style={{ cursor: 'pointer' }}
-            onClick={(e) => handleImageClick(e, url)}
+            onClick={(e) => handleImageClick(e, index)}
           />
         ))}
       </SimpleGrid>
@@ -129,6 +140,10 @@ export function PostContent({ postText, postImages }: PostContentProps) {
         fullScreen
         padding={0}
         withCloseButton={false}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft') handlePrevious();
+          if (e.key === 'ArrowRight') handleNext();
+        }}
         styles={{
           content: {
             backgroundColor: 'rgba(0, 0, 0, 0.9)',
@@ -154,22 +169,72 @@ export function PostContent({ postText, postImages }: PostContentProps) {
           color="white"
           size="xl"
           radius="xl"
-          onClick={() => setOpened(false)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpened(false);
+          }}
           style={{ zIndex: 1000 }}
         >
           <IconX size={32} />
         </ActionIcon>
 
-        {selectedImage && (
+        {imageCount > 1 && (
+          <>
+            <ActionIcon
+              pos="absolute"
+              left={20}
+              variant="subtle"
+              color="white"
+              size="xl"
+              radius="xl"
+              onClick={handlePrevious}
+              style={{ zIndex: 1000 }}
+            >
+              <IconChevronLeft size={48} />
+            </ActionIcon>
+
+            <ActionIcon
+              pos="absolute"
+              right={20}
+              variant="subtle"
+              color="white"
+              size="xl"
+              radius="xl"
+              onClick={handleNext}
+              style={{ zIndex: 1000 }}
+            >
+              <IconChevronRight size={48} />
+            </ActionIcon>
+
+            <Group pos="absolute" bottom={20} gap="xs" style={{ zIndex: 1000 }}>
+              {postImages?.map((_, idx) => (
+                <Box
+                  key={idx}
+                  w={8}
+                  h={8}
+                  style={{
+                    borderRadius: '50%',
+                    backgroundColor: idx === selectedIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                    transition: 'background-color 200ms ease',
+                  }}
+                />
+              ))}
+            </Group>
+          </>
+        )}
+
+        {postImages && (
           <Image
-            src={selectedImage}
+            src={postImages[selectedIndex]}
             fit="contain"
             w="100%"
             h="100%"
             fallbackSrc="https://placehold.co/800x600?text=Invalid+URL"
+            onClick={(e) => e.stopPropagation()}
           />
         )}
       </Modal>
     </Box>
   );
 }
+
