@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { Post } from '@/hooks/usePosts.tsx';
 import { Center, Group, Text } from '@mantine/core';
 import {
   IconHeart,
@@ -8,22 +9,18 @@ import {
   IconSend,
 } from '@tabler/icons-react';
 
+import { useCreatePostModal } from '../hooks/useCreatePostModal.tsx';
 import { PostAction } from './PostAction.tsx';
 import classes from './PostActions.module.css';
 
 type ActionsProps = {
-  likesCount: number;
-  commentsCount: number;
-  repostsCount: number;
+  post: Post;
 };
 
-export function PostActions({
-  likesCount,
-  commentsCount,
-  repostsCount,
-}: ActionsProps) {
+export function PostActions({ post }: ActionsProps) {
   const [liked, setLiked] = useState(false);
-  const currentLikesCount = liked ? likesCount + 1 : likesCount;
+  const currentLikesCount = liked ? post.likesCount + 1 : post.likesCount;
+  const { openCreatePostModal } = useCreatePostModal();
 
   return (
     <Group ml={-6} gap={14}>
@@ -41,13 +38,13 @@ export function PostActions({
           color="blue"
           type="reply"
           onClick={() => {
-            console.log('commented'); // TODO
+            openCreatePostModal(post);
           }}
         >
           <IconMessageCircle />
         </PostAction>
         <Text className={classes.count}>
-          {commentsCount === 0 ? '' : commentsCount}
+          {post.commentsCount === 0 ? '' : post.commentsCount}
         </Text>
       </Center>
 
@@ -62,7 +59,7 @@ export function PostActions({
           <IconRepeat />
         </PostAction>
         <Text className={classes.count}>
-          {repostsCount === 0 ? '' : repostsCount}
+          {post.repostsCount === 0 ? '' : post.repostsCount}
         </Text>
       </Center>
 

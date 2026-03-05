@@ -5,8 +5,8 @@ import { usePostWithChildPosts } from '@/hooks/usePostWithChildPosts.ts';
 import { Center, Divider, Loader, Stack } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
 
+import { CreatePost } from '../../posts/CreatePost/CreatePost.tsx';
 import { PostItem } from '../../posts/PostItem/PostItem.tsx';
-import { AddComment } from '../AddComment/AddComment.tsx';
 import { OriginalPost } from '../OriginalPost/OriginalPost.tsx';
 
 export function PostWithComments() {
@@ -41,40 +41,17 @@ export function PostWithComments() {
 
   return (
     <Stack>
-      {parentPost && (
-        <OriginalPost
-          postText={parentPost.post.text}
-          postImages={parentPost.post.images?.[0]}
-          commentsCount={parentPost.post.commentsCount}
-          likesCount={parentPost.post.likesCount}
-          repostsCount={parentPost.post.repostsCount}
-          postTime={parentPost.post.createdAt}
-          username={parentPost.post.postedBy.username}
-          avatar={parentPost.post.postedBy.profilePic}
-        />
-      )}
-
-      {isAuthenticated && <AddComment />}
+      {parentPost && <OriginalPost post={parentPost.post} />}
 
       <Divider mx={-16} />
 
+      {isAuthenticated && parentPost && (
+        <CreatePost parentPost={parentPost.post} />
+      )}
+
       {/* Render Child Posts */}
       {childPostsData?.pages.map((page) =>
-        page.childPosts.map((post) => (
-          <PostItem
-            postAuthorId={post.postedBy.id}
-            key={post.id}
-            postId={post.id}
-            postTime={post.createdAt}
-            postAuthor={post.postedBy.username}
-            postAuthorAvatar={post.postedBy.profilePic}
-            likesCount={post.likesCount}
-            commentsCount={post.commentsCount}
-            repostsCount={post.repostsCount}
-            postText={post.text}
-            postImages={post.images?.[0]}
-          />
-        )),
+        page.childPosts.map((post) => <PostItem key={post.id} post={post} />),
       )}
 
       {/* Infinite Scroll Loader */}

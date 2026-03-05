@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
+import { Post } from '@/hooks/usePosts.tsx';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import { Flex } from '@mantine/core';
 
@@ -8,45 +9,29 @@ import { PostActions } from '../../posts/PostActions/PostActions.tsx';
 import { PostContent } from '../../posts/PostContent/PostContent.tsx';
 import { PostHeader } from '../../posts/PostHeader/PostHeader.tsx';
 import { PostMain } from '../../posts/PostMain/PostMain.tsx';
+import classes from './OriginalPost.module.css';
 
 type OriginalPostProps = {
-  username: string;
-  avatar: string | null;
-  likesCount: number;
-  commentsCount: number;
-  repostsCount: number;
-  postText?: string;
-  postImages?: string;
-  postTime: Date;
+  post: Post;
 };
 
-export function OriginalPost({
-  username,
-  avatar,
-  repostsCount,
-  likesCount,
-  commentsCount,
-  postText,
-  postImages,
-  postTime,
-}: OriginalPostProps) {
+export function OriginalPost({ post }: OriginalPostProps) {
   return (
     <PostMain>
       <Flex gap={12}>
-        <Link to={`/user/${username}`}>
-          <UserAvatar username={username} avatar={avatar} />
+        <Link to={`/user/${post.postedBy.username}`} className={classes.avatar}>
+          <UserAvatar
+            username={post.postedBy.username}
+            avatar={post.postedBy.profilePic}
+          />
         </Link>
         <PostHeader
-          username={username}
-          createdAt={getPostTime(new Date(postTime))}
+          username={post.postedBy.username}
+          createdAt={getPostTime(new Date(post.createdAt))}
         />
       </Flex>
-      <PostContent postText={postText} postImages={postImages} />
-      <PostActions
-        likesCount={likesCount}
-        repostsCount={repostsCount}
-        commentsCount={commentsCount}
-      />
+      <PostContent postText={post.text} postImages={post.images} />
+      <PostActions post={post} />
     </PostMain>
   );
 }

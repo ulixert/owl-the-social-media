@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
+import { Post } from '@/hooks/usePosts.tsx';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import { Divider, Flex } from '@mantine/core';
 
@@ -11,53 +12,33 @@ import { PostMain } from '../PostMain/PostMain.tsx';
 import classes from './PostItem.module.css';
 
 type PostProps = {
-  postId: number;
-  postText?: string;
-  postImages?: string;
-  postTime: Date;
-  postAuthor: string;
-  postAuthorId: number;
-  postAuthorAvatar: string | null;
-  likesCount: number;
-  commentsCount: number;
-  repostsCount: number;
+  post: Post;
 };
 
-export function PostItem({
-  postImages,
-  postText,
-  postId,
-  postTime,
-  postAuthor,
-  postAuthorAvatar,
-  likesCount,
-  commentsCount,
-  repostsCount,
-}: PostProps) {
+export function PostItem({ post }: PostProps) {
   const navigate = useNavigate();
   return (
     <>
       <div
         role="link"
         tabIndex={0}
-        onClick={() => navigate(`/posts/${postId}`)}
-        onKeyDown={(e) => e.key === 'Enter' && navigate(`/posts/${postId}`)}
+        onClick={() => navigate(`/posts/${post.id}`)}
+        onKeyDown={(e) => e.key === 'Enter' && navigate(`/posts/${post.id}`)}
         className={classes.post}
       >
         <Flex gap={12}>
-          <PostLeftBar username={postAuthor} avatar={postAuthorAvatar} />
+          <PostLeftBar
+            username={post.postedBy.username}
+            avatar={post.postedBy.profilePic}
+          />
 
           <PostMain>
             <PostHeader
-              createdAt={getPostTime(new Date(postTime))}
-              username={postAuthor}
+              createdAt={getPostTime(new Date(post.createdAt))}
+              username={post.postedBy.username}
             />
-            <PostContent postText={postText} postImages={postImages} />
-            <PostActions
-              likesCount={likesCount}
-              commentsCount={commentsCount}
-              repostsCount={repostsCount}
-            />
+            <PostContent postText={post.text} postImages={post.images} />
+            <PostActions post={post} />
           </PostMain>
         </Flex>
       </div>

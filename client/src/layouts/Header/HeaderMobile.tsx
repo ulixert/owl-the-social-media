@@ -2,12 +2,14 @@ import { DropdownMenu } from '@/components/DropdownMenu/DropdownMenu.tsx';
 import { Logo } from '@/components/Logo/Logo.tsx';
 import { ReturnButton } from '@/components/ReturnButton/ReturnButton.tsx';
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation.ts';
+import { useCreatePostModal } from '@/features/posts/hooks/useCreatePostModal.tsx';
 import { Burger, Flex } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 
 export function HeaderMobile() {
   const [opened, { toggle }] = useDisclosure();
   const mutation = useLogoutMutation();
+  const { openCreatePostModal } = useCreatePostModal();
 
   return (
     <Flex justify="center" align="center" p="md" gap={10}>
@@ -32,7 +34,7 @@ export function HeaderMobile() {
           {
             name: 'Create new post',
             onClick: () => {
-              /* TODO */
+              openCreatePostModal();
             },
           },
 

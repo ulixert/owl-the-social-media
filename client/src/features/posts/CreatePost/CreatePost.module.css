@@ -1,0 +1,20 @@
+.imageWrap {
+  border-radius: var(--mantine-radius-lg);
+  overflow: hidden;
+}
+
+.imageClose {
+  opacity: 0.85;
+  transition: opacity 150ms ease;
+}
+
+.imageClose:hover {
+  opacity: 1;
+}
+
+.line {
+  width: 2px;
+  background-color: var(--mantine-color-gray-3);
+  flex: 1;
+  margin-top: 4px;
+}

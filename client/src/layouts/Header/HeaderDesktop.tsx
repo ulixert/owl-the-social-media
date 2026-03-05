@@ -5,11 +5,13 @@ import { useAuthStore } from '@stores/authStore.ts';
 import { useTitleStore } from '@stores/titleStore.ts';
 import { IconArrowDown } from '@tabler/icons-react';
 
+import { useCreatePostModal } from '@/features/posts/hooks/useCreatePostModal.tsx';
 import classes from './Header.module.css';
 
 export function HeaderDesktop() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const title = useTitleStore((state) => state.title);
+  const { openCreatePostModal } = useCreatePostModal();
 
   return (
     <Flex justify="center" align="center" p="md" gap={10}>
@@ -38,7 +40,7 @@ export function HeaderDesktop() {
             {
               name: 'Create new post',
               onClick: () => {
-                /* TODO */
+                openCreatePostModal();
               },
             },
           ]}
