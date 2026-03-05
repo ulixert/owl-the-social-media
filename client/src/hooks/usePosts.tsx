@@ -9,8 +9,14 @@ export type Post = PostType & {
   postedBy: {
     id: number;
     username: string;
+    name: string;
     profilePic: string | null;
   };
+  parentPost?: {
+    postedBy: {
+      username: string;
+    };
+  } | null;
   isLiked: boolean;
 };
 

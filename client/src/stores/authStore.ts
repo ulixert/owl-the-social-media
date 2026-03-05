@@ -3,6 +3,7 @@ import { create } from 'zustand';
 type UserData = {
   userId: number;
   username: string;
+  name: string;
   profilePic: string | null;
 };
 

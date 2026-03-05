@@ -8,10 +8,11 @@ export function generateRefreshTokenAndSetCookie(
   res: Response,
   userId: number,
   username: string,
+  name: string,
   profilePic: string | null,
 ) {
   const token = jwt.sign(
-    { userId, username, profilePic },
+    { userId, username, name, profilePic },
     REFRESH_TOKEN_SECRET,
     {
       expiresIn: '7d',

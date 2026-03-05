@@ -183,7 +183,9 @@ export async function getMyData(req: Request, res: Response) {
     const user = await prisma.user.findUnique({
       where: { id: currentUserId },
       select: {
+        id: true,
         username: true,
+        name: true,
         profilePic: true,
       },
     });

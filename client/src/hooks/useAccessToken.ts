@@ -14,14 +14,16 @@ export function useAccessToken() {
       const response = await axiosInstance.get<AuthResponse>(
         '/auth/refresh-token',
       );
+      const { accessToken, userId, username, name, profilePic } = response.data;
 
-      const { accessToken, userId, username, profilePic } = response.data;
-
-      setAccessToken(accessToken, {
-        userId,
-        username,
-        profilePic,
-      });
+      if (accessToken) {
+        setAccessToken(accessToken, {
+          userId,
+          username,
+          name,
+          profilePic,
+        });
+      }
 
       return response.data;
     },

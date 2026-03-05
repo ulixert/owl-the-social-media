@@ -31,7 +31,17 @@ export async function getHotPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
         likes: req.user
@@ -78,7 +88,17 @@ export async function getPostById(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
         likes: req.user
@@ -138,7 +158,17 @@ export async function getChildPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
         likes: req.user
@@ -219,7 +249,17 @@ export async function createPost(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },

@@ -4,6 +4,7 @@ import { Outlet, useNavigation } from 'react-router-dom';
 import { Loading } from '@/components/Loading/Loading.tsx';
 import { LoginButton } from '@/components/LoginButton/LoginButton.tsx';
 import { AppShell, Container } from '@mantine/core';
+import { ModalsProvider } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
 
 import { Footer } from '../Footer/Footer.tsx';
@@ -16,7 +17,7 @@ export function AppLayout() {
   const navigation = useNavigation();
 
   return (
-    <>
+    <ModalsProvider>
       {navigation.state === 'loading' && <Loading />}
 
       <AppShell
@@ -52,6 +53,6 @@ export function AppLayout() {
           <Footer />
         </AppShell.Footer>
       </AppShell>
-    </>
+    </ModalsProvider>
   );
 }

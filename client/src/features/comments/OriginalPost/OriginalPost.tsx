@@ -50,8 +50,9 @@ export function OriginalPost({ post }: OriginalPostProps) {
           </UserHoverCard>
           <PostHeader
             username={post.postedBy.username}
+            name={post.postedBy.name}
             createdAt={getPostTime(new Date(post.createdAt))}
-            parentPostId={post.parentPostId}
+            replyToUsername={post.parentPost?.postedBy.username}
           />
         </Flex>
         <PostContent postText={post.text} postImages={post.images} />

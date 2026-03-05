@@ -11,6 +11,7 @@ export type AuthResponse = {
   accessToken: string;
   userId: number;
   username: string;
+  name: string;
   profilePic: string | null;
 };
 

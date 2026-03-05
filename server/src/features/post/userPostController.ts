@@ -28,7 +28,17 @@ export async function getUserPosts(
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
         likes: req.user
@@ -83,6 +93,7 @@ export async function getUserReplies(
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
           },
         },
@@ -102,6 +113,7 @@ export async function getUserReplies(
               select: {
                 id: true,
                 username: true,
+                name: true,
                 profilePic: true,
               },
             },

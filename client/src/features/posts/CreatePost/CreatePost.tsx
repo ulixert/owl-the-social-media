@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { PostCreateSchema } from 'validation';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { axiosInstance } from '@/api/axiosConfig.ts';
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
@@ -29,6 +30,7 @@ import {
 import { useAuthStore } from '@stores/authStore.ts';
 import { IconPhoto, IconX } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 
 import classes from './CreatePost.module.css';
 
@@ -61,6 +63,8 @@ export function CreatePost({
 }: CreatePostProps) {
   const userData = useAuthStore((s) => s.userData);
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [text, setText] = useState('');
   const [images, setImages] = useState<string[]>([]);
@@ -114,20 +118,21 @@ export function CreatePost({
         const res = await axiosInstance.post<CreatePostResponse>(url, body);
         return res.data.post;
       },
-      onSuccess: async (post) => {
+      onSuccess: (post) => {
         showSuccessNotification({
           title: parentPost ? 'Reply posted' : 'Posted',
           message: parentPost ? 'Your reply is live.' : 'Your post is live.',
         });
-        await queryClient.invalidateQueries({ queryKey: ['posts'] });
+        void queryClient.invalidateQueries({ queryKey: ['posts'] });
         if (parentPost) {
-          await queryClient.invalidateQueries({
+          void queryClient.invalidateQueries({
             queryKey: ['childPosts', location.pathname, parentPost.id],
           });
         }
         setText('');
         setImages([]);
         onSuccess?.(post);
+        navigate(`/posts/${post.id}`);
       },
       onError: () => {
         showErrorNotification({
@@ -193,8 +198,21 @@ export function CreatePost({
           </Stack>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Group gap={4}>
-              <Text size="sm" fw={600}>
-                {parentPost.postedBy.username}
+              <UserHoverCard username={parentPost.postedBy.username}>
+                <Link
+                  to={`/user/${parentPost.postedBy.username}`}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <Text size="sm" fw={700}>
+                    {parentPost.postedBy.name}
+                  </Text>
+                </Link>
+              </UserHoverCard>
+              <Text size="sm" c="dimmed">
+                @{parentPost.postedBy.username}
+              </Text>
+              <Text size="xs" c="dimmed">
+                &bull;
               </Text>
               <Text size="xs" c="dimmed">
                 {getPostTime(new Date(parentPost.createdAt))}
@@ -203,8 +221,18 @@ export function CreatePost({
             <Text size="sm" lineClamp={3}>
               {parentPost.text}
             </Text>
-            <Text size="xs" c="blue" mt={4}>
-              Replying to @{parentPost.postedBy.username}
+            <Text size="xs" c="dimmed" mt={4}>
+              Replying to{' '}
+              <UserHoverCard username={parentPost.postedBy.username}>
+                <Link
+                  to={`/user/${parentPost.postedBy.username}`}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Text span c="blue.6">
+                    @{parentPost.postedBy.username}
+                  </Text>
+                </Link>
+              </UserHoverCard>
             </Text>
           </Box>
         </Flex>
@@ -220,9 +248,14 @@ export function CreatePost({
 
         <Box style={{ flex: 1, minWidth: 0 }}>
           {!isModal && (
-            <Text size="sm" fw={600} mb={4}>
-              {userData?.username ?? 'You'}
-            </Text>
+            <Group gap={4} mb={4}>
+              <Text size="sm" fw={700}>
+                {userData?.name ?? 'You'}
+              </Text>
+              <Text size="sm" c="dimmed">
+                @{userData?.username ?? 'you'}
+              </Text>
+            </Group>
           )}
 
           <Textarea

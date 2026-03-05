@@ -38,7 +38,17 @@ export async function getFollowingPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
         likes: req.user
@@ -121,7 +131,17 @@ export async function getRecommendedPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
         likes: req.user
@@ -189,7 +209,17 @@ export async function getLikedPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
         likes: req.user
@@ -252,7 +282,17 @@ export async function getSavedPosts(req: Request, res: Response) {
           select: {
             id: true,
             username: true,
+            name: true,
             profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
         likes: req.user

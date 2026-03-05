@@ -26,7 +26,7 @@ export async function login(req: Request, res: Response) {
     const { email, password } = input.data;
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { password: true, id: true, username: true, profilePic: true },
+      select: { password: true, id: true, username: true, name: true, profilePic: true },
     });
     if (!user) {
       res.status(400).json({
@@ -49,12 +49,14 @@ export async function login(req: Request, res: Response) {
       res,
       user.id,
       user.username,
+      user.name,
       user.profilePic,
     );
     res.status(200).json({
       accessToken: generateAccessToken(user.id),
       userId: user.id,
       username: user.username,
+      name: user.name,
       profilePic: user.profilePic,
     });
   } catch (error) {
@@ -114,12 +116,14 @@ export async function signup(req: Request, res: Response) {
       res,
       newUser.id,
       newUser.username,
+      newUser.name,
       newUser.profilePic,
     );
     res.status(201).json({
       accessToken: generateAccessToken(newUser.id),
       userId: newUser.id,
       username: newUser.username,
+      name: newUser.name,
       profilePic: newUser.profilePic,
     });
   } catch (error) {
@@ -144,14 +148,14 @@ export async function refreshAccessToken(req: Request, res: Response) {
       return;
     }
 
-    const { userId, username, profilePic } = await jwtVerify(
+    const { userId, username, name, profilePic } = await jwtVerify(
       token,
       process.env.REFRESH_TOKEN_SECRET!,
     );
 
     const accessToken = generateAccessToken(userId);
 
-    res.status(200).json({ accessToken, userId, username, profilePic });
+    res.status(200).json({ accessToken, userId, username, name, profilePic });
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       res.status(401).json({
