@@ -4,6 +4,7 @@ import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import { Flex } from '@mantine/core';
+import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 
 import { PostActions } from '../../posts/PostActions/PostActions.tsx';
 import { PostContent } from '../../posts/PostContent/PostContent.tsx';
@@ -36,15 +37,17 @@ export function OriginalPost({ post }: OriginalPostProps) {
     >
       <PostMain>
         <Flex gap={12}>
-          <Link
-            to={`/user/${post.postedBy.username}`}
-            className={classes.avatar}
-          >
-            <UserAvatar
-              username={post.postedBy.username}
-              avatar={post.postedBy.profilePic}
-            />
-          </Link>
+          <UserHoverCard username={post.postedBy.username}>
+            <Link
+              to={`/user/${post.postedBy.username}`}
+              className={classes.avatar}
+            >
+              <UserAvatar
+                username={post.postedBy.username}
+                avatar={post.postedBy.profilePic}
+              />
+            </Link>
+          </UserHoverCard>
           <PostHeader
             username={post.postedBy.username}
             createdAt={getPostTime(new Date(post.createdAt))}

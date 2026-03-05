@@ -9,6 +9,7 @@ export type UserProfile = {
   biography: string | null;
   followingCount: number;
   followersCount: number;
+  isFollowing: boolean;
   createdAt: string; // JSON from API
 };
 

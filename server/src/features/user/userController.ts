@@ -148,7 +148,20 @@ export async function getUserProfile(
       return;
     }
 
-    res.status(200).json({ user });
+    let isFollowing = false;
+    if (req.user) {
+      const follow = await prisma.userFollows.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId: req.user.id,
+            followingId: user.id,
+          },
+        },
+      });
+      isFollowing = !!follow;
+    }
+
+    res.status(200).json({ user: { ...user, isFollowing } });
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred.' });
     console.error('Error in getUserProfile: ', error);

@@ -2,6 +2,8 @@ import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { UserProfile } from '@/hooks/useUserProfile.ts';
 import { Anchor, Box, Button, Flex, Stack, Tabs, Text } from '@mantine/core';
 import { IconBrandInstagram } from '@tabler/icons-react';
+import { useAuthStore } from '@stores/authStore.ts';
+import { useFollowMutation } from '../hooks/useFollowMutation.ts';
 
 import { UserMoreMenu } from '../UserMoreMenu/UserMoreMenu.tsx';
 import classes from './UserHeader.module.css';
@@ -13,11 +15,17 @@ type UserHeaderProps = {
 };
 
 export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
+  const currentUser = useAuthStore((state) => state.userData);
+  const isCurrentUser = currentUser?.userId === user.id;
+  const followMutation = useFollowMutation(user.id, user.username);
+
   return (
     <Stack gap={16} align="start" className={classes.container}>
       <Flex justify="space-between" w="100%">
         <Box>
-          <Text size="xl">{user.username}</Text>
+          <Text size="xl" fw={700}>
+            {user.name || user.username}
+          </Text>
           <Flex gap={8} align={'center'}>
             <Text size="sm" c="gray.6">
               @{user.username}
@@ -31,37 +39,43 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
           <UserAvatar
             username={user.username}
             avatar={user.profilePic}
-            hiddenFrom="sm"
-            size="lg"
-          />
-          <UserAvatar
-            username={user.username}
-            avatar={user.profilePic}
-            visibleFrom="sm"
             size="xl"
           />
         </Box>
       </Flex>
 
-      <Text>{user.biography ?? 'introduce yourself'}</Text>
+      <Text size="sm">{user.biography ?? 'No bio yet.'}</Text>
 
-      <Flex w="100%" justify="space-between">
+      <Flex w="100%" justify="space-between" align="center">
         <Flex gap={8} align={'center'} c="gray.6" className={classes.follow}>
-          <Anchor c="inherit">
-            <span>{user.followingCount}</span> follows
-          </Anchor>
-          <Text>&bull;</Text>
-          <Anchor c="inherit">
+          <Anchor c="inherit" size="sm">
             <span>{user.followersCount}</span> followers
           </Anchor>
         </Flex>
-        <Flex>
+        <Flex gap={12}>
           <Box className={classes.iconContainer}>
             <IconBrandInstagram size={24} cursor="pointer" />
           </Box>
           <UserMoreMenu />
         </Flex>
       </Flex>
+
+      {!isCurrentUser ? (
+        <Button
+          fullWidth
+          variant={user.isFollowing ? 'outline' : 'filled'}
+          color={user.isFollowing ? 'gray' : 'dark'}
+          radius="md"
+          onClick={() => followMutation.mutate()}
+          loading={followMutation.isPending}
+        >
+          {user.isFollowing ? 'Following' : 'Follow'}
+        </Button>
+      ) : (
+        <Button fullWidth variant="outline" color="gray" radius="md">
+          Edit profile
+        </Button>
+      )}
 
       <Tabs
         defaultValue="posts"
