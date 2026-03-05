@@ -12,6 +12,7 @@ type AuthState = {
   userData: UserData | null;
   isAuthenticated: boolean;
   setAccessToken: (token: string | null, userData?: UserData | null) => void;
+  updateUserData: (data: Partial<UserData>) => void;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -25,4 +26,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: Boolean(token),
       userData,
     }),
+
+  updateUserData: (data) =>
+    set((state) => ({
+      userData: state.userData ? { ...state.userData, ...data } : null,
+    })),
 }));

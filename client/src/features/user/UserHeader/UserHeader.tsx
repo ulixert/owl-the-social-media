@@ -5,6 +5,8 @@ import { IconBrandInstagram } from '@tabler/icons-react';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useFollowMutation } from '../hooks/useFollowMutation.ts';
 import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
+import { modals } from '@mantine/modals';
+import { EditProfileModal } from '../components/EditProfileModal/EditProfileModal.tsx';
 
 import { UserMoreMenu } from '../UserMoreMenu/UserMoreMenu.tsx';
 import classes from './UserHeader.module.css';
@@ -21,6 +23,18 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
   const openLoginModal = useOpenLoginModal();
   const isCurrentUser = currentUser?.userId === user.id;
   const followMutation = useFollowMutation(user.id, user.username);
+
+  const handleEditProfile = () => {
+    const modalId = 'edit-profile-modal';
+    modals.open({
+      id: modalId,
+      title: 'Edit profile',
+      children: <EditProfileModal user={user} onClose={() => modals.close(modalId)} />,
+      radius: 'lg',
+      centered: true,
+      padding: 'xl',
+    });
+  };
 
   const handleFollow = () => {
     if (!isAuthenticated) {
@@ -91,7 +105,13 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
           {user.isFollowing ? 'Following' : 'Follow'}
         </Button>
       ) : (
-        <Button fullWidth variant="outline" color="gray" radius="md">
+        <Button
+          fullWidth
+          variant="outline"
+          color="gray"
+          radius="md"
+          onClick={handleEditProfile}
+        >
           Edit profile
         </Button>
       )}
