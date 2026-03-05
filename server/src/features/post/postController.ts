@@ -118,6 +118,29 @@ export async function getPostById(req: Request, res: Response) {
       return;
     }
 
+    if (post.isDeleted) {
+      res.status(200).json({
+        post: {
+          id: post.id,
+          parentPostId: post.parentPostId,
+          isDeleted: true,
+          createdAt: post.createdAt,
+          postedBy: {
+            username: '',
+            name: '',
+            profilePic: null,
+          },
+          text: 'This post has been deleted.',
+          images: [],
+          likesCount: 0,
+          commentsCount: 0,
+          repostsCount: 0,
+          isLiked: false,
+        },
+      });
+      return;
+    }
+
     const { likes, ...rest } = post;
     const postWithIsLiked = {
       ...rest,
@@ -286,9 +309,9 @@ export async function deletePost(req: Request, res: Response) {
 
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      select: { postedById: true },
+      select: { postedById: true, parentPostId: true, isDeleted: true },
     });
-    if (!post) {
+    if (!post || post.isDeleted) {
       res.status(404).json({ error: 'Post not found' });
       return;
     }
@@ -302,9 +325,18 @@ export async function deletePost(req: Request, res: Response) {
       return;
     }
 
-    await prisma.post.update({
-      where: { id: postId },
-      data: { isDeleted: true },
+    await prisma.$transaction(async (tx) => {
+      await tx.post.update({
+        where: { id: postId },
+        data: { isDeleted: true },
+      });
+
+      if (post.parentPostId) {
+        await tx.post.update({
+          where: { id: post.parentPostId },
+          data: { commentsCount: { decrement: 1 } },
+        });
+      }
     });
 
     res.status(204).send();
@@ -333,10 +365,10 @@ export async function updatePost(req: Request, res: Response) {
 
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      select: { postedById: true },
+      select: { postedById: true, isDeleted: true },
     });
 
-    if (!post) {
+    if (!post || post.isDeleted) {
       res.status(404).json({ error: 'Post not found' });
       return;
     }

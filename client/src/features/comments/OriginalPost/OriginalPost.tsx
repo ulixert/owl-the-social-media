@@ -27,6 +27,16 @@ export function OriginalPost({ post }: OriginalPostProps) {
     void navigate(`/posts/${post.id}`);
   };
 
+  if (post.isDeleted) {
+    return (
+      <div className={classes.originalPost} style={{ cursor: 'default' }}>
+        <PostMain>
+          <PostContent postText="This post has been deleted." postImages={[]} />
+        </PostMain>
+      </div>
+    );
+  }
+
   return (
     <div
       role="link"
