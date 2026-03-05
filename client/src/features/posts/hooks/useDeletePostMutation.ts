@@ -21,7 +21,12 @@ export function useDeletePostMutation(postId: number) {
         title: 'Post deleted',
         message: 'Your post has been successfully deleted.',
       });
+      // Delay slightly to ensure the database has finished the transaction
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       await queryClient.invalidateQueries({ queryKey: ['posts'] });
+      await queryClient.invalidateQueries({ queryKey: ['post'] });
+      await queryClient.invalidateQueries({ queryKey: ['childPosts'] });
       await queryClient.invalidateQueries({ queryKey: ['search'] });
 
       // If we are on the post's detail page, navigate back

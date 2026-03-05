@@ -149,7 +149,7 @@ export async function getUserProfile(
     }
 
     const likesCountResult = await prisma.post.aggregate({
-      where: { postedById: user.id },
+      where: { postedById: user.id, isDeleted: false },
       _sum: {
         likesCount: true,
       },

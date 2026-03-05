@@ -144,12 +144,13 @@ export function CreatePost({
         });
         void queryClient.invalidateQueries({ queryKey: ['posts'] });
         if (parentPost || editingPost?.parentPostId) {
+          const pid = parentPost?.id ?? editingPost?.parentPostId;
           void queryClient.invalidateQueries({
-            queryKey: [
-              'childPosts',
-              location.pathname,
-              parentPost?.id ?? editingPost?.parentPostId,
-            ],
+            queryKey: ['childPosts', location.pathname, pid],
+          });
+          // Also invalidate the parent post to update its comment count
+          void queryClient.invalidateQueries({
+            queryKey: ['post', pid],
           });
         }
         if (editingPost) {

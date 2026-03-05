@@ -45,7 +45,7 @@ export function PostWithComments() {
   }
 
   return (
-    <Stack p="md">
+    <Stack p="md" pb={0}>
       {parentPost && (
         <>
           <OriginalPost post={parentPost.post} />
