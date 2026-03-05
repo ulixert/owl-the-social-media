@@ -158,6 +158,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
           if (e.key === 'ArrowLeft') handlePrevious();
           if (e.key === 'ArrowRight') handleNext();
         }}
+        onClick={() => setOpened(false)}
         styles={{
           content: {
             backgroundColor: 'rgba(0, 0, 0, 0.9)',
