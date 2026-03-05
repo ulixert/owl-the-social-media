@@ -13,7 +13,7 @@ import classes from './NavLinks.module.css';
 type NavLinkProps = {
   icon: typeof IconHome;
   active?: boolean;
-  onClick: () => void;
+  onClick?: () => void;
   needLogin?: boolean;
   path: string;
   type?: 'link' | 'action';
@@ -33,7 +33,7 @@ export function NavLink({
   const openLoginModal = useOpenLoginModal();
 
   function handleClick() {
-    onClick();
+    onClick?.();
 
     if (needLogin && !isAuthenticated) {
       openLoginModal();

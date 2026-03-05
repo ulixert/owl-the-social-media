@@ -1,6 +1,6 @@
 import { useState } from 'react';
+
 import { UserProfile } from '@/hooks/useUserProfile.ts';
-import { useUpdateProfileMutation } from '../../hooks/useUpdateProfileMutation.ts';
 import {
   Avatar,
   Box,
@@ -14,6 +14,8 @@ import {
   Textarea,
 } from '@mantine/core';
 
+import { useUpdateProfileMutation } from '../../hooks/useUpdateProfileMutation.ts';
+
 type EditProfileModalProps = {
   user: UserProfile;
   onClose: () => void;
@@ -21,8 +23,8 @@ type EditProfileModalProps = {
 
 export function EditProfileModal({ user, onClose }: EditProfileModalProps) {
   const [name, setName] = useState(user.name);
-  const [biography, setBiography] = useState(user.biography || '');
-  const [profilePic, setProfilePic] = useState(user.profilePic || '');
+  const [biography, setBiography] = useState(user.biography ?? '');
+  const [profilePic, setProfilePic] = useState(user.profilePic ?? '');
 
   const mutation = useUpdateProfileMutation(user.username);
 
@@ -55,7 +57,9 @@ export function EditProfileModal({ user, onClose }: EditProfileModalProps) {
       <Divider />
 
       <Box>
-        <Text size="sm" fw={700} mb={4}>Bio</Text>
+        <Text size="sm" fw={700} mb={4}>
+          Bio
+        </Text>
         <Textarea
           placeholder="+ Write bio"
           value={biography}
@@ -71,7 +75,9 @@ export function EditProfileModal({ user, onClose }: EditProfileModalProps) {
       <Divider />
 
       <Box>
-        <Text size="sm" fw={700} mb={4}>Profile Picture URL</Text>
+        <Text size="sm" fw={700} mb={4}>
+          Profile Picture URL
+        </Text>
         <TextInput
           placeholder="https://..."
           value={profilePic}

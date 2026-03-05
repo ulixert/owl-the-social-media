@@ -19,7 +19,6 @@ export function NavLinks() {
         {...link}
         key={link.path}
         active={active}
-        onClick={() => {}}
       />
     );
   });
