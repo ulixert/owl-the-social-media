@@ -148,6 +148,15 @@ export async function getUserProfile(
       return;
     }
 
+    const likesCountResult = await prisma.post.aggregate({
+      where: { postedById: user.id },
+      _sum: {
+        likesCount: true,
+      },
+    });
+
+    const totalLikes = likesCountResult._sum.likesCount ?? 0;
+
     let isFollowing = false;
     if (req.user) {
       const follow = await prisma.userFollows.findUnique({
@@ -161,7 +170,7 @@ export async function getUserProfile(
       isFollowing = !!follow;
     }
 
-    res.status(200).json({ user: { ...user, isFollowing } });
+    res.status(200).json({ user: { ...user, isFollowing, likesCount: totalLikes } });
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred.' });
     console.error('Error in getUserProfile: ', error);

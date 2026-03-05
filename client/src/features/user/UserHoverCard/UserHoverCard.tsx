@@ -3,6 +3,7 @@ import { useUserProfile } from '@/hooks/useUserProfile.ts';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useFollowMutation } from '../hooks/useFollowMutation.ts';
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
+import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
 import {
   Box,
   Button,
@@ -22,6 +23,8 @@ export function UserHoverCard({ username, children }: UserHoverCardProps) {
   const navigate = useNavigate();
   const { data: user, isLoading } = useUserProfile(username);
   const currentUser = useAuthStore((state) => state.userData);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const openLoginModal = useOpenLoginModal();
   const followMutation = useFollowMutation(user?.id ?? 0, username);
 
   const isCurrentUser = currentUser?.userId === user?.id;
@@ -29,6 +32,10 @@ export function UserHoverCard({ username, children }: UserHoverCardProps) {
   const handleFollow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuthenticated) {
+      openLoginModal();
+      return;
+    }
     followMutation.mutate();
   };
 
@@ -94,13 +101,29 @@ export function UserHoverCard({ username, children }: UserHoverCardProps) {
               </Text>
             )}
 
-            <Flex gap="md">
+            <Flex gap="md" align="center">
               <Flex gap={4} align="center">
                 <Text size="sm" fw={700}>
                   {user.followersCount}
                 </Text>
                 <Text size="sm" c="dimmed">
                   followers
+                </Text>
+              </Flex>
+              <Flex gap={4} align="center">
+                <Text size="sm" fw={700}>
+                  {user.followingCount}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  following
+                </Text>
+              </Flex>
+              <Flex gap={4} align="center">
+                <Text size="sm" fw={700}>
+                  {user.likesCount}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  likes
                 </Text>
               </Flex>
             </Flex>

@@ -4,6 +4,7 @@ import { Anchor, Box, Button, Flex, Stack, Tabs, Text } from '@mantine/core';
 import { IconBrandInstagram } from '@tabler/icons-react';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useFollowMutation } from '../hooks/useFollowMutation.ts';
+import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
 
 import { UserMoreMenu } from '../UserMoreMenu/UserMoreMenu.tsx';
 import classes from './UserHeader.module.css';
@@ -16,8 +17,18 @@ type UserHeaderProps = {
 
 export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
   const currentUser = useAuthStore((state) => state.userData);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const openLoginModal = useOpenLoginModal();
   const isCurrentUser = currentUser?.userId === user.id;
   const followMutation = useFollowMutation(user.id, user.username);
+
+  const handleFollow = () => {
+    if (!isAuthenticated) {
+      openLoginModal();
+      return;
+    }
+    followMutation.mutate();
+  };
 
   return (
     <Stack gap={16} align="start" className={classes.container}>
@@ -51,6 +62,14 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
           <Anchor c="inherit" size="sm">
             <span>{user.followersCount}</span> followers
           </Anchor>
+          <Text>&bull;</Text>
+          <Anchor c="inherit" size="sm">
+            <span>{user.followingCount}</span> following
+          </Anchor>
+          <Text>&bull;</Text>
+          <Anchor c="inherit" size="sm">
+            <span>{user.likesCount}</span> likes
+          </Anchor>
         </Flex>
         <Flex gap={12}>
           <Box className={classes.iconContainer}>
@@ -66,7 +85,7 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
           variant={user.isFollowing ? 'outline' : 'filled'}
           color={user.isFollowing ? 'gray' : 'dark'}
           radius="md"
-          onClick={() => followMutation.mutate()}
+          onClick={handleFollow}
           loading={followMutation.isPending}
         >
           {user.isFollowing ? 'Following' : 'Follow'}
