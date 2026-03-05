@@ -36,6 +36,7 @@ export function PostItem({ post }: PostProps) {
             <PostHeader
               createdAt={getPostTime(new Date(post.createdAt))}
               username={post.postedBy.username}
+              parentPostId={post.parentPostId}
             />
             <PostContent postText={post.text} postImages={post.images} />
             <PostActions post={post} />

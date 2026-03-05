@@ -11,6 +11,7 @@ import { OriginalPost } from '../OriginalPost/OriginalPost.tsx';
 
 export function PostWithComments() {
   const {
+    currentPost,
     parentPost,
     isParentLoading,
     isParentError,
@@ -32,21 +33,32 @@ export function PostWithComments() {
   }, [inView, hasNextPage, fetchNextPage]);
 
   if (isParentLoading) {
-    return <Loader />;
+    return (
+      <Center mt="xl">
+        <Loader />
+      </Center>
+    );
   }
 
   if (isParentError) {
-    return <div>Error loading parent post</div>;
+    return <div>Error loading post</div>;
   }
 
   return (
     <Stack>
-      {parentPost && <OriginalPost post={parentPost.post} />}
+      {parentPost && (
+        <>
+          <OriginalPost post={parentPost.post} />
+          <Divider mx={-16} />
+        </>
+      )}
+
+      {currentPost && <OriginalPost post={currentPost.post} />}
 
       <Divider mx={-16} />
 
-      {isAuthenticated && parentPost && (
-        <CreatePost parentPost={parentPost.post} />
+      {isAuthenticated && currentPost && (
+        <CreatePost parentPost={currentPost.post} />
       )}
 
       {/* Render Child Posts */}

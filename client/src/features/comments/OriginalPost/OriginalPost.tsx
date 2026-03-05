@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
@@ -16,22 +16,44 @@ type OriginalPostProps = {
 };
 
 export function OriginalPost({ post }: OriginalPostProps) {
+  const navigate = useNavigate();
+
+  const handleClick = (e: React.MouseEvent) => {
+    // If the click was on a link (avatar) or an action button, don't navigate
+    if ((e.target as HTMLElement).closest('a, button')) {
+      return;
+    }
+    navigate(`/posts/${post.id}`);
+  };
+
   return (
-    <PostMain>
-      <Flex gap={12}>
-        <Link to={`/user/${post.postedBy.username}`} className={classes.avatar}>
-          <UserAvatar
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={(e) => e.key === 'Enter' && navigate(`/posts/${post.id}`)}
+      className={classes.originalPost}
+    >
+      <PostMain>
+        <Flex gap={12}>
+          <Link
+            to={`/user/${post.postedBy.username}`}
+            className={classes.avatar}
+          >
+            <UserAvatar
+              username={post.postedBy.username}
+              avatar={post.postedBy.profilePic}
+            />
+          </Link>
+          <PostHeader
             username={post.postedBy.username}
-            avatar={post.postedBy.profilePic}
+            createdAt={getPostTime(new Date(post.createdAt))}
+            parentPostId={post.parentPostId}
           />
-        </Link>
-        <PostHeader
-          username={post.postedBy.username}
-          createdAt={getPostTime(new Date(post.createdAt))}
-        />
-      </Flex>
-      <PostContent postText={post.text} postImages={post.images} />
-      <PostActions post={post} />
-    </PostMain>
+        </Flex>
+        <PostContent postText={post.text} postImages={post.images} />
+        <PostActions post={post} />
+      </PostMain>
+    </div>
   );
 }

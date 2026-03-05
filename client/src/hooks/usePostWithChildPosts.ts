@@ -14,19 +14,37 @@ export function usePostWithChildPosts() {
   const location = useLocation();
   const postId = Number(location.pathname.split('/').pop());
 
-  // Fetch the parent post
+  // Fetch the current post (which might be a parent or a child)
   const {
-    data: parentPost,
-    isLoading: isParentLoading,
-    isError: isParentError,
+    data: currentPostData,
+    isLoading: isCurrentLoading,
+    isError: isCurrentError,
   } = useQuery<PostResponse>({
-    queryKey: ['parentPost', location.pathname, postId],
+    queryKey: ['post', postId],
     queryFn: async () => {
       const response = await axiosInstance.get<PostResponse>(`posts/${postId}`);
       return response.data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const parentPostId = currentPostData?.post.parentPostId;
+
+  // Fetch the actual parent post if the current post is a reply
+  const {
+    data: parentPostData,
+    isLoading: isParentLoading,
+    isError: isParentError,
+  } = useQuery<PostResponse>({
+    queryKey: ['post', parentPostId],
+    queryFn: async () => {
+      const response = await axiosInstance.get<PostResponse>(
+        `posts/${parentPostId}`,
+      );
+      return response.data;
+    },
+    enabled: !!parentPostId,
+    staleTime: 1000 * 60 * 5,
   });
 
   const {
@@ -38,9 +56,10 @@ export function usePostWithChildPosts() {
   } = useChildPosts(postId);
 
   return {
-    parentPost,
-    isParentLoading,
-    isParentError,
+    currentPost: currentPostData,
+    parentPost: parentPostData,
+    isParentLoading: isCurrentLoading || (!!parentPostId && isParentLoading),
+    isParentError: isCurrentError || isParentError,
     childPostsData,
     isChildFetching,
     isChildError,
