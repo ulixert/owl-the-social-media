@@ -19,10 +19,15 @@ import {
   getChildPosts,
   getHotPosts,
   getPostById,
+  searchPosts,
+  searchUsers,
 } from './postController.js';
 import { getUserPosts, getUserReplies } from './userPostController.js';
 
 export const postRouter: Router = express.Router();
+
+postRouter.get('/search/users', optionalProtectRoute, searchUsers);
+postRouter.get('/search/posts', optionalProtectRoute, searchPosts);
 
 postRouter.get('/hot', optionalProtectRoute, getHotPosts);
 postRouter.get('/following', protectRoute, getFollowingPosts);

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PostCreateSchema } from 'validation';
+import { z } from 'zod';
 
 import { prisma } from '../../db';
 import {
@@ -309,5 +310,131 @@ export async function deletePost(req: Request, res: Response) {
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in deletePost: ', error);
+  }
+}
+
+const searchQuerySchema = postQuerySchema.extend({
+  q: z.string().min(1),
+});
+
+export async function searchUsers(req: Request, res: Response) {
+  try {
+    const input = searchQuerySchema.safeParse(req.query);
+    if (!input.success) {
+      res.status(400).json({ message: 'Invalid search query' });
+      return;
+    }
+
+    const { q, cursor, limit } = input.data;
+
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { username: { contains: q, mode: 'insensitive' } },
+          { name: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      take: limit,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : 0,
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        profilePic: true,
+        biography: true,
+        followersCount: true,
+      },
+    });
+
+    // Check if the current user is following these users
+    const usersWithFollowStatus = await Promise.all(
+      users.map(async (user) => {
+        let isFollowing = false;
+        if (req.user) {
+          const follow = await prisma.userFollows.findUnique({
+            where: {
+              followerId_followingId: {
+                followerId: req.user.id,
+                followingId: user.id,
+              },
+            },
+          });
+          isFollowing = !!follow;
+        }
+        return { ...user, isFollowing };
+      }),
+    );
+
+    const nextCursor = users.length > 0 ? users[users.length - 1].id : null;
+
+    res.status(200).json({ users: usersWithFollowStatus, nextCursor });
+  } catch (error) {
+    res.status(500).json({ message: 'An unknown error occurred' });
+    console.error('Error in searchUsers: ', error);
+  }
+}
+
+export async function searchPosts(req: Request, res: Response) {
+  try {
+    const input = searchQuerySchema.safeParse(req.query);
+    if (!input.success) {
+      res.status(400).json({ message: 'Invalid search query' });
+      return;
+    }
+
+    const { q, cursor, limit } = input.data;
+
+    const posts = await prisma.post.findMany({
+      where: {
+        text: { contains: q, mode: 'insensitive' },
+        isDeleted: false,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : 0,
+      include: {
+        postedBy: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            profilePic: true,
+          },
+        },
+        parentPost: {
+          select: {
+            postedBy: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        },
+        likes: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
+      },
+    });
+
+    const postsWithIsLiked = posts.map((post) => {
+      const { likes, ...rest } = post;
+      return {
+        ...rest,
+        isLiked: likes ? likes.length > 0 : false,
+      };
+    });
+
+    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+
+    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
+  } catch (error) {
+    res.status(500).json({ message: 'An unknown error occurred' });
+    console.error('Error in searchPosts: ', error);
   }
 }

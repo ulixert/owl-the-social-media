@@ -9,11 +9,12 @@ export function useLikeMutation(postId: number) {
     mutationFn: async () => {
       await axiosInstance.put(`/posts/${postId}/like`);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Invalidate posts queries to refresh liked status and counts
-      void queryClient.invalidateQueries({ queryKey: ['posts'] });
-      void queryClient.invalidateQueries({ queryKey: ['post', postId] });
-      void queryClient.invalidateQueries({ queryKey: ['childPosts'] });
+      await queryClient.invalidateQueries({ queryKey: ['posts'] });
+      await queryClient.invalidateQueries({ queryKey: ['post', postId] });
+      await queryClient.invalidateQueries({ queryKey: ['childPosts'] });
+      await queryClient.invalidateQueries({ queryKey: ['search'] });
     },
     onError: () => {
       showErrorNotification({
