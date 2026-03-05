@@ -29,11 +29,7 @@ export async function getFollowingPosts(req: Request, res: Response) {
       where: {
         postedById: { in: followedIds },
       },
-      orderBy: [
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: { createdAt: 'desc' },
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,
       skip: cursor ? 1 : 0,
@@ -82,10 +78,9 @@ export async function getRecommendedPosts(req: Request, res: Response) {
         isDeleted: false, // Exclude deleted posts
       },
       orderBy: [
-        { commentsCount: 'desc' },
-        { likesCount: 'desc' },
-        { repostsCount: 'desc' },
         { createdAt: 'desc' },
+        { likesCount: 'desc' },
+        { commentsCount: 'desc' },
       ],
       take: Number(limit),
       cursor: cursor ? { id: Number(cursor) } : undefined,

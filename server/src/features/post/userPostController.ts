@@ -19,11 +19,7 @@ export async function getUserPosts(
 
     const posts = await prisma.post.findMany({
       where: { postedBy: { username }, parentPostId: null },
-      orderBy: [
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: { createdAt: 'desc' },
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,
       skip: cursor ? 1 : 0,
@@ -78,11 +74,7 @@ export async function getUserReplies(
 
     const posts = await prisma.post.findMany({
       where: { postedBy: { username }, parentPostId: { not: null } },
-      orderBy: [
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: { createdAt: 'desc' },
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,
       skip: cursor ? 1 : 0,

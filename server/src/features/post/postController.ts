@@ -19,9 +19,9 @@ export async function getHotPosts(req: Request, res: Response) {
 
     const posts = await prisma.post.findMany({
       orderBy: [
+        { createdAt: 'desc' },
         { likesCount: 'desc' },
         { commentsCount: 'desc' },
-        { createdAt: 'desc' },
       ],
       take: limit,
       cursor: cursor ? { id: cursor } : undefined,
