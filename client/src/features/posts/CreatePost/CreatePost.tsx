@@ -69,8 +69,8 @@ export function CreatePost({
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [text, setText] = useState(editingPost?.text || '');
-  const [images, setImages] = useState<string[]>(editingPost?.images || []);
+  const [text, setText] = useState(editingPost?.text ?? '');
+  const [images, setImages] = useState<string[]>(editingPost?.images ?? []);
   const [imageUrl, setImageUrl] = useState('');
   const [imagePopoverOpen, setImagePopoverOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +148,7 @@ export function CreatePost({
             queryKey: [
               'childPosts',
               location.pathname,
-              parentPost?.id || editingPost?.parentPostId,
+              parentPost?.id ?? editingPost?.parentPostId,
             ],
           });
         }

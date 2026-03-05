@@ -1,9 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { useUserProfile } from '@/hooks/useUserProfile.ts';
-import { useAuthStore } from '@stores/authStore.ts';
-import { useFollowMutation } from '../hooks/useFollowMutation.ts';
+
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
+import { useUserProfile } from '@/hooks/useUserProfile.ts';
 import {
   Box,
   Button,
@@ -13,6 +12,9 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
+import { useAuthStore } from '@stores/authStore.ts';
+
+import { useFollowMutation } from '../hooks/useFollowMutation.ts';
 
 type UserHoverCardProps = {
   username: string;
@@ -43,7 +45,7 @@ export function UserHoverCard({ username, children }: UserHoverCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (user) {
-      navigate(`/user/${user.username}`);
+      void navigate(`/user/${user.username}`);
     }
   };
 

@@ -121,7 +121,7 @@ export async function getPostById(req: Request, res: Response) {
     const { likes, ...rest } = post;
     const postWithIsLiked = {
       ...rest,
-      isLiked: likes ? (likes as any[]).length > 0 : false,
+      isLiked: Array.isArray(likes) && likes.length > 0,
     };
 
     res.status(200).json({ post: postWithIsLiked });

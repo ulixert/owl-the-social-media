@@ -1,7 +1,11 @@
+import { useLocation, useNavigate } from 'react-router-dom';
+
 import { axiosInstance } from '@/api/axiosConfig.ts';
+import {
+  showErrorNotification,
+  showSuccessNotification,
+} from '@/utils/showNotification.tsx';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { showErrorNotification, showSuccessNotification } from '@/utils/showNotification.tsx';
-import { useNavigate, useLocation } from 'react-router-dom';
 
 export function useDeletePostMutation(postId: number) {
   const queryClient = useQueryClient();
@@ -19,10 +23,10 @@ export function useDeletePostMutation(postId: number) {
       });
       await queryClient.invalidateQueries({ queryKey: ['posts'] });
       await queryClient.invalidateQueries({ queryKey: ['search'] });
-      
+
       // If we are on the post's detail page, navigate back
       if (location.pathname === `/posts/${postId}`) {
-        navigate(-1);
+        void navigate(-1);
       }
     },
     onError: () => {

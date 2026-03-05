@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+
 import { prisma } from '../db';
 import { jwtVerify } from './utils/jwtVerify.js';
 
@@ -9,7 +10,7 @@ export async function optionalProtectRoute(
 ) {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return next();
     }
 
@@ -28,7 +29,7 @@ export async function optionalProtectRoute(
       req.user = user;
     }
     next();
-  } catch (error) {
+  } catch {
     // If token is invalid, we just proceed as unauthenticated
     next();
   }
