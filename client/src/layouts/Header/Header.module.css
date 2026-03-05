@@ -13,8 +13,17 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  font-weight: 700;
-  font-size: var(--mantine-font-size-lg);
+  font-weight: 500;
+  font-size: var(--mantine-font-size-md);
+}
+
+.backButton {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
 }
 
 .tabs {
@@ -25,7 +34,8 @@
 
 .tab {
   flex: 1;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: var(--mantine-font-size-md);
   height: 60px;
   border-bottom: 2px solid transparent;
   transition: all 150ms ease;
@@ -46,20 +56,9 @@
 }
 
 .tab[data-active] {
-  color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
-  border-bottom-color: var(--mantine-color-blue-6);
-}
-
-/* User specifically asked for grey color for selected tab indicator or text? 
-   "the selected tab colored with a grey color, not yellowish now"
-   Usually this refers to the active state. 
-   I will use a subtle grey background for the active tab list if that's what they mean, 
-   but usually tabs have an underline. 
-   Wait, "colored with a grey color" might mean the text or indicator.
-   I'll use a neutral grey for the indicator instead of the default blue.
-*/
-
-.tab[data-active] {
-  border-bottom-color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-3));
+  border-bottom-color: light-dark(
+    var(--mantine-color-gray-7),
+    var(--mantine-color-gray-3)
+  );
   color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
 }
