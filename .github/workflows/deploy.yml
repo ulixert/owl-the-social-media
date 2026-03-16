@@ -46,5 +46,5 @@ jobs:
             cd ~/apps/owl-the-social-media
             echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u ulixert --password-stdin
             git pull origin main
-            docker compose pull
-            docker compose up -d
+            docker compose -f docker-compose.yml pull
+            docker compose -f docker-compose.yml up -d
