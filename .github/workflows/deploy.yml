@@ -1,4 +1,4 @@
-name: Auto-Deploy to AWS EC2
+name: Build and Deploy to AWS EC2
 
 on:
   push:
@@ -6,7 +6,34 @@ on:
       - main
 
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Server Image
+        run: |
+          docker build -t ghcr.io/ulixert/owl-server:latest -f Dockerfile.server .
+          docker push ghcr.io/ulixert/owl-server:latest
+
+      - name: Build and push Caddy/Client Image
+        run: |
+          docker build -t ghcr.io/ulixert/owl-client:latest -f Dockerfile.client .
+          docker push ghcr.io/ulixert/owl-client:latest
+
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to AWS EC2
@@ -17,5 +44,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd ~/apps/owl-the-social-media
+            echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u ulixert --password-stdin
             git pull origin main
-            docker compose -f docker-compose.yml up -d --build
+            docker compose pull
+            docker compose up -d

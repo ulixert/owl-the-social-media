@@ -16,12 +16,9 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   server:
-    image: owl-server:prod
+    image: ghcr.io/ulixert/owl-server:latest
     env_file:
       - ./server/.prod.env
-    build:
-      context: .
-      dockerfile: Dockerfile.server
     depends_on:
       db:
         condition: service_healthy
@@ -29,7 +26,7 @@ services:
     restart: unless-stopped
 
   migrate:
-    image: owl-server:prod
+    image: ghcr.io/ulixert/owl-server:latest
     env_file:
       - ./server/.prod.env
     depends_on:
@@ -41,9 +38,7 @@ services:
     command: ["npx", "prisma", "migrate", "deploy"]
 
   caddy:
-    build:
-      context: .
-      dockerfile: Dockerfile.client
+    image: ghcr.io/ulixert/owl-client:latest
     ports:
       - "127.0.0.1:8001:80"
     depends_on:
