@@ -10,6 +10,7 @@
     "build": "tsdown",
     "start": "node --env-file=.prod.env dist/server.mjs",
     "typecheck": "tsc --noEmit",
+    "seed": "tsx --env-file=.env prisma/seed/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
