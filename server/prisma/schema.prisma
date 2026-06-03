@@ -58,6 +58,10 @@ model Post {
   postedBy      User     @relation(fields: [postedById], references: [id])
   reposts       Repost[]
   saves         Save[]
+
+  // Feed keyset pagination: filter by author/parent, order by id desc.
+  @@index([postedById, id])
+  @@index([parentPostId, id])
 }
 
 model Like {
@@ -69,6 +73,8 @@ model Like {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, postId])
+  // Liked feed keyset: filter by user, order by id desc.
+  @@index([userId, id])
 }
 
 model Repost {
@@ -91,6 +97,8 @@ model Save {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, postId])
+  // Saved feed keyset: filter by user, order by id desc.
+  @@index([userId, id])
 }
 
 enum Role {
