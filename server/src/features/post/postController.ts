@@ -359,7 +359,7 @@ export async function updatePost(req: Request, res: Response) {
     // Validate input
     const input = PostUpdateSchema.safeParse(req.body);
     if (!input.success) {
-      res.status(400).json({ error: input.error.errors[0]?.message ?? 'Invalid input' });
+      res.status(400).json({ error: input.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 

@@ -82,7 +82,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
 
     if (imageCount === 3) {
       return (
-        <Grid gutter="xs">
+        <Grid gap="xs">
           <Grid.Col span={6}>
             <Image
               src={postImages[0]}

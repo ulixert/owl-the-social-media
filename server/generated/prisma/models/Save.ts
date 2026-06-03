@@ -9,8 +9,8 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.js"
-import type * as Prisma from "../internal/prismaNamespace.js"
+import type * as $Enums from "../enums"
+import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Save
@@ -193,7 +193,7 @@ export type SaveGroupByOutputType = {
   _max: SaveMaxAggregateOutputType | null
 }
 
-type GetSaveGroupByPayload<T extends SaveGroupByArgs> = Prisma.PrismaPromise<
+export type GetSaveGroupByPayload<T extends SaveGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<SaveGroupByOutputType, T['by']> &
       {
@@ -1256,6 +1256,11 @@ export type SaveFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    * Skip the first `n` Saves.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Saves.
+   */
   distinct?: Prisma.SaveScalarFieldEnum | Prisma.SaveScalarFieldEnum[]
 }
 

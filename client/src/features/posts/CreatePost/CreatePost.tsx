@@ -187,7 +187,7 @@ export function CreatePost({
     const schema = editingPost ? PostUpdateSchema : PostCreateSchema;
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
-      setError(parsed.error.errors[0]?.message ?? 'Invalid input');
+      setError(parsed.error.issues[0]?.message ?? 'Invalid input');
       return;
     }
 
@@ -367,7 +367,7 @@ export function CreatePost({
               )}
 
               {images.length === 3 && (
-                <Grid gutter="xs">
+                <Grid gap="xs">
                   <Grid.Col span={6}>
                     <Box pos="relative" className={classes.imageWrap}>
                       <Image

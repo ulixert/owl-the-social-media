@@ -8,10 +8,10 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/User.js'
-export type * from './models/UserFollows.js'
-export type * from './models/Post.js'
-export type * from './models/Like.js'
-export type * from './models/Repost.js'
-export type * from './models/Save.js'
-export type * from './commonInputTypes.js'
+export type * from './models/User'
+export type * from './models/UserFollows'
+export type * from './models/Post'
+export type * from './models/Like'
+export type * from './models/Repost'
+export type * from './models/Save'
+export type * from './commonInputTypes'

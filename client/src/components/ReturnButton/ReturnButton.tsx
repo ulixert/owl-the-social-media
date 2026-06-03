@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ActionIcon } from '@mantine/core';
@@ -9,11 +8,8 @@ import styles from './ReturnButton.module.css';
 export function ReturnButton() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showButton, setShowButton] = useState(false);
-
-  useEffect(() => {
-    setShowButton(location.pathname !== '/');
-  }, [location]);
+  // Derived directly from the route — no effect/state needed.
+  const showButton = location.pathname !== '/';
 
   function handleBack() {
     if (location.key === 'initial') {

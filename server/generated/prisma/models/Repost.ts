@@ -9,8 +9,8 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.js"
-import type * as Prisma from "../internal/prismaNamespace.js"
+import type * as $Enums from "../enums"
+import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model Repost
@@ -193,7 +193,7 @@ export type RepostGroupByOutputType = {
   _max: RepostMaxAggregateOutputType | null
 }
 
-type GetRepostGroupByPayload<T extends RepostGroupByArgs> = Prisma.PrismaPromise<
+export type GetRepostGroupByPayload<T extends RepostGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<RepostGroupByOutputType, T['by']> &
       {
@@ -1256,6 +1256,11 @@ export type RepostFindManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Skip the first `n` Reposts.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Reposts.
+   */
   distinct?: Prisma.RepostScalarFieldEnum | Prisma.RepostScalarFieldEnum[]
 }
 
