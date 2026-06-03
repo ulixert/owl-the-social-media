@@ -42,63 +42,45 @@ export async function followAndUnfollowUser(
     });
 
     if (isFollowing) {
-      // Unfollow the user
-      await prisma.userFollows.delete({
-        where: {
-          followerId_followingId: {
-            followerId: currentUserId,
-            followingId: targetUserId,
+      // Unfollow: remove the edge and adjust both counters atomically.
+      await prisma.$transaction([
+        prisma.userFollows.delete({
+          where: {
+            followerId_followingId: {
+              followerId: currentUserId,
+              followingId: targetUserId,
+            },
           },
-        },
-      });
-
-      // Update the user's following count
-      await prisma.user.update({
-        where: { id: targetUserId },
-        data: {
-          followersCount: {
-            decrement: 1,
-          },
-        },
-      });
-
-      await prisma.user.update({
-        where: { id: currentUserId },
-        data: {
-          followingCount: {
-            decrement: 1,
-          },
-        },
-      });
+        }),
+        prisma.user.update({
+          where: { id: targetUserId },
+          data: { followersCount: { decrement: 1 } },
+        }),
+        prisma.user.update({
+          where: { id: currentUserId },
+          data: { followingCount: { decrement: 1 } },
+        }),
+      ]);
 
       res.status(204).send();
     } else {
-      // Follow the user
-      await prisma.userFollows.create({
-        data: {
-          followerId: currentUserId,
-          followingId: targetUserId,
-        },
-      });
-
-      // Update the user's following count
-      await prisma.user.update({
-        where: { id: targetUserId },
-        data: {
-          followersCount: {
-            increment: 1,
+      // Follow: create the edge and adjust both counters atomically.
+      await prisma.$transaction([
+        prisma.userFollows.create({
+          data: {
+            followerId: currentUserId,
+            followingId: targetUserId,
           },
-        },
-      });
-
-      await prisma.user.update({
-        where: { id: currentUserId },
-        data: {
-          followingCount: {
-            increment: 1,
-          },
-        },
-      });
+        }),
+        prisma.user.update({
+          where: { id: targetUserId },
+          data: { followersCount: { increment: 1 } },
+        }),
+        prisma.user.update({
+          where: { id: currentUserId },
+          data: { followingCount: { increment: 1 } },
+        }),
+      ]);
 
       res.status(204).send();
     }
