@@ -3,10 +3,12 @@ packages:
   - server
   - packages/*
 
-ignoredBuiltDependencies:
-  - '@prisma/engines'
-  - esbuild
-  - prisma
+# Explicit build-script decisions (false = do not run their install scripts).
+# Recorded so pnpm stops prompting / rewriting this block on every install.
+allowBuilds:
+  '@prisma/engines': false
+  esbuild: false
+  prisma: false
 
 # Allow newly-published packages: this project tracks latest releases, so the
 # supply-chain age gate (a pnpm 11 default in some environments) is disabled.
