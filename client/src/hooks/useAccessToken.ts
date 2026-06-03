@@ -8,6 +8,9 @@ export function useAccessToken() {
   const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+  // setAccessToken is a stable store setter used as a side-effect sink, not a
+  // cache input, so it intentionally stays out of the query key.
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps
   const { isPending, isError } = useQuery({
     queryKey: ['accessToken'],
     queryFn: async () => {

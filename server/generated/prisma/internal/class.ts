@@ -12,15 +12,15 @@
  */
 
 import * as runtime from "@prisma/client/runtime/client"
-import type * as Prisma from "./prismaNamespace.js"
+import type * as Prisma from "./prismaNamespace"
 
 
 const config: runtime.GetPrismaClientConfig = {
   "previewFeatures": [
     "typedSql"
   ],
-  "clientVersion": "7.4.2",
-  "engineVersion": "94a226be1cf2967af2541cca5529f0f7ba866919",
+  "clientVersion": "7.8.0",
+  "engineVersion": "3c6e192761c0362d496ed980de936e2f3cebcd3a",
   "activeProvider": "postgresql",
   "inlineSchema": "generator client {\n  provider        = \"prisma-client\"\n  output          = \"../generated/prisma\"\n  previewFeatures = [\"typedSql\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel User {\n  id             Int           @id @default(autoincrement())\n  username       String        @unique\n  email          String        @unique\n  name           String\n  password       String\n  role           Role          @default(USER)\n  active         Boolean       @default(true)\n  profilePic     String?\n  biography      String?\n  followingCount Int           @default(0)\n  followersCount Int           @default(0)\n  createdAt      DateTime      @default(now())\n  updatedAt      DateTime      @updatedAt\n  likes          Like[]\n  posts          Post[]\n  reposts        Repost[]\n  saves          Save[]\n  following      UserFollows[] @relation(\"Following\")\n  followers      UserFollows[] @relation(\"Followers\")\n}\n\nmodel UserFollows {\n  id          Int  @id @default(autoincrement())\n  followerId  Int\n  followingId Int\n  follower    User @relation(\"Following\", fields: [followerId], references: [id])\n  following   User @relation(\"Followers\", fields: [followingId], references: [id])\n\n  @@unique([followerId, followingId])\n}\n\nmodel Post {\n  id            Int      @id @default(autoincrement())\n  postedById    Int\n  parentPostId  Int?\n  text          String?\n  likesCount    Int      @default(0)\n  commentsCount Int      @default(0)\n  repostsCount  Int      @default(0)\n  isDeleted     Boolean  @default(false)\n  createdAt     DateTime @default(now())\n  updatedAt     DateTime @updatedAt\n  images        String[]\n  likes         Like[]\n  parentPost    Post?    @relation(\"ParentPost\", fields: [parentPostId], references: [id])\n  childPosts    Post[]   @relation(\"ParentPost\")\n  postedBy      User     @relation(fields: [postedById], references: [id])\n  reposts       Repost[]\n  saves         Save[]\n}\n\nmodel Like {\n  id        Int      @id @default(autoincrement())\n  userId    Int\n  postId    Int\n  createdAt DateTime @default(now())\n  post      Post     @relation(fields: [postId], references: [id])\n  user      User     @relation(fields: [userId], references: [id])\n\n  @@unique([userId, postId])\n}\n\nmodel Repost {\n  id        Int      @id @default(autoincrement())\n  userId    Int\n  postId    Int\n  createdAt DateTime @default(now())\n  post      Post     @relation(fields: [postId], references: [id])\n  user      User     @relation(fields: [userId], references: [id])\n\n  @@unique([userId, postId])\n}\n\nmodel Save {\n  id        Int      @id @default(autoincrement())\n  userId    Int\n  postId    Int\n  createdAt DateTime @default(now())\n  post      Post     @relation(fields: [postId], references: [id])\n  user      User     @relation(fields: [userId], references: [id])\n\n  @@unique([userId, postId])\n}\n\nenum Role {\n  USER\n  ADMIN\n}\n",
   "runtimeDataModel": {
@@ -192,7 +192,7 @@ export interface PrismaClient<
    * 
    * Read more in our [docs](https://www.prisma.io/docs/orm/prisma-client/queries/transactions).
    */
-  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): runtime.Types.Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): runtime.Types.Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
 
   $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => runtime.Types.Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): runtime.Types.Utils.JsPromise<R>
 

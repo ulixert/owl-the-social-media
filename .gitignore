@@ -8,6 +8,8 @@ dist
 *.local
 data
 *.env
+.env.test
+!.env.test.example
 
 .nx/cache
 .nx/workspace-data

@@ -29,11 +29,10 @@ export async function getFollowingPosts(req: Request, res: Response) {
       where: {
         postedById: { in: followedIds },
         isDeleted: false,
+        ...(cursor ? { id: { lt: cursor } } : {}),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       include: {
         postedBy: {
           select: {
@@ -70,18 +69,24 @@ export async function getFollowingPosts(req: Request, res: Response) {
       };
     });
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      posts.length === limit ? posts[posts.length - 1].id : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
-    console.error('Error in getHotPosts: ', error);
+    console.error('Error in getFollowingPosts: ', error);
   }
 }
 
 export async function getRecommendedPosts(req: Request, res: Response) {
   try {
-    const { cursor, limit = 10 } = req.query;
+    const input = postQuerySchema.safeParse(req.query);
+    if (!input.success) {
+      res.status(400).json({ message: 'Invalid query params' });
+      return;
+    }
+    const { cursor, limit } = input.data;
     const currentUserId = req.user?.id;
 
     let followedIds: number[] = [];
@@ -118,15 +123,9 @@ export async function getRecommendedPosts(req: Request, res: Response) {
 
     // Fetch recommended posts
     const recommendedPosts = await prisma.post.findMany({
-      where: whereClause,
-      orderBy: [
-        { createdAt: 'desc' },
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-      ],
-      take: Number(limit),
-      cursor: cursor ? { id: Number(cursor) } : undefined,
-      skip: cursor ? 1 : 0,
+      where: { ...whereClause, ...(cursor ? { id: { lt: cursor } } : {}) },
+      orderBy: { id: 'desc' },
+      take: limit,
       include: {
         postedBy: {
           select: {
@@ -165,7 +164,7 @@ export async function getRecommendedPosts(req: Request, res: Response) {
 
     // Determine the next cursor for pagination
     const nextCursor =
-      recommendedPosts.length > 0
+      recommendedPosts.length === limit
         ? recommendedPosts[recommendedPosts.length - 1].id
         : null;
 
@@ -188,52 +187,34 @@ export async function getLikedPosts(req: Request, res: Response) {
     const currentUserId = req.user!.id;
     const { cursor, limit } = input.data;
 
-    const likedPosts = await prisma.like.findMany({
-      where: { userId: currentUserId },
-      select: { postId: true },
-    });
-
-    const postIds = likedPosts.map((like) => like.postId);
-
-    const posts = await prisma.post.findMany({
-      where: { id: { in: postIds }, isDeleted: false },
-      orderBy: [
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-        { createdAt: 'desc' },
-      ],
+    // Keyset-paginate the Like rows directly (most recently liked first) and
+    // join the post in. Avoids loading every liked post id into memory.
+    // nextCursor here is a Like.id — opaque to the client.
+    const likeRows = await prisma.like.findMany({
+      where: {
+        userId: currentUserId,
+        post: { isDeleted: false },
+        ...(cursor ? { id: { lt: cursor } } : {}),
+      },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            profilePic: true,
-          },
-        },
-        parentPost: {
-          select: {
+      select: {
+        id: true,
+        post: {
+          include: {
             postedBy: {
-              select: {
-                username: true,
-              },
+              select: { id: true, username: true, name: true, profilePic: true },
             },
+            parentPost: {
+              select: { postedBy: { select: { username: true } } },
+            },
+            likes: req.user ? { where: { userId: req.user.id } } : undefined,
           },
         },
-        likes: req.user
-          ? {
-              where: {
-                userId: req.user.id,
-              },
-            }
-          : undefined,
       },
     });
 
-    const postsWithIsLiked = posts.map((post) => {
+    const postsWithIsLiked = likeRows.map(({ post }) => {
       const { likes, ...rest } = post;
       return {
         ...rest,
@@ -241,7 +222,8 @@ export async function getLikedPosts(req: Request, res: Response) {
       };
     });
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      likeRows.length === limit ? likeRows[likeRows.length - 1].id : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
@@ -261,52 +243,33 @@ export async function getSavedPosts(req: Request, res: Response) {
     const currentUserId = req.user!.id;
     const { cursor, limit } = input.data;
 
-    const savedPosts = await prisma.save.findMany({
-      where: { userId: currentUserId },
-      select: { postId: true },
-    });
-
-    const postIds = savedPosts.map((save) => save.postId);
-
-    const posts = await prisma.post.findMany({
-      where: { id: { in: postIds }, isDeleted: false },
-      orderBy: [
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-        { createdAt: 'desc' },
-      ],
+    // Keyset-paginate the Save rows directly (most recently saved first) and
+    // join the post in. nextCursor here is a Save.id — opaque to the client.
+    const saveRows = await prisma.save.findMany({
+      where: {
+        userId: currentUserId,
+        post: { isDeleted: false },
+        ...(cursor ? { id: { lt: cursor } } : {}),
+      },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            profilePic: true,
-          },
-        },
-        parentPost: {
-          select: {
+      select: {
+        id: true,
+        post: {
+          include: {
             postedBy: {
-              select: {
-                username: true,
-              },
+              select: { id: true, username: true, name: true, profilePic: true },
             },
+            parentPost: {
+              select: { postedBy: { select: { username: true } } },
+            },
+            likes: req.user ? { where: { userId: req.user.id } } : undefined,
           },
         },
-        likes: req.user
-          ? {
-              where: {
-                userId: req.user.id,
-              },
-            }
-          : undefined,
       },
     });
 
-    const postsWithIsLiked = posts.map((post) => {
+    const postsWithIsLiked = saveRows.map(({ post }) => {
       const { likes, ...rest } = post;
       return {
         ...rest,
@@ -314,7 +277,8 @@ export async function getSavedPosts(req: Request, res: Response) {
       };
     });
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      saveRows.length === limit ? saveRows[saveRows.length - 1].id : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {

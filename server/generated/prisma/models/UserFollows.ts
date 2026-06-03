@@ -9,8 +9,8 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.js"
-import type * as Prisma from "../internal/prismaNamespace.js"
+import type * as $Enums from "../enums"
+import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model UserFollows
@@ -186,7 +186,7 @@ export type UserFollowsGroupByOutputType = {
   _max: UserFollowsMaxAggregateOutputType | null
 }
 
-type GetUserFollowsGroupByPayload<T extends UserFollowsGroupByArgs> = Prisma.PrismaPromise<
+export type GetUserFollowsGroupByPayload<T extends UserFollowsGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<UserFollowsGroupByOutputType, T['by']> &
       {
@@ -1216,6 +1216,11 @@ export type UserFollowsFindManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Skip the first `n` UserFollows.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of UserFollows.
+   */
   distinct?: Prisma.UserFollowsScalarFieldEnum | Prisma.UserFollowsScalarFieldEnum[]
 }
 

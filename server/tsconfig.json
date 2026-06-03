@@ -23,11 +23,10 @@
     "declaration": true,
     /* Paths */
     "outDir": "dist",
-    "baseUrl": "src",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "prisma/seed"],
   "exclude": ["dist", "node_modules"]
 }

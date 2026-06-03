@@ -34,31 +34,33 @@ export async function likeUnlikePost(req: Request, res: Response) {
     });
 
     if (isLiked) {
-      await prisma.like.delete({
-        where: {
-          userId_postId: {
-            postId,
-            userId: currentUserId,
+      await prisma.$transaction([
+        prisma.like.delete({
+          where: {
+            userId_postId: {
+              postId,
+              userId: currentUserId,
+            },
           },
-        },
-      });
-
-      await prisma.post.update({
-        where: { id: postId },
-        data: { likesCount: { decrement: 1 } },
-      });
+        }),
+        prisma.post.update({
+          where: { id: postId },
+          data: { likesCount: { decrement: 1 } },
+        }),
+      ]);
     } else {
-      await prisma.like.create({
-        data: {
-          userId: currentUserId,
-          postId,
-        },
-      });
-
-      await prisma.post.update({
-        where: { id: postId },
-        data: { likesCount: { increment: 1 } },
-      });
+      await prisma.$transaction([
+        prisma.like.create({
+          data: {
+            userId: currentUserId,
+            postId,
+          },
+        }),
+        prisma.post.update({
+          where: { id: postId },
+          data: { likesCount: { increment: 1 } },
+        }),
+      ]);
     }
 
     res.status(204).send();
@@ -165,38 +167,38 @@ export async function repostUnrepost(req: Request, res: Response) {
 
     if (isReposted) {
       // Unrepost the post
-      await prisma.repost.delete({
-        where: {
-          userId_postId: {
-            postId,
-            userId: currentUserId,
+      await prisma.$transaction([
+        prisma.repost.delete({
+          where: {
+            userId_postId: {
+              postId,
+              userId: currentUserId,
+            },
           },
-        },
-      });
-
-      // update the original post repost count
-      await prisma.post.update({
-        where: { id: post.id },
-        data: { repostsCount: { decrement: 1 } },
-      });
+        }),
+        prisma.post.update({
+          where: { id: post.id },
+          data: { repostsCount: { decrement: 1 } },
+        }),
+      ]);
 
       res.status(204).send();
       return;
     }
 
     // Repost the post
-    await prisma.repost.create({
-      data: {
-        postId,
-        userId: currentUserId,
-      },
-    });
-
-    // Update the original post repost count
-    await prisma.post.update({
-      where: { id: post.id },
-      data: { repostsCount: { increment: 1 } },
-    });
+    await prisma.$transaction([
+      prisma.repost.create({
+        data: {
+          postId,
+          userId: currentUserId,
+        },
+      }),
+      prisma.post.update({
+        where: { id: post.id },
+        data: { repostsCount: { increment: 1 } },
+      }),
+    ]);
 
     res.status(204).send();
   } catch (error) {

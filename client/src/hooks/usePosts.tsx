@@ -33,12 +33,15 @@ export function usePosts(endpoint = location.pathname) {
     useInfiniteQuery({
       queryKey: ['posts', isAuthenticated, location.pathname, endpoint],
       queryFn: async ({ pageParam }): Promise<PostsResponse> => {
-        if (endpoint === '/') {
-          endpoint = isAuthenticated ? '/for-you' : '/hot';
-        }
+        const resolvedEndpoint =
+          endpoint === '/'
+            ? isAuthenticated
+              ? '/for-you'
+              : '/hot'
+            : endpoint;
 
         const response = await axiosInstance.get<PostsResponse>(
-          `posts${endpoint}`,
+          `posts${resolvedEndpoint}`,
           {
             params: {
               cursor: pageParam === 0 ? undefined : pageParam,

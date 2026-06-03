@@ -19,15 +19,9 @@ export async function getHotPosts(req: Request, res: Response) {
     const { cursor, limit } = input.data;
 
     const posts = await prisma.post.findMany({
-      where: { isDeleted: false },
-      orderBy: [
-        { createdAt: 'desc' },
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-      ],
+      where: { isDeleted: false, ...(cursor ? { id: { lt: cursor } } : {}) },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       include: {
         postedBy: {
           select: {
@@ -64,7 +58,8 @@ export async function getHotPosts(req: Request, res: Response) {
       };
     });
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      posts.length === limit ? posts[posts.length - 1].id : null;
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
@@ -173,11 +168,13 @@ export async function getChildPosts(req: Request, res: Response) {
     const { cursor, limit } = input.data;
 
     const childPosts = await prisma.post.findMany({
-      where: { parentPostId: postId, isDeleted: false },
-      orderBy: { createdAt: 'desc' },
+      where: {
+        parentPostId: postId,
+        isDeleted: false,
+        ...(cursor ? { id: { lt: cursor } } : {}),
+      },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       include: {
         postedBy: {
           select: {
@@ -215,7 +212,9 @@ export async function getChildPosts(req: Request, res: Response) {
     });
 
     const nextCursor =
-      childPosts.length > 0 ? childPosts[childPosts.length - 1].id : null;
+      childPosts.length === limit
+        ? childPosts[childPosts.length - 1].id
+        : null;
     res.status(200).json({ childPosts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred' });
@@ -359,7 +358,7 @@ export async function updatePost(req: Request, res: Response) {
     // Validate input
     const input = PostUpdateSchema.safeParse(req.body);
     if (!input.success) {
-      res.status(400).json({ error: input.error.errors[0]?.message ?? 'Invalid input' });
+      res.status(400).json({ error: input.error.issues[0]?.message ?? 'Invalid input' });
       return;
     }
 
@@ -429,14 +428,14 @@ export async function searchUsers(req: Request, res: Response) {
 
     const users = await prisma.user.findMany({
       where: {
+        ...(cursor ? { id: { lt: cursor } } : {}),
         OR: [
           { username: { contains: q, mode: 'insensitive' } },
           { name: { contains: q, mode: 'insensitive' } },
         ],
       },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       select: {
         id: true,
         username: true,
@@ -447,26 +446,27 @@ export async function searchUsers(req: Request, res: Response) {
       },
     });
 
-    // Check if the current user is following these users
-    const usersWithFollowStatus = await Promise.all(
-      users.map(async (user) => {
-        let isFollowing = false;
-        if (req.user) {
-          const follow = await prisma.userFollows.findUnique({
-            where: {
-              followerId_followingId: {
-                followerId: req.user.id,
-                followingId: user.id,
-              },
-            },
-          });
-          isFollowing = !!follow;
-        }
-        return { ...user, isFollowing };
-      }),
-    );
+    // Resolve "is the current user following this user" for the whole page in
+    // a single query instead of one lookup per result (N+1).
+    let followedIds = new Set<number>();
+    if (req.user) {
+      const follows = await prisma.userFollows.findMany({
+        where: {
+          followerId: req.user.id,
+          followingId: { in: users.map((user) => user.id) },
+        },
+        select: { followingId: true },
+      });
+      followedIds = new Set(follows.map((follow) => follow.followingId));
+    }
 
-    const nextCursor = users.length > 0 ? users[users.length - 1].id : null;
+    const usersWithFollowStatus = users.map((user) => ({
+      ...user,
+      isFollowing: followedIds.has(user.id),
+    }));
+
+    const nextCursor =
+      users.length === limit ? users[users.length - 1].id : null;
 
     res.status(200).json({ users: usersWithFollowStatus, nextCursor });
   } catch (error) {
@@ -489,11 +489,10 @@ export async function searchPosts(req: Request, res: Response) {
       where: {
         text: { contains: q, mode: 'insensitive' },
         isDeleted: false,
+        ...(cursor ? { id: { lt: cursor } } : {}),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       include: {
         postedBy: {
           select: {
@@ -530,7 +529,8 @@ export async function searchPosts(req: Request, res: Response) {
       };
     });
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      posts.length === limit ? posts[posts.length - 1].id : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {

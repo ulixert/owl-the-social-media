@@ -19,8 +19,8 @@ app.use(`${API_PREFIX}/users`, userRouter);
 app.use(`${API_PREFIX}/posts`, postRouter);
 app.use(`${API_PREFIX}/auth`, authRouter);
 
-// Error handling
-app.all('*', (req, _, next: NextFunction) => {
-  const err = new NotFoundError(`Can't find ${req.originalUrl} on this server`);
-  next(err);
+// Catch-all for unmatched routes. A path-less middleware avoids the wildcard
+// route syntax that path-to-regexp (Express 5) no longer accepts.
+app.use((req, _, next: NextFunction) => {
+  next(new NotFoundError(`Can't find ${req.originalUrl} on this server`));
 });

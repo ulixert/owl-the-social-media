@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]
+
+jobs:
+  server:
+    name: Server (lint, typecheck, test)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: owl
+          POSTGRES_PASSWORD: owl
+          POSTGRES_DB: owl_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U owl -d owl_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://owl:owl@localhost:5432/owl_test?schema=public
+      ACCESS_TOKEN_SECRET: ci-access-secret
+      REFRESH_TOKEN_SECRET: ci-refresh-secret
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared validation package
+        run: pnpm --filter validation build
+
+      - name: Generate Prisma client
+        run: pnpm --filter server exec prisma generate
+
+      - name: Lint
+        run: pnpm --filter server lint
+
+      - name: Typecheck
+        run: pnpm --filter server typecheck
+
+      - name: Test
+        run: pnpm --filter server test
+
+  client:
+    name: Client (lint, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared validation package
+        run: pnpm --filter validation build
+
+      - name: Lint
+        run: pnpm --filter client lint
+
+      - name: Build
+        run: pnpm --filter client build
