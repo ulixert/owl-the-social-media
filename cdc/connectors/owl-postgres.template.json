@@ -1,0 +1,30 @@
+{
+  "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+  "tasks.max": "1",
+
+  "database.hostname": "db",
+  "database.port": "5432",
+  "database.user": "__POSTGRES_USER__",
+  "database.password": "__POSTGRES_PASSWORD__",
+  "database.dbname": "__POSTGRES_DB__",
+
+  "plugin.name": "pgoutput",
+  "slot.name": "owl_cdc_slot",
+  "publication.name": "owl_cdc_pub",
+  "publication.autocreate.mode": "filtered",
+
+  "topic.prefix": "owl",
+
+  "table.include.list": "public.Post,public.Like,public.UserFollows,public.Save,public.Repost,public.User",
+
+  "snapshot.mode": "no_data",
+
+  "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "key.converter.schemas.enable": "false",
+  "value.converter.schemas.enable": "false",
+
+  "topic.creation.default.replication.factor": "1",
+  "topic.creation.default.partitions": "1",
+  "topic.creation.default.cleanup.policy": "delete"
+}
