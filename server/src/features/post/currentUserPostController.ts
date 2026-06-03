@@ -29,11 +29,10 @@ export async function getFollowingPosts(req: Request, res: Response) {
       where: {
         postedById: { in: followedIds },
         isDeleted: false,
+        ...(cursor ? { id: { lt: cursor } } : {}),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       include: {
         postedBy: {
           select: {
@@ -70,18 +69,24 @@ export async function getFollowingPosts(req: Request, res: Response) {
       };
     });
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      posts.length === limit ? posts[posts.length - 1].id : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
-    console.error('Error in getHotPosts: ', error);
+    console.error('Error in getFollowingPosts: ', error);
   }
 }
 
 export async function getRecommendedPosts(req: Request, res: Response) {
   try {
-    const { cursor, limit = 10 } = req.query;
+    const input = postQuerySchema.safeParse(req.query);
+    if (!input.success) {
+      res.status(400).json({ message: 'Invalid query params' });
+      return;
+    }
+    const { cursor, limit } = input.data;
     const currentUserId = req.user?.id;
 
     let followedIds: number[] = [];
@@ -118,15 +123,9 @@ export async function getRecommendedPosts(req: Request, res: Response) {
 
     // Fetch recommended posts
     const recommendedPosts = await prisma.post.findMany({
-      where: whereClause,
-      orderBy: [
-        { createdAt: 'desc' },
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-      ],
-      take: Number(limit),
-      cursor: cursor ? { id: Number(cursor) } : undefined,
-      skip: cursor ? 1 : 0,
+      where: { ...whereClause, ...(cursor ? { id: { lt: cursor } } : {}) },
+      orderBy: { id: 'desc' },
+      take: limit,
       include: {
         postedBy: {
           select: {
@@ -165,7 +164,7 @@ export async function getRecommendedPosts(req: Request, res: Response) {
 
     // Determine the next cursor for pagination
     const nextCursor =
-      recommendedPosts.length > 0
+      recommendedPosts.length === limit
         ? recommendedPosts[recommendedPosts.length - 1].id
         : null;
 

@@ -18,11 +18,14 @@ export async function getUserPosts(
     const { cursor, limit } = input.data;
 
     const posts = await prisma.post.findMany({
-      where: { postedBy: { username }, parentPostId: null, isDeleted: false },
-      orderBy: { createdAt: 'desc' },
+      where: {
+        postedBy: { username },
+        parentPostId: null,
+        isDeleted: false,
+        ...(cursor ? { id: { lt: cursor } } : {}),
+      },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       include: {
         postedBy: {
           select: {
@@ -59,7 +62,8 @@ export async function getUserPosts(
       };
     });
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      posts.length === limit ? posts[posts.length - 1].id : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
@@ -83,11 +87,14 @@ export async function getUserReplies(
     const { cursor, limit } = input.data;
 
     const posts = await prisma.post.findMany({
-      where: { postedBy: { username }, parentPostId: { not: null }, isDeleted: false },
-      orderBy: { createdAt: 'desc' },
+      where: {
+        postedBy: { username },
+        parentPostId: { not: null },
+        isDeleted: false,
+        ...(cursor ? { id: { lt: cursor } } : {}),
+      },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       include: {
         postedBy: {
           select: {
@@ -130,7 +137,8 @@ export async function getUserReplies(
       };
     });
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      posts.length === limit ? posts[posts.length - 1].id : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {

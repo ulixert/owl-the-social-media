@@ -19,15 +19,9 @@ export async function getHotPosts(req: Request, res: Response) {
     const { cursor, limit } = input.data;
 
     const posts = await prisma.post.findMany({
-      where: { isDeleted: false },
-      orderBy: [
-        { createdAt: 'desc' },
-        { likesCount: 'desc' },
-        { commentsCount: 'desc' },
-      ],
+      where: { isDeleted: false, ...(cursor ? { id: { lt: cursor } } : {}) },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       include: {
         postedBy: {
           select: {
@@ -64,7 +58,8 @@ export async function getHotPosts(req: Request, res: Response) {
       };
     });
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      posts.length === limit ? posts[posts.length - 1].id : null;
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
@@ -173,11 +168,13 @@ export async function getChildPosts(req: Request, res: Response) {
     const { cursor, limit } = input.data;
 
     const childPosts = await prisma.post.findMany({
-      where: { parentPostId: postId, isDeleted: false },
-      orderBy: { createdAt: 'desc' },
+      where: {
+        parentPostId: postId,
+        isDeleted: false,
+        ...(cursor ? { id: { lt: cursor } } : {}),
+      },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       include: {
         postedBy: {
           select: {
@@ -215,7 +212,9 @@ export async function getChildPosts(req: Request, res: Response) {
     });
 
     const nextCursor =
-      childPosts.length > 0 ? childPosts[childPosts.length - 1].id : null;
+      childPosts.length === limit
+        ? childPosts[childPosts.length - 1].id
+        : null;
     res.status(200).json({ childPosts: postsWithIsLiked, nextCursor });
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred' });
@@ -429,14 +428,14 @@ export async function searchUsers(req: Request, res: Response) {
 
     const users = await prisma.user.findMany({
       where: {
+        ...(cursor ? { id: { lt: cursor } } : {}),
         OR: [
           { username: { contains: q, mode: 'insensitive' } },
           { name: { contains: q, mode: 'insensitive' } },
         ],
       },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       select: {
         id: true,
         username: true,
@@ -466,7 +465,8 @@ export async function searchUsers(req: Request, res: Response) {
       }),
     );
 
-    const nextCursor = users.length > 0 ? users[users.length - 1].id : null;
+    const nextCursor =
+      users.length === limit ? users[users.length - 1].id : null;
 
     res.status(200).json({ users: usersWithFollowStatus, nextCursor });
   } catch (error) {
@@ -489,11 +489,10 @@ export async function searchPosts(req: Request, res: Response) {
       where: {
         text: { contains: q, mode: 'insensitive' },
         isDeleted: false,
+        ...(cursor ? { id: { lt: cursor } } : {}),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { id: 'desc' },
       take: limit,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
       include: {
         postedBy: {
           select: {
@@ -530,7 +529,8 @@ export async function searchPosts(req: Request, res: Response) {
       };
     });
 
-    const nextCursor = posts.length > 0 ? posts[posts.length - 1].id : null;
+    const nextCursor =
+      posts.length === limit ? posts[posts.length - 1].id : null;
 
     res.status(200).json({ posts: postsWithIsLiked, nextCursor });
   } catch (error) {
