@@ -446,24 +446,24 @@ export async function searchUsers(req: Request, res: Response) {
       },
     });
 
-    // Check if the current user is following these users
-    const usersWithFollowStatus = await Promise.all(
-      users.map(async (user) => {
-        let isFollowing = false;
-        if (req.user) {
-          const follow = await prisma.userFollows.findUnique({
-            where: {
-              followerId_followingId: {
-                followerId: req.user.id,
-                followingId: user.id,
-              },
-            },
-          });
-          isFollowing = !!follow;
-        }
-        return { ...user, isFollowing };
-      }),
-    );
+    // Resolve "is the current user following this user" for the whole page in
+    // a single query instead of one lookup per result (N+1).
+    let followedIds = new Set<number>();
+    if (req.user) {
+      const follows = await prisma.userFollows.findMany({
+        where: {
+          followerId: req.user.id,
+          followingId: { in: users.map((user) => user.id) },
+        },
+        select: { followingId: true },
+      });
+      followedIds = new Set(follows.map((follow) => follow.followingId));
+    }
+
+    const usersWithFollowStatus = users.map((user) => ({
+      ...user,
+      isFollowing: followedIds.has(user.id),
+    }));
 
     const nextCursor =
       users.length === limit ? users[users.length - 1].id : null;
