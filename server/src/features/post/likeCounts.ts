@@ -46,18 +46,17 @@ type DebeziumLikeValue = {
  * delete's `before` image carries `postId`. Returns null for events that don't
  * affect the count.
  */
-export function likeEventEffect(
-  value: DebeziumLikeValue | null,
-): LikeEffect | null {
-  switch (value?.op) {
+export function likeEventEffect(value: unknown): LikeEffect | null {
+  const event = value as DebeziumLikeValue | null;
+  switch (event?.op) {
     case 'c':
     case 'r':
-      return typeof value.after?.postId === 'number'
-        ? { postId: value.after.postId, delta: 1 }
+      return typeof event?.after?.postId === 'number'
+        ? { postId: event.after.postId, delta: 1 }
         : null;
     case 'd':
-      return typeof value.before?.postId === 'number'
-        ? { postId: value.before.postId, delta: -1 }
+      return typeof event?.before?.postId === 'number'
+        ? { postId: event.before.postId, delta: -1 }
         : null;
     default:
       return null;

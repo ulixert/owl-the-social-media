@@ -11,6 +11,8 @@
     "start": "node --env-file=.prod.env dist/server.mjs",
     "typecheck": "tsc --noEmit",
     "seed": "tsx --env-file=.env prisma/seed/seed.ts",
+    "like:reconcile": "tsx --env-file=.env src/scripts/reconcileLikeCounts.ts",
+    "consume:likes": "tsx --env-file=.env src/consumers/likeCounter.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
