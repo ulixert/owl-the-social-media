@@ -10,7 +10,9 @@ describe('counter integrity', () => {
     await resetDb();
   });
 
-  it('like then unlike returns likesCount to zero', async () => {
+  // The like count is a derived view (Redis, maintained by the CDC consumer),
+  // so the write path only touches the source of truth: the Like row.
+  it('like then unlike adds then removes the Like row', async () => {
     const authorId = await createUser('author');
     const likerId = await createUser('liker');
     const post = await prisma.post.create({
@@ -21,14 +23,13 @@ describe('counter integrity', () => {
       .put(`/api/v1/posts/${post.id}/like`)
       .set('Authorization', authHeader(likerId))
       .expect(204);
-    expect((await prisma.post.findUnique({ where: { id: post.id } }))?.likesCount).toBe(1);
+    expect(await prisma.like.count({ where: { postId: post.id } })).toBe(1);
 
     await request(app)
       .put(`/api/v1/posts/${post.id}/like`)
       .set('Authorization', authHeader(likerId))
       .expect(204);
-    expect((await prisma.post.findUnique({ where: { id: post.id } }))?.likesCount).toBe(0);
-    expect(await prisma.like.count()).toBe(0);
+    expect(await prisma.like.count({ where: { postId: post.id } })).toBe(0);
   });
 
   it('follow then unfollow returns both counters to zero', async () => {

@@ -11,6 +11,8 @@
     "start": "node --env-file=.prod.env dist/server.mjs",
     "typecheck": "tsc --noEmit",
     "seed": "tsx --env-file=.env prisma/seed/seed.ts",
+    "like:reconcile": "tsx --env-file=.env src/scripts/reconcileLikeCounts.ts",
+    "consume:likes": "tsx --env-file=.env src/consumers/likeCounter.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -25,7 +27,9 @@
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "ioredis": "^5.11.0",
     "jsonwebtoken": "^9.0.3",
+    "kafkajs": "^2.2.4",
     "pg": "^8.21.0",
     "prisma": "^7.8.0",
     "validation": "workspace:^",
