@@ -1,0 +1,132 @@
+# Local-only CDC backbone: Postgres logical replication -> Debezium (Kafka
+# Connect) -> Redpanda. Opt-in; merged on top of the base compose:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.override.yml \
+#     -f docker-compose.cdc.yml up -d db redpanda console connect connect-setup
+#
+# (Use the `pnpm cdc:*` scripts, which encode that command.)
+
+services:
+  # Enable logical decoding on the existing dev database. This only changes
+  # runtime flags — the cluster in the pg_data volume (and the seeded data) is
+  # untouched; Postgres just restarts. pgoutput is built in, no extra plugin.
+  db:
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "max_replication_slots=10"
+
+  redpanda:
+    image: redpandadata/redpanda:v24.2.7
+    command:
+      - redpanda
+      - start
+      - --mode=dev-container
+      - --overprovisioned
+      - --smp=1
+      - --memory=1G
+      - --reserve-memory=0M
+      - --node-id=0
+      - --check=false
+      # Two listeners: in-network clients use redpanda:9092, the host uses
+      # localhost:19092. A single advertised address can't serve both.
+      - --kafka-addr=internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr=internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092" # Kafka API from the host
+      - "9644:9644" # admin/metrics API
+    networks: [appnet]
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+
+  console:
+    image: redpandadata/console:v2.7.2
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_BROKERS: "redpanda:9092"
+      CONNECT_ENABLED: "true"
+      CONNECT_CLUSTERS_NAME: "owl-connect"
+      CONNECT_CLUSTERS_URL: "http://connect:8083"
+    networks: [appnet]
+
+  connect:
+    image: quay.io/debezium/connect:2.7.3.Final
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    ports:
+      - "8083:8083" # Connect REST API
+    environment:
+      # The Debezium image maps these well-known vars WITHOUT a CONNECT_ prefix.
+      BOOTSTRAP_SERVERS: "redpanda:9092"
+      GROUP_ID: "owl-connect"
+      CONFIG_STORAGE_TOPIC: "owl_connect_configs"
+      OFFSET_STORAGE_TOPIC: "owl_connect_offsets"
+      STATUS_STORAGE_TOPIC: "owl_connect_status"
+      # Single broker => internal topics must be RF 1.
+      CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      # Readable JSON payloads, no Schema Registry.
+      KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      # Everything else needs the CONNECT_ prefix the entrypoint translates.
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_TOPIC_CREATION_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+    networks: [appnet]
+
+  # One-shot: waits for Connect, injects POSTGRES_* into the connector template,
+  # and registers it. Exits 0 when done.
+  connect-setup:
+    image: curlimages/curl:8.10.1
+    depends_on:
+      connect:
+        condition: service_healthy
+    env_file:
+      - .env.local # provides POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB
+    volumes:
+      - ./cdc/connectors:/connectors:ro
+    entrypoint: ["sh", "-c"]
+    # The template uses __TOKEN__ placeholders (not ${...}) to avoid both Compose
+    # and shell interpolation. $$ makes Compose pass a literal $ so the inner
+    # shell expands $POSTGRES_* from env_file at runtime.
+    command:
+      - |
+        set -e
+        echo "waiting for Connect REST..."
+        until curl -sf http://connect:8083/connectors >/dev/null; do sleep 2; done
+        sed -e "s|__POSTGRES_USER__|$$POSTGRES_USER|g" \
+            -e "s|__POSTGRES_PASSWORD__|$$POSTGRES_PASSWORD|g" \
+            -e "s|__POSTGRES_DB__|$$POSTGRES_DB|g" \
+            /connectors/owl-postgres.template.json > /tmp/connector.json
+        echo "registering connector (idempotent PUT)..."
+        curl -sf -X PUT -H "Content-Type: application/json" \
+          --data @/tmp/connector.json \
+          http://connect:8083/connectors/owl-postgres/config
+        echo "\nconnector registered."
+    networks: [appnet]
+    restart: "no"
+
+volumes:
+  redpanda_data:
