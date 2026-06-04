@@ -25,9 +25,13 @@ type PostsResponse = {
   nextCursor: number | null;
 };
 
-export function usePosts(endpoint = location.pathname) {
+export function usePosts(endpointArg?: string) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const location = useLocation();
+  // Resolve in the body, not a default param: a default `= location.pathname`
+  // references the `location` const below, which is a TDZ hazard the bundler
+  // resolved to undefined (→ requests to "postsundefined").
+  const endpoint = endpointArg ?? location.pathname;
 
   const { data, isPending, isError, hasNextPage, fetchNextPage, isFetching } =
     useInfiniteQuery({
