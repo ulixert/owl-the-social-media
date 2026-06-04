@@ -48,3 +48,6 @@ jobs:
             git pull origin main
             docker compose -f docker-compose.yml pull
             docker compose -f docker-compose.yml up -d
+            # Reclaim disk from old image layers replaced by the new :latest
+            # (otherwise dangling images accumulate and fill the EBS volume).
+            docker image prune -f
