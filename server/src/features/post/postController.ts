@@ -250,26 +250,7 @@ export async function createPost(req: Request, res: Response) {
 
     const { text, images } = input.data;
 
-    // Check if the parent post exists
-    if (parentPostId) {
-      const parentPost = await prisma.post.findUnique({
-        where: { id: parentPostId },
-      });
-
-      if (!parentPost) {
-        res.status(404).json({ error: 'Parent post not found' });
-        return;
-      }
-
-      // Increment the comments count of the parent post
-      await prisma.post.update({
-        where: { id: parentPostId },
-        data: { commentsCount: { increment: 1 } },
-      });
-    }
-
-    // Create post
-    const post = await prisma.post.create({
+    const postArgs = {
       data: {
         text,
         images: images ?? undefined,
@@ -295,7 +276,30 @@ export async function createPost(req: Request, res: Response) {
           },
         },
       },
-    });
+    };
+
+    // Verify the parent exists (for a clean 404) before creating a reply.
+    if (parentPostId) {
+      const parentPost = await prisma.post.findUnique({
+        where: { id: parentPostId },
+      });
+      if (!parentPost) {
+        res.status(404).json({ error: 'Parent post not found' });
+        return;
+      }
+    }
+
+    // For a reply, create the post and bump the parent's commentsCount in one
+    // transaction so the count can't drift if either write fails.
+    const post = parentPostId
+      ? await prisma.$transaction(async (tx) => {
+          await tx.post.update({
+            where: { id: parentPostId },
+            data: { commentsCount: { increment: 1 } },
+          });
+          return tx.post.create(postArgs);
+        })
+      : await prisma.post.create(postArgs);
 
     res.status(201).json({ post });
   } catch (error) {

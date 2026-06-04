@@ -51,6 +51,23 @@ describe('counter integrity', () => {
     expect((await prisma.user.findUnique({ where: { id: bId } }))?.followersCount).toBe(0);
     expect(await prisma.userFollows.count()).toBe(0);
   });
+
+  it('creating a reply increments the parent commentsCount (atomically)', async () => {
+    const authorId = await createUser('author');
+    const parent = await prisma.post.create({
+      data: { postedById: authorId, text: 'parent' },
+    });
+
+    await request(app)
+      .post(`/api/v1/posts/${parent.id}`)
+      .set('Authorization', authHeader(authorId))
+      .send({ text: 'a reply' })
+      .expect(201);
+
+    const updated = await prisma.post.findUnique({ where: { id: parent.id } });
+    expect(updated?.commentsCount).toBe(1);
+    expect(await prisma.post.count({ where: { parentPostId: parent.id } })).toBe(1);
+  });
 });
 
 describe('searchUsers follow status (batched)', () => {
