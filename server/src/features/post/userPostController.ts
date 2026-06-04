@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import { prisma } from '../../db';
 import { postQuerySchema } from '../../types/validation/schemas.js';
+import { withLikeCounts } from './likeCounts.js';
 
 export async function getUserPosts(
   req: Request<{ username: string }>,
@@ -65,7 +66,10 @@ export async function getUserPosts(
     const nextCursor =
       posts.length === limit ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
+    res.status(200).json({
+      posts: await withLikeCounts(postsWithIsLiked),
+      nextCursor,
+    });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in getUserPosts: ', error);
@@ -140,7 +144,10 @@ export async function getUserReplies(
     const nextCursor =
       posts.length === limit ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
+    res.status(200).json({
+      posts: await withLikeCounts(postsWithIsLiked),
+      nextCursor,
+    });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in getUserReplies: ', error);

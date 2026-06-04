@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import { prisma } from '../../db';
 import { postQuerySchema } from '../../types/validation/schemas.js';
+import { withLikeCounts } from './likeCounts.js';
 
 export async function getFollowingPosts(req: Request, res: Response) {
   try {
@@ -72,7 +73,10 @@ export async function getFollowingPosts(req: Request, res: Response) {
     const nextCursor =
       posts.length === limit ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
+    res.status(200).json({
+      posts: await withLikeCounts(postsWithIsLiked),
+      nextCursor,
+    });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in getFollowingPosts: ', error);
@@ -169,7 +173,10 @@ export async function getRecommendedPosts(req: Request, res: Response) {
         : null;
 
     // Respond with recommended posts and pagination cursor
-    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
+    res.status(200).json({
+      posts: await withLikeCounts(postsWithIsLiked),
+      nextCursor,
+    });
   } catch (error) {
     console.error('Error in getRecommendedPosts:', error);
     res.status(500).json({ error: 'An unknown error occurred' });
@@ -225,7 +232,10 @@ export async function getLikedPosts(req: Request, res: Response) {
     const nextCursor =
       likeRows.length === limit ? likeRows[likeRows.length - 1].id : null;
 
-    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
+    res.status(200).json({
+      posts: await withLikeCounts(postsWithIsLiked),
+      nextCursor,
+    });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in getLikedPosts: ', error);
@@ -280,7 +290,10 @@ export async function getSavedPosts(req: Request, res: Response) {
     const nextCursor =
       saveRows.length === limit ? saveRows[saveRows.length - 1].id : null;
 
-    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
+    res.status(200).json({
+      posts: await withLikeCounts(postsWithIsLiked),
+      nextCursor,
+    });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in getSavedPosts: ', error);

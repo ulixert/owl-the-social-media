@@ -20,6 +20,22 @@ services:
       - "-c"
       - "max_replication_slots=10"
 
+  # Serving layer for derived views (per-post like counts). Rebuildable from
+  # Postgres via `pnpm --filter server like:reconcile`, so persistence is just a
+  # convenience.
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks: [appnet]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis_data:/data
+
   redpanda:
     image: redpandadata/redpanda:v24.2.7
     command:
@@ -130,3 +146,4 @@ services:
 
 volumes:
   redpanda_data:
+  redis_data:

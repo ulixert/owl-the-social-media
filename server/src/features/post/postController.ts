@@ -8,6 +8,7 @@ import {
   postParamsSchema,
   postQuerySchema,
 } from '../../types/validation/schemas.js';
+import { withLikeCounts } from './likeCounts.js';
 
 export async function getHotPosts(req: Request, res: Response) {
   try {
@@ -60,7 +61,10 @@ export async function getHotPosts(req: Request, res: Response) {
 
     const nextCursor =
       posts.length === limit ? posts[posts.length - 1].id : null;
-    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
+    res.status(200).json({
+      posts: await withLikeCounts(postsWithIsLiked),
+      nextCursor,
+    });
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in getHotPosts: ', error);
@@ -142,6 +146,7 @@ export async function getPostById(req: Request, res: Response) {
       isLiked: Array.isArray(likes) && likes.length > 0,
     };
 
+    await withLikeCounts([postWithIsLiked]);
     res.status(200).json({ post: postWithIsLiked });
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred' });
@@ -215,7 +220,10 @@ export async function getChildPosts(req: Request, res: Response) {
       childPosts.length === limit
         ? childPosts[childPosts.length - 1].id
         : null;
-    res.status(200).json({ childPosts: postsWithIsLiked, nextCursor });
+    res.status(200).json({
+      childPosts: await withLikeCounts(postsWithIsLiked),
+      nextCursor,
+    });
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred' });
     console.error('Error in getChildPosts: ', error);
@@ -532,7 +540,10 @@ export async function searchPosts(req: Request, res: Response) {
     const nextCursor =
       posts.length === limit ? posts[posts.length - 1].id : null;
 
-    res.status(200).json({ posts: postsWithIsLiked, nextCursor });
+    res.status(200).json({
+      posts: await withLikeCounts(postsWithIsLiked),
+      nextCursor,
+    });
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred' });
     console.error('Error in searchPosts: ', error);

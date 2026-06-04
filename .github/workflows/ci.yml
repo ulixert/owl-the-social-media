@@ -24,10 +24,20 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     env:
       DATABASE_URL: postgresql://owl:owl@localhost:5432/owl_test?schema=public
       ACCESS_TOKEN_SECRET: ci-access-secret
       REFRESH_TOKEN_SECRET: ci-refresh-secret
+      REDIS_URL: redis://localhost:6379
     steps:
       - uses: actions/checkout@v4
 
