@@ -33,34 +33,25 @@ export async function likeUnlikePost(req: Request, res: Response) {
       },
     });
 
+    // The like count is now a derived view: we only write the source of truth
+    // (the Like row). The CDC consumer updates post:{id}:likes in Redis, which
+    // the read path serves. No counter to keep in sync here.
     if (isLiked) {
-      await prisma.$transaction([
-        prisma.like.delete({
-          where: {
-            userId_postId: {
-              postId,
-              userId: currentUserId,
-            },
-          },
-        }),
-        prisma.post.update({
-          where: { id: postId },
-          data: { likesCount: { decrement: 1 } },
-        }),
-      ]);
-    } else {
-      await prisma.$transaction([
-        prisma.like.create({
-          data: {
-            userId: currentUserId,
+      await prisma.like.delete({
+        where: {
+          userId_postId: {
             postId,
+            userId: currentUserId,
           },
-        }),
-        prisma.post.update({
-          where: { id: postId },
-          data: { likesCount: { increment: 1 } },
-        }),
-      ]);
+        },
+      });
+    } else {
+      await prisma.like.create({
+        data: {
+          userId: currentUserId,
+          postId,
+        },
+      });
     }
 
     res.status(204).send();
