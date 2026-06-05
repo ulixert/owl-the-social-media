@@ -43,6 +43,29 @@ services:
     working_dir: /app
     command: ["npx", "prisma", "migrate", "deploy"]
 
+  # One-off curated demo seed. Behind the "seed" profile so it never runs on a
+  # normal `up`; invoke explicitly:
+  #   docker compose --profile seed run --rm seed-demo
+  # Shares the uploads volume + UPLOAD_DIR with the server so seeded image files
+  # land where the server serves them. Safe + idempotent (see prisma/seed/demo.ts).
+  seed-demo:
+    image: ghcr.io/ulixert/owl-server:latest
+    profiles: ["seed"]
+    env_file:
+      - ./server/.prod.env
+    environment:
+      UPLOAD_DIR: /app/uploads
+      DEMO_SEED_CONFIRM: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [appnet]
+    restart: "no"
+    working_dir: /app
+    volumes:
+      - uploads:/app/uploads
+    command: ["node", "dist/seed-demo.mjs"]
+
   caddy:
     image: ghcr.io/ulixert/owl-client:latest
     ports:

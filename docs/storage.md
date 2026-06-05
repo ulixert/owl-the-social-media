@@ -66,7 +66,23 @@ handwritten posts with reply threads and likes — so prod doesn't look empty.
   all real data untouched.
 - Any demo handle logs in with `DEMO_PASSWORD` (default `owldemo123`).
 
-To seed prod, run it with the prod `DATABASE_URL` **and** the prod `UPLOAD_DIR` (i.e.
-inside the server container / against its volume) so the media files land where the
-server serves them. Note: re-running orphans the previous run's upload files (new UUIDs
-each time) — harmless, but clear the volume if you care.
+### Running it locally
+
+```
+DEMO_SEED_CONFIRM=1 pnpm --filter server seed:demo   # tsx, against .env / dev DB
+```
+
+### Running it in prod
+
+The seed compiles to `dist/seed-demo.mjs` (a second `tsdown` entry) so it runs with
+plain `node` in the prod image — no `tsx`, and the bundle pulls in `src/storage`. A
+one-off `seed-demo` compose service runs it **inside the server container**, sharing the
+`uploads` volume and `UPLOAD_DIR=/app/uploads` so seeded media files land where the
+server serves them. It's behind the `seed` profile, so it never runs on a normal `up`:
+
+```
+docker compose --profile seed run --rm seed-demo
+```
+
+Note: re-running orphans the previous run's upload files (new UUIDs each time) —
+harmless, but clear the `uploads` volume if you care.
