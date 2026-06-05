@@ -2,23 +2,10 @@ import { Request, Response } from 'express';
 
 import { prisma } from '../../db';
 import { postQuerySchema } from '../../types/validation/schemas.js';
+import { getForYouFeed } from './forYou.js';
 import { getFollowingFeedIds } from './feed.js';
 import { withLikeCounts } from './likeCounts.js';
-
-// Shared include shape for feed posts: author summary, parent author (for reply
-// context), and the viewer's own like row (to derive isLiked).
-export function feedInclude(viewerId: number | undefined) {
-  return {
-    postedBy: { select: { id: true, username: true, name: true, profilePic: true } },
-    parentPost: { select: { postedBy: { select: { username: true } } } },
-    likes: viewerId ? { where: { userId: viewerId } } : undefined,
-  };
-}
-
-export function withIsLiked<T extends { likes?: unknown[] }>(post: T) {
-  const { likes, ...rest } = post;
-  return { ...rest, isLiked: likes ? likes.length > 0 : false };
-}
+import { feedInclude, withIsLiked } from './postSerializers.js';
 
 // The original pull model: fan-in query over followed authors. Used directly
 // when the Redis feed is cold/down, and to hydrate the merged id page below.
@@ -94,6 +81,9 @@ export async function getFollowingPosts(req: Request, res: Response) {
   }
 }
 
+// For-You: a ranked recommendation feed (candidate generation + heuristic
+// ranking), implemented in forYou.ts. The `cursor` is an opaque offset into the
+// ranked pool. This route is auth-protected, so req.user is always present.
 export async function getRecommendedPosts(req: Request, res: Response) {
   try {
     const input = postQuerySchema.safeParse(req.query);
@@ -102,92 +92,8 @@ export async function getRecommendedPosts(req: Request, res: Response) {
       return;
     }
     const { cursor, limit } = input.data;
-    const currentUserId = req.user?.id;
-
-    let followedIds: number[] = [];
-    let likedByFollowedPostIds: number[] = [];
-
-    if (currentUserId) {
-      const followedUsers = await prisma.userFollows.findMany({
-        where: { followerId: currentUserId },
-        select: { followingId: true },
-      });
-      followedIds = followedUsers.map((f) => f.followingId);
-
-      if (followedIds.length > 0) {
-        const likesByFollowed = await prisma.like.findMany({
-          where: { userId: { in: followedIds } },
-          select: { postId: true },
-          take: 50,
-          orderBy: { createdAt: 'desc' },
-        });
-        likedByFollowedPostIds = likesByFollowed.map((l) => l.postId);
-      }
-    }
-
-    const whereClause = currentUserId
-      ? {
-          isDeleted: false,
-          OR: [
-            { postedById: { in: followedIds } },
-            { id: { in: likedByFollowedPostIds } },
-            { likesCount: { gte: 3 } }, // Fallback to somewhat popular posts
-          ],
-        }
-      : { isDeleted: false };
-
-    // Fetch recommended posts
-    const recommendedPosts = await prisma.post.findMany({
-      where: { ...whereClause, ...(cursor ? { id: { lt: cursor } } : {}) },
-      orderBy: { id: 'desc' },
-      take: limit,
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            profilePic: true,
-          },
-        },
-        parentPost: {
-          select: {
-            postedBy: {
-              select: {
-                username: true,
-              },
-            },
-          },
-        },
-        likes: req.user
-          ? {
-              where: {
-                userId: req.user.id,
-              },
-            }
-          : undefined,
-      },
-    });
-
-    const postsWithIsLiked = recommendedPosts.map((post) => {
-      const { likes, ...rest } = post;
-      return {
-        ...rest,
-        isLiked: likes ? likes.length > 0 : false,
-      };
-    });
-
-    // Determine the next cursor for pagination
-    const nextCursor =
-      recommendedPosts.length === limit
-        ? recommendedPosts[recommendedPosts.length - 1].id
-        : null;
-
-    // Respond with recommended posts and pagination cursor
-    res.status(200).json({
-      posts: await withLikeCounts(postsWithIsLiked),
-      nextCursor,
-    });
+    const result = await getForYouFeed(req.user!.id, cursor, limit);
+    res.status(200).json(result);
   } catch (error) {
     console.error('Error in getRecommendedPosts:', error);
     res.status(500).json({ error: 'An unknown error occurred' });

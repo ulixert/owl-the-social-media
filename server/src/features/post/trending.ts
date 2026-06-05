@@ -9,7 +9,7 @@
 
 import { prisma } from '../../db/index.js';
 import { redis } from '../../redis.js';
-import { feedInclude, withIsLiked } from './currentUserPostController.js';
+import { feedInclude, withIsLiked } from './postSerializers.js';
 import { withLikeCounts } from './likeCounts.js';
 
 export const TRENDING_KEY = 'trending';
