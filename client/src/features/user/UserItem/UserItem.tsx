@@ -4,7 +4,12 @@ import { useFollowMutation } from '../hooks/useFollowMutation.ts';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
 import { Box, Button, Divider, Flex, Stack, Text } from '@mantine/core';
+import { IconRosetteDiscountCheckFilled } from '@tabler/icons-react';
 import { UserHoverCard } from '../UserHoverCard/UserHoverCard.tsx';
+
+// The seed marks verified accounts with this exact biography. Treat it as a
+// verified flag and render a badge instead of showing it as bio text.
+const VERIFIED_BIO = 'Verified account';
 
 export type SearchUser = {
   id: number;
@@ -28,6 +33,7 @@ export function UserItem({ user }: UserItemProps) {
   const followMutation = useFollowMutation(user.id, user.username);
 
   const isCurrentUser = currentUser?.userId === user.id;
+  const isVerified = user.biography === VERIFIED_BIO;
 
   const handleFollow = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -63,16 +69,25 @@ export function UserItem({ user }: UserItemProps) {
               onClick={(e) => e.stopPropagation()}
               style={{ minWidth: 0, width: 'fit-content' }}
             >
-              <Text fw={700} size="sm" truncate>
-                {user.name}
-              </Text>
+              <Flex gap={4} align="center" style={{ minWidth: 0 }}>
+                <Text fw={700} size="sm" truncate>
+                  {user.name}
+                </Text>
+                {isVerified && (
+                  <IconRosetteDiscountCheckFilled
+                    size={15}
+                    color="var(--mantine-color-blue-5)"
+                    style={{ flexShrink: 0 }}
+                  />
+                )}
+              </Flex>
               <Text size="xs" c="dimmed" truncate>
                 @{user.username}
               </Text>
             </Box>
           </UserHoverCard>
 
-          {user.biography && (
+          {user.biography && !isVerified && (
             <Text size="sm" c="dimmed" lineClamp={1}>
               {user.biography}
             </Text>
@@ -87,10 +102,22 @@ export function UserItem({ user }: UserItemProps) {
             size="compact-sm"
             radius="md"
             variant={user.isFollowing ? 'default' : 'filled'}
-            color={user.isFollowing ? undefined : 'dark'}
             onClick={handleFollow}
             loading={followMutation.isPending}
             px="lg"
+            // Threads-style: black in light mode, white in dark mode.
+            styles={
+              user.isFollowing
+                ? undefined
+                : {
+                    root: {
+                      backgroundColor:
+                        'light-dark(var(--mantine-color-black), var(--mantine-color-white))',
+                      color:
+                        'light-dark(var(--mantine-color-white), var(--mantine-color-black))',
+                    },
+                  }
+            }
           >
             {user.isFollowing ? 'Following' : 'Follow'}
           </Button>
