@@ -14,6 +14,9 @@ POST /auth/refresh-token (cookie) ──> verify JWT, then check Redis:
    jti == stored jti       → rotate: new jti, reset TTL, set new cookie, new access token
 
 POST /auth/logout (cookie) ──> DEL refresh:{familyId}, clear cookie
+
+POST /auth/logout-all (access token) ──> DEL every family in user:{id}:families,
+   DEL the set, clear cookie  ("log out everywhere")
 ```
 
 ## Why
@@ -37,8 +40,24 @@ A stateless refresh JWT can't be revoked — logout only clears the cookie, so a
   alone proves authenticity, Redis proves it hasn't been rotated out or revoked.
 
 Files: `server/src/features/auth/session.ts` (Redis helpers: `createSession`,
-`rotateSession`, `revokeSession`), `authController.ts` (login/signup/refresh/logout),
+`rotateSession`, `revokeSession`, `revokeAllSessions`), `authController.ts`
+(login/signup/refresh/logout/logoutAll), `authRouter.ts` (routes),
 `utils/generateTokenAndSetCookie.ts` (`issueRefreshToken`).
+
+## Log out everywhere
+
+A login can spawn many sessions (phone, laptop, …), each its own family. To revoke
+them all at once we keep a per-user index: a Redis **set** `user:{id}:families`
+holding that user's family ids. `createSession` `SADD`s the new family (and resets
+the set's 7-day TTL); `revokeAllSessions(userId)` reads the set, `DEL`s every
+`refresh:{familyId}` in it, then drops the set. `POST /auth/logout-all` is
+authenticated by the **access token** (it identifies the user without a cookie) and
+also clears the current cookie, since "everywhere" includes this device.
+
+The set is a **best-effort index, not truth**: a family can expire or be revoked
+while its id lingers in the set, but revocation just `DEL`s by key (a no-op if it's
+already gone), and the set's TTL self-bounds it to roughly the last 7 days of
+sessions. So stale members are harmless and never cause a wrong revocation.
 
 ## Fail closed
 
@@ -60,11 +79,14 @@ the immediately-previous jti is an alternative; not implemented.)
 
 `server/src/test/authSession.test.ts`: refresh rotates (old token rejected); replaying
 a rotated-out token → 401 **and** the family is revoked (the current token then also
-fails); logout → subsequent refresh 401; missing token → 401.
+fails); logout → subsequent refresh 401; missing token → 401; **log out everywhere**
+across two sessions → `{ revokedSessions: 2 }` and both devices' refreshes 401;
+`/auth/logout-all` without an access token → 401.
 
 ## Out of scope / next
 
-- **Per-user session list / "log out everywhere"** — would need an index of a user's
-  families (e.g. a Redis set keyed by userId). Easy extension on this model.
-- **Access-token denylist** — access tokens stay stateless, so a compromised one is
-  valid until it expires (15 min); a denylist would close that window if needed.
+- **Access-token denylist** — access tokens stay stateless, so a compromised one (or
+  one held by a device after "log out everywhere") is valid until it expires (≤15 min);
+  a Redis denylist checked in `protectRoute` would close that residual window.
+- **Per-user session *list* UI** — the index now exists; surfacing active sessions
+  ("Chrome on macOS · last active 2h ago") would need per-family device metadata.
