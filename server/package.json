@@ -16,6 +16,8 @@
     "consume:likes": "tsx --env-file=.env src/consumers/likeCounter.ts",
     "feed:reconcile": "tsx --env-file=.env src/scripts/reconcileFeeds.ts",
     "consume:feed": "tsx --env-file=.env src/consumers/timelineFanout.ts",
+    "search:reconcile": "tsx --env-file=.env src/scripts/reconcileSearch.ts",
+    "consume:search": "tsx --env-file=.env src/consumers/searchIndexer.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

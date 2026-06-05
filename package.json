@@ -18,7 +18,9 @@
     "cdc:clean": "sh cdc/clean.sh",
     "flink:up": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml --profile flink up -d flink-jobmanager flink-taskmanager",
     "flink:submit": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml --profile flink up trending-build trending-submit",
-    "flink:down": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml --profile flink rm -sf flink-jobmanager flink-taskmanager"
+    "flink:down": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml --profile flink rm -sf flink-jobmanager flink-taskmanager",
+    "es:up": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml --profile es up -d elasticsearch",
+    "es:down": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml --profile es rm -sf elasticsearch"
   },
   "keywords": [],
   "author": "",
