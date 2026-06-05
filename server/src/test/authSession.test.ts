@@ -22,6 +22,11 @@ function signup(username: string) {
   });
 }
 
+const login = (username: string) =>
+  request(app)
+    .post('/api/v1/auth/login')
+    .send({ email: `${username}@example.com`, password: 'Password123!' });
+
 const refresh = (cookie: string) =>
   request(app).post('/api/v1/auth/refresh-token').set('Cookie', cookie);
 
@@ -68,5 +73,32 @@ describe('refresh-token rotation (Redis sessions)', () => {
 
   it('rejects a missing/unknown refresh token', async () => {
     expect((await request(app).post('/api/v1/auth/refresh-token')).status).toBe(401);
+  });
+
+  it('logs out everywhere: revokes every session for the user', async () => {
+    // Two devices: signup starts session A, a second login starts session B.
+    const created = await signup('omni');
+    const cookieA = refreshCookie(created);
+    const accessToken = (created.body as { accessToken: string }).accessToken;
+
+    const second = await login('omni');
+    const cookieB = refreshCookie(second);
+    expect(cookieB).not.toBe(cookieA);
+
+    // Both sessions are valid beforehand (use a clone so we don't rotate the
+    // ones we assert on; instead just confirm the endpoint reports two families).
+    const out = await request(app)
+      .post('/api/v1/auth/logout-all')
+      .set('Authorization', `Bearer ${accessToken}`);
+    expect(out.status).toBe(200);
+    expect((out.body as { revokedSessions: number }).revokedSessions).toBe(2);
+
+    // Every session is now dead — neither device can refresh.
+    expect((await refresh(cookieA)).status).toBe(401);
+    expect((await refresh(cookieB)).status).toBe(401);
+  });
+
+  it('requires authentication to log out everywhere', async () => {
+    expect((await request(app).post('/api/v1/auth/logout-all')).status).toBe(401);
   });
 });
