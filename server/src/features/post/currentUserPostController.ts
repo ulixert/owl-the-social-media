@@ -2,7 +2,55 @@ import { Request, Response } from 'express';
 
 import { prisma } from '../../db';
 import { postQuerySchema } from '../../types/validation/schemas.js';
+import { getFollowingFeedIds } from './feed.js';
 import { withLikeCounts } from './likeCounts.js';
+
+// Shared include shape for feed posts: author summary, parent author (for reply
+// context), and the viewer's own like row (to derive isLiked).
+function feedInclude(viewerId: number | undefined) {
+  return {
+    postedBy: { select: { id: true, username: true, name: true, profilePic: true } },
+    parentPost: { select: { postedBy: { select: { username: true } } } },
+    likes: viewerId ? { where: { userId: viewerId } } : undefined,
+  };
+}
+
+function withIsLiked<T extends { likes?: unknown[] }>(post: T) {
+  const { likes, ...rest } = post;
+  return { ...rest, isLiked: likes ? likes.length > 0 : false };
+}
+
+// The original pull model: fan-in query over followed authors. Used directly
+// when the Redis feed is cold/down, and to hydrate the merged id page below.
+async function getFollowingPostsFromDb(
+  viewerId: number,
+  cursor: number,
+  limit: number,
+) {
+  const followedUsers = await prisma.userFollows.findMany({
+    where: { followerId: viewerId },
+    select: { followingId: true },
+  });
+  const followedIds = followedUsers.map((f) => f.followingId);
+  followedIds.push(viewerId); // include the viewer's own posts
+
+  const posts = await prisma.post.findMany({
+    where: {
+      postedById: { in: followedIds },
+      isDeleted: false,
+      ...(cursor ? { id: { lt: cursor } } : {}),
+    },
+    orderBy: { id: 'desc' },
+    take: limit,
+    include: feedInclude(viewerId),
+  });
+
+  const nextCursor = posts.length === limit ? posts[posts.length - 1].id : null;
+  return {
+    posts: await withLikeCounts(posts.map(withIsLiked)),
+    nextCursor,
+  };
+}
 
 export async function getFollowingPosts(req: Request, res: Response) {
   try {
@@ -13,68 +61,31 @@ export async function getFollowingPosts(req: Request, res: Response) {
     }
 
     const currentUserId = req.user!.id;
-
     const { cursor, limit } = input.data;
 
-    // Get followed users (and include the current user)
-    const followedUsers = await prisma.userFollows.findMany({
-      where: { followerId: currentUserId },
-      select: { followingId: true },
+    // Hybrid read: the precomputed Redis feed merged with followed celebrities.
+    // Returns null when we should serve straight from Postgres (Redis cold/down,
+    // or paged past what the feed holds).
+    const ids = await getFollowingFeedIds(currentUserId, cursor, limit);
+    if (ids === null) {
+      res.status(200).json(await getFollowingPostsFromDb(currentUserId, cursor, limit));
+      return;
+    }
+
+    // Hydrate the id page. The isDeleted filter + id-membership drop any stale
+    // ids left in the feed, so missed deletes are harmless.
+    const rows = await prisma.post.findMany({
+      where: { id: { in: ids }, isDeleted: false },
+      include: feedInclude(currentUserId),
     });
+    rows.sort((a, b) => b.id - a.id);
 
-    const followedIds = followedUsers.map((follow) => follow.followingId);
-    followedIds.push(currentUserId);
-
-    // Fetch posts with pagination
-    const posts = await prisma.post.findMany({
-      where: {
-        postedById: { in: followedIds },
-        isDeleted: false,
-        ...(cursor ? { id: { lt: cursor } } : {}),
-      },
-      orderBy: { id: 'desc' },
-      take: limit,
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            profilePic: true,
-          },
-        },
-        parentPost: {
-          select: {
-            postedBy: {
-              select: {
-                username: true,
-              },
-            },
-          },
-        },
-        likes: req.user
-          ? {
-              where: {
-                userId: req.user.id,
-              },
-            }
-          : undefined,
-      },
-    });
-
-    const postsWithIsLiked = posts.map((post) => {
-      const { likes, ...rest } = post;
-      return {
-        ...rest,
-        isLiked: likes ? likes.length > 0 : false,
-      };
-    });
-
-    const nextCursor =
-      posts.length === limit ? posts[posts.length - 1].id : null;
+    // Cursor continues from the last *candidate* id (even if some were filtered),
+    // so pagination doesn't skip posts.
+    const nextCursor = ids.length === limit ? ids[ids.length - 1] : null;
 
     res.status(200).json({
-      posts: await withLikeCounts(postsWithIsLiked),
+      posts: await withLikeCounts(rows.map(withIsLiked)),
       nextCursor,
     });
   } catch (error) {
