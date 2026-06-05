@@ -1,12 +1,23 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import { axiosInstance } from '@/api/axiosConfig.ts';
+import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
 import { SearchUser, UserItem } from '@/features/user/UserItem/UserItem.tsx';
 import { PostItem } from '@/features/posts/PostItem/PostItem.tsx';
-import { Box, Center, Loader, Stack, Text, TextInput } from '@mantine/core';
-import { IconSearch, IconX } from '@tabler/icons-react';
+import {
+  Box,
+  Center,
+  Divider,
+  Flex,
+  Loader,
+  Stack,
+  Text,
+  TextInput,
+} from '@mantine/core';
+import { IconHeart, IconSearch, IconX } from '@tabler/icons-react';
 import { useTitleStore } from '@stores/titleStore.ts';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -26,6 +37,50 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
     <Text fw={700} size="sm" c="dimmed" px="md" py="sm">
       {children}
     </Text>
+  );
+}
+
+// Compact trending row (denser than a full PostItem): author + snippet + likes.
+function TrendingItem({ post }: { post: Post }) {
+  const navigate = useNavigate();
+  return (
+    <>
+      <Flex
+        gap="sm"
+        py="sm"
+        align="flex-start"
+        style={{ cursor: 'pointer' }}
+        onClick={() => navigate(`/posts/${post.id}`)}
+      >
+        <UserAvatar
+          username={post.postedBy.username}
+          avatar={post.postedBy.profilePic}
+          size="md"
+        />
+        <Stack gap={2} flex={1} style={{ minWidth: 0 }}>
+          <Flex gap={6} align="center" style={{ minWidth: 0 }}>
+            <Text fw={700} size="sm" truncate>
+              {post.postedBy.name}
+            </Text>
+            <Text size="xs" c="dimmed" truncate>
+              @{post.postedBy.username}
+            </Text>
+          </Flex>
+          {post.text && (
+            <Text size="sm" lineClamp={2}>
+              {post.text}
+            </Text>
+          )}
+          <Flex gap={4} align="center" mt={2} c="dimmed">
+            <IconHeart size={13} />
+            <Text size="xs" c="dimmed">
+              {post.likesCount.toLocaleString()}
+            </Text>
+          </Flex>
+        </Stack>
+      </Flex>
+      <Divider ml={52} />
+    </>
   );
 }
 
@@ -53,7 +108,7 @@ export function SearchPage() {
     queryFn: async () =>
       (
         await axiosInstance.get<PostSearchResponse>('posts/trending', {
-          params: { limit: 15 },
+          params: { limit: 10 },
         })
       ).data,
     enabled: !isSearching,
@@ -132,24 +187,26 @@ export function SearchPage() {
         // Explore: trending first, then a few suggestions (Threads-style)
         <Stack gap={0}>
           <SectionHeader>Trending</SectionHeader>
-          <Stack gap="md" px="md" pb="md">
+          <Box px="md">
             {trending?.posts.length ? (
-              trending.posts.map((post) => <PostItem key={post.id} post={post} />)
+              trending.posts.map((post) => (
+                <TrendingItem key={post.id} post={post} />
+              ))
             ) : (
               <Text c="dimmed" ta="center" py="xl">
                 Nothing trending yet — check back soon.
               </Text>
             )}
-          </Stack>
+          </Box>
 
           {(recommended?.users.length ?? 0) > 0 && (
             <>
               <SectionHeader>Suggested for you</SectionHeader>
-              <Stack gap={0}>
+              <Box px="md">
                 {recommended?.users.slice(0, 5).map((user) => (
                   <UserItem key={user.id} user={user} />
                 ))}
-              </Stack>
+              </Box>
             </>
           )}
         </Stack>
@@ -162,11 +219,11 @@ export function SearchPage() {
               <Loader size="sm" />
             </Center>
           ) : users.length > 0 ? (
-            <Stack gap={0}>
+            <Box px="md">
               {users.map((user) => (
                 <UserItem key={user.id} user={user} />
               ))}
-            </Stack>
+            </Box>
           ) : (
             <Text c="dimmed" px="md" pb="sm">
               No accounts found
