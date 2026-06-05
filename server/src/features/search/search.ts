@@ -13,7 +13,7 @@
 // posts are exactly the indexed ones and queries need no isDeleted filter.
 
 import { prisma } from '../../db/index.js';
-import { es } from '../../elasticsearch.js';
+import { es, READ_TIMEOUT } from '../../elasticsearch.js';
 import { withLikeCounts } from '../post/likeCounts.js';
 import { feedInclude, withIsLiked } from '../post/postSerializers.js';
 
@@ -151,14 +151,17 @@ async function search(
   size: number,
 ): Promise<Hits | null> {
   try {
-    const res = await es.search({
-      index,
-      from,
-      size,
-      query,
-      _source: false, // we only need ids; the body is hydrated from Postgres
-      track_total_hits: true,
-    });
+    const res = await es.search(
+      {
+        index,
+        from,
+        size,
+        query,
+        _source: false, // we only need ids; the body is hydrated from Postgres
+        track_total_hits: true,
+      },
+      READ_TIMEOUT,
+    );
     const total =
       typeof res.hits.total === 'number' ? res.hits.total : (res.hits.total?.value ?? 0);
     return { ids: res.hits.hits.map((h) => Number(h._id)), total };
