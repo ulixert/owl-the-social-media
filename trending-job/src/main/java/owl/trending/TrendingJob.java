@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.AggregateFunction;
-import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeHint;
@@ -66,7 +65,7 @@ public class TrendingJob {
             .setTopics(topic)
             .setGroupId("owl-trending")
             .setStartingOffsets(OffsetsInitializer.earliest())
-            .setValueOnlyDeserializer(new SimpleStringSchema())
+            .setValueOnlyDeserializer(new NullableStringSchema())
             .build();
 
     final ObjectMapper mapper = new ObjectMapper();
@@ -144,7 +143,9 @@ public class TrendingJob {
       buffer.get().forEach(all::add);
       buffer.clear();
       all.sort(Comparator.comparingLong((PostCount pc) -> pc.count).reversed());
-      out.collect(all.subList(0, Math.min(k, all.size())));
+      // A standalone ArrayList, not subList() — the latter is a view the
+      // downstream operator's Kryo copy can't clone (ConcurrentModification/NPE).
+      out.collect(new ArrayList<>(all.subList(0, Math.min(k, all.size()))));
     }
   }
 
