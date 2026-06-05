@@ -75,6 +75,10 @@ model Like {
   @@unique([userId, postId])
   // Liked feed keyset: filter by user, order by id desc.
   @@index([userId, id])
+  // Covering index for the For-You "recent likes by followees" candidate query
+  // (userId IN (...) ORDER BY createdAt DESC): postId is included so it's an
+  // index-only scan, avoiding the cold random heap reads (~846ms → index-only).
+  @@index([userId, createdAt, postId])
 }
 
 model Repost {
