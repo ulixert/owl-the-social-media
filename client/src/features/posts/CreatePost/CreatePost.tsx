@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PostCreateSchema, PostUpdateSchema } from 'validation';
 
@@ -6,6 +6,7 @@ import { axiosInstance } from '@/api/axiosConfig.ts';
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
+import { useUploadImages } from '@/hooks/useUploadImages.ts';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import {
   showErrorNotification,
@@ -21,11 +22,9 @@ import {
   Grid,
   Group,
   Image,
-  Popover,
   SimpleGrid,
   Stack,
   Text,
-  TextInput,
   Textarea,
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
@@ -71,40 +70,34 @@ export function CreatePost({
 
   const [text, setText] = useState(editingPost?.text ?? '');
   const [images, setImages] = useState<string[]>(editingPost?.images ?? []);
-  const [imageUrl, setImageUrl] = useState('');
-  const [imagePopoverOpen, setImagePopoverOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadImages = useUploadImages();
 
   const remaining = MAX_CHARS - text.length;
   const isOverLimit = remaining < 0;
   const isEmpty = text.trim().length === 0 && images.length === 0;
 
-  const addImage = useCallback(() => {
-    const trimmed = imageUrl.trim();
-    if (!trimmed) return;
+  const handleFiles = useCallback(
+    async (fileList: FileList | null) => {
+      if (!fileList || fileList.length === 0) return;
+      const files = Array.from(fileList);
+      const room = MAX_IMAGES - images.length;
+      if (room <= 0) {
+        setError(`You can attach up to ${MAX_IMAGES} images`);
+        return;
+      }
 
-    try {
-      new URL(trimmed);
-    } catch {
-      setError('Please enter a valid URL');
-      return;
-    }
-
-    if (images.length >= MAX_IMAGES) {
-      setError(`You can attach up to ${MAX_IMAGES} images`);
-      return;
-    }
-
-    if (images.includes(trimmed)) {
-      setError('Image already added');
-      return;
-    }
-
-    setImages((prev) => [...prev, trimmed]);
-    setImageUrl('');
-    setImagePopoverOpen(false);
-    setError(null);
-  }, [imageUrl, images]);
+      setError(null);
+      try {
+        const urls = await uploadImages.mutateAsync(files.slice(0, room));
+        setImages((prev) => [...prev, ...urls]);
+      } catch {
+        setError('Upload failed. Please try again.');
+      }
+    },
+    [images.length, uploadImages],
+  );
 
   const removeImage = (url: string) => {
     setImages((prev) => prev.filter((img) => img !== url));
@@ -471,48 +464,28 @@ export function CreatePost({
           )}
 
           <Group gap="xs" mt="sm">
-            <Popover
-              opened={imagePopoverOpen}
-              onChange={setImagePopoverOpen}
-              width={300}
-              position="bottom-start"
-              shadow="md"
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(e) => {
+                void handleFiles(e.currentTarget.files);
+                e.currentTarget.value = '';
+              }}
+            />
+            <ActionIcon
+              variant="subtle"
+              color="blue"
+              size="md"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Add image"
+              loading={uploadImages.isPending}
+              disabled={images.length >= MAX_IMAGES}
             >
-              <Popover.Target>
-                <ActionIcon
-                  variant="subtle"
-                  color="blue"
-                  size="md"
-                  onClick={() => setImagePopoverOpen((o) => !o)}
-                  aria-label="Add image"
-                  disabled={images.length >= MAX_IMAGES}
-                >
-                  <IconPhoto size={18} />
-                </ActionIcon>
-              </Popover.Target>
-
-              <Popover.Dropdown>
-                <Text size="xs" fw={500} mb={6}>
-                  Paste image URL
-                </Text>
-                <TextInput
-                  placeholder="https://example.com/image.jpg"
-                  size="sm"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.currentTarget.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addImage();
-                    }
-                  }}
-                  autoFocus
-                />
-                <Button size="compact-xs" radius="xl" mt={8} onClick={addImage}>
-                  Add
-                </Button>
-              </Popover.Dropdown>
-            </Popover>
+              <IconPhoto size={18} />
+            </ActionIcon>
 
             {images.length > 0 && (
               <Text size="xs" c="dimmed">
