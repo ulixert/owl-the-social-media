@@ -1,8 +1,8 @@
 import { Loading } from '@/components/Loading/Loading.tsx';
 
 export const PostRoutes = [
-  {
-    path: 'hot',
+  ...['hot', 'trending'].map((path) => ({
+    path,
     async lazy() {
       const { PostList } = await import(
         '../features/posts/PostList/PostList.tsx'
@@ -10,7 +10,7 @@ export const PostRoutes = [
       return { Component: PostList };
     },
     hydrateFallbackElement: <Loading />,
-  },
+  })),
   ...['for-you', 'following'].map((path) => ({
     path,
     async lazy() {
