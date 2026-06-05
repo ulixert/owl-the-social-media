@@ -14,6 +14,8 @@
     "seed:demo": "tsx --env-file=.env prisma/seed/demo.ts",
     "like:reconcile": "tsx --env-file=.env src/scripts/reconcileLikeCounts.ts",
     "consume:likes": "tsx --env-file=.env src/consumers/likeCounter.ts",
+    "feed:reconcile": "tsx --env-file=.env src/scripts/reconcileFeeds.ts",
+    "consume:feed": "tsx --env-file=.env src/consumers/timelineFanout.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
