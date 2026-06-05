@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { UserProfile } from '@/hooks/useUserProfile.ts';
+import { useUploadImages } from '@/hooks/useUploadImages.ts';
 import {
+  ActionIcon,
   Avatar,
   Box,
   Button,
@@ -13,6 +15,7 @@ import {
   TextInput,
   Textarea,
 } from '@mantine/core';
+import { IconCamera } from '@tabler/icons-react';
 
 import { useUpdateProfileMutation } from '../../hooks/useUpdateProfileMutation.ts';
 
@@ -25,8 +28,16 @@ export function EditProfileModal({ user, onClose }: EditProfileModalProps) {
   const [name, setName] = useState(user.name);
   const [biography, setBiography] = useState(user.biography ?? '');
   const [profilePic, setProfilePic] = useState(user.profilePic ?? '');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const mutation = useUpdateProfileMutation(user.username);
+  const uploadImages = useUploadImages();
+
+  const handleAvatarFile = async (file: File | undefined) => {
+    if (!file) return;
+    const [url] = await uploadImages.mutateAsync([file]);
+    if (url) setProfilePic(url);
+  };
 
   const handleSave = async () => {
     await mutation.mutateAsync({
@@ -51,7 +62,33 @@ export function EditProfileModal({ user, onClose }: EditProfileModalProps) {
             styles={{ input: { fontSize: '1.1rem', padding: 0 } }}
           />
         </Box>
-        <Avatar src={profilePic} size="lg" radius="xl" />
+        <Box pos="relative">
+          <Avatar src={profilePic} size="lg" radius="xl" />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              void handleAvatarFile(e.currentTarget.files?.[0]);
+              e.currentTarget.value = '';
+            }}
+          />
+          <ActionIcon
+            variant="filled"
+            color="dark"
+            radius="xl"
+            size="sm"
+            pos="absolute"
+            bottom={0}
+            right={0}
+            onClick={() => fileInputRef.current?.click()}
+            loading={uploadImages.isPending}
+            aria-label="Upload profile picture"
+          >
+            <IconCamera size={14} />
+          </ActionIcon>
+        </Box>
       </Flex>
 
       <Divider />
@@ -67,21 +104,6 @@ export function EditProfileModal({ user, onClose }: EditProfileModalProps) {
           autosize
           minRows={2}
           maxRows={4}
-          variant="unstyled"
-          styles={{ input: { padding: 0 } }}
-        />
-      </Box>
-
-      <Divider />
-
-      <Box>
-        <Text size="sm" fw={700} mb={4}>
-          Profile Picture URL
-        </Text>
-        <TextInput
-          placeholder="https://..."
-          value={profilePic}
-          onChange={(e) => setProfilePic(e.currentTarget.value)}
           variant="unstyled"
           styles={{ input: { padding: 0 } }}
         />
