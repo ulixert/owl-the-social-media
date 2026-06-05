@@ -62,8 +62,29 @@ Only the four the keyset queries actually use:
 - `Like(userId, id)` — liked feed
 - `Save(userId, id)` — saved feed
 
-Deliberately **not** added: `createdAt` or `likesCount` indexes. Every feed now
-orders by `id`, so those would never be used — dead weight on every write.
+Deliberately **not** added: a plain `createdAt` or `likesCount` *ordering* index.
+Every feed orders by `id`, so those would never be used — dead weight on every write.
+
+Later added (For-You rework): `Like(userId, createdAt, postId)` — a **covering**
+index for a specific access pattern, not feed ordering. See below.
+
+## For-You feed (measurement-driven)
+
+`EXPLAIN ANALYZE` of the old For-You query (`followed OR liked-by-followed OR
+likesCount>=3 ORDER BY id`) overturned the assumption: the `likesCount>=3` gate
+wasn't the problem (the main scan was a fast backward PK scan). The cost was the
+**social-proof subquery** — `Like WHERE userId IN (followees) ORDER BY createdAt
+DESC LIMIT 50` — doing a Bitmap Heap Scan over **~4,578 random heap blocks** to fetch
+`postId`/`createdAt`, then a sort: **~846 ms cold** (~5 ms warm, when those blocks
+are cached). No index covered "recent likes by a set of users."
+
+Fix: the covering index `Like(userId, createdAt, postId)` turns it into an
+**Index-Only Scan** (Heap Fetches ~0, ~1 ms, cache-independent).
+
+The feed was then redesigned (candidate generation → heuristic ranking), removing
+the global OR entirely; candidate sources are bounded/indexed (~1 ms social-proof,
+~0.4 ms recent-popular; followed authors O(1) from the fan-out feed when warm, or a
+~168 ms backward-PK-scan DB fallback). See `docs/for-you.md`.
 
 ## What this doesn't fix (next steps)
 
