@@ -3,6 +3,48 @@ import { UserUpdateSchema } from 'validation';
 
 import { prisma } from '../../db';
 
+// "Who to follow": the most-followed accounts, excluding the viewer and anyone
+// they already follow. Powers the Explore page's suggestions.
+export async function getRecommendedUsers(req: Request, res: Response) {
+  try {
+    const currentUserId = req.user?.id;
+
+    let excludeIds: number[] = [];
+    if (currentUserId) {
+      const follows = await prisma.userFollows.findMany({
+        where: { followerId: currentUserId },
+        select: { followingId: true },
+      });
+      excludeIds = [currentUserId, ...follows.map((f) => f.followingId)];
+    }
+
+    const users = await prisma.user.findMany({
+      where: excludeIds.length ? { id: { notIn: excludeIds } } : {},
+      orderBy: { followersCount: 'desc' },
+      take: 8,
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        profilePic: true,
+        biography: true,
+        followersCount: true,
+      },
+    });
+
+    // Excluded the followed set above, so none of these are followed.
+    const usersWithFollowStatus = users.map((user) => ({
+      ...user,
+      isFollowing: false,
+    }));
+
+    res.status(200).json({ users: usersWithFollowStatus });
+  } catch (error) {
+    res.status(500).json({ message: 'An unknown error occurred' });
+    console.error('Error in getRecommendedUsers: ', error);
+  }
+}
+
 export async function followAndUnfollowUser(
   req: Request<{ id: string }>,
   res: Response,
