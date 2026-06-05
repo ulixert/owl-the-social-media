@@ -10,7 +10,12 @@ import {
   generateAccessToken,
   issueRefreshToken,
 } from '../../utils/generateTokenAndSetCookie.js';
-import { createSession, revokeSession, rotateSession } from './session.js';
+import {
+  createSession,
+  revokeAllSessions,
+  revokeSession,
+  rotateSession,
+} from './session.js';
 import { checkPassword } from './utils/checkPassword.js';
 
 type AuthUser = {
@@ -22,7 +27,7 @@ type AuthUser = {
 
 // Start a session, set the rotating refresh cookie, and return the auth payload.
 async function issueSession(res: Response, user: AuthUser) {
-  const { familyId, jti } = await createSession();
+  const { familyId, jti } = await createSession(user.id);
   issueRefreshToken(res, {
     userId: user.id,
     username: user.username,
@@ -116,11 +121,13 @@ export async function logout(req: Request, res: Response) {
         : undefined;
     if (token) {
       try {
-        const { familyId } = await jwtVerify(
+        const { userId, familyId } = await jwtVerify(
           token,
           process.env.REFRESH_TOKEN_SECRET!,
         );
-        if (familyId) await revokeSession(familyId);
+        if (familyId && typeof userId === 'number') {
+          await revokeSession(userId, familyId);
+        }
       } catch {
         // ignore — clear the cookie regardless
       }
@@ -129,6 +136,22 @@ export async function logout(req: Request, res: Response) {
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred.' });
     console.error('Error in logout: ', error);
+  }
+}
+
+// "Log out everywhere": revoke every session family for the authenticated user,
+// invalidating all their refresh tokens (including this device's — so the cookie
+// is cleared too). Identity comes from the access token (protectRoute), and this
+// fails CLOSED: if Redis revocation throws, we 500 rather than report success.
+// Note: stateless access tokens already issued stay valid until they expire
+// (≤15m); revoking those is the separate access-token-denylist work.
+export async function logoutAll(req: Request, res: Response) {
+  try {
+    const revokedSessions = await revokeAllSessions(req.user!.id);
+    res.clearCookie('refreshToken').status(200).json({ revokedSessions });
+  } catch (error) {
+    res.status(500).json({ message: 'An unknown error occurred.' });
+    console.error('Error in logoutAll: ', error);
   }
 }
 
