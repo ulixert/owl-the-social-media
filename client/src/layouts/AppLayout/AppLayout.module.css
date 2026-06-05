@@ -14,27 +14,33 @@
   border-top: 1px solid var(--border-color);
 }
 
+/* Scroll region right of the sidebar. The feed sits in a left-aligned column so
+   it hugs the sidebar (empty space falls on the right — where step-3 columns go),
+   rather than floating centered in the leftover width. */
 .main {
-  border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
-  background-color: var(--alt-bg-color);
+  background-color: var(--bg-color);
   color: var(--text-color);
-  box-shadow: var(--mantine-shadow-lg);
-  border: 1px solid var(--border-color);
   margin-top: 60px;
-  padding-bottom: 0;
   min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: flex-start;
 
   @media (max-width: 48em) {
-    border-radius: 0;
     margin-top: 50px;
   }
 }
 
-.container {
-  padding: 0;
+.column {
+  width: 100%;
+  max-width: 640px;
+  min-height: calc(100vh - 60px);
+  background-color: var(--alt-bg-color);
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
 
   @media (max-width: 48em) {
     max-width: none;
-    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 }

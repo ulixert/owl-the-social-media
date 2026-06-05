@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ReturnButton } from '@/components/ReturnButton/ReturnButton.tsx';
 import { LoginButton } from '@/components/LoginButton/LoginButton.tsx';
-import { Flex, Tabs, Text, Box } from '@mantine/core';
+import { Box, Flex, Tabs, Text } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useTitleStore } from '@stores/titleStore.ts';
 
@@ -23,46 +23,46 @@ export function HeaderDesktop() {
   };
 
   return (
-    <Flex justify="center" align="center" h="100%" px="md" className={classes.container}>
-      {!isHomeFeed && (
-        <>
-          <Box className={classes.backButton}>
-            <ReturnButton />
-          </Box>
-          <Text className={classes.title}>
-            {title}
-          </Text>
-        </>
-      )}
+    // Left-aligned so the header bar sits over the feed column (which hugs the
+    // sidebar), matching the main content rather than spanning the full width.
+    <Flex justify="flex-start" align="center" h="100%" className={classes.container}>
+      <Box className={classes.bar}>
+        {!isHomeFeed && (
+          <>
+            <Box className={classes.backButton}>
+              <ReturnButton />
+            </Box>
+            <Text className={classes.title}>{title}</Text>
+          </>
+        )}
 
-      {isHomeFeed && isAuthenticated && (
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          className={classes.tabs}
-          variant="unstyled"
-        >
-          <Tabs.List grow>
-            <Tabs.Tab value="for-you" className={classes.tab}>
-              For You
-            </Tabs.Tab>
-            <Tabs.Tab value="following" className={classes.tab}>
-              Following
-            </Tabs.Tab>
-          </Tabs.List>
-        </Tabs>
-      )}
+        {isHomeFeed && isAuthenticated && (
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            className={classes.tabs}
+            variant="unstyled"
+          >
+            <Tabs.List grow>
+              <Tabs.Tab value="for-you" className={classes.tab}>
+                For You
+              </Tabs.Tab>
+              <Tabs.Tab value="following" className={classes.tab}>
+                Following
+              </Tabs.Tab>
+            </Tabs.List>
+          </Tabs>
+        )}
 
-      {isHomeFeed && !isAuthenticated && (
-        <>
-          <Text className={classes.title}>
-            Home
-          </Text>
-          <Box className={classes.rightButton}>
-            <LoginButton />
-          </Box>
-        </>
-      )}
+        {isHomeFeed && !isAuthenticated && (
+          <>
+            <Text className={classes.title}>Home</Text>
+            <Box className={classes.rightButton}>
+              <LoginButton />
+            </Box>
+          </>
+        )}
+      </Box>
     </Flex>
   );
 }

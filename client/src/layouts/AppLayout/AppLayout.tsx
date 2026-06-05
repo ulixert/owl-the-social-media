@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Outlet, useNavigation } from 'react-router-dom';
 
 import { Loading } from '@/components/Loading/Loading.tsx';
-import { AppShell, Container } from '@mantine/core';
+import { AppShell } from '@mantine/core';
 import { ModalsProvider } from '@mantine/modals';
 
 import { Footer } from '../Footer/Footer.tsx';
@@ -20,6 +20,7 @@ export function AppLayout() {
       <AppShell
         layout="alt"
         padding={0}
+        navbar={{ width: 245, breakpoint: 'sm' }}
         transitionDuration={500}
         transitionTimingFunction="ease"
       >
@@ -36,13 +37,13 @@ export function AppLayout() {
           <Header />
         </AppShell.Header>
 
-        <Container size={640} className={classes.container}>
-          <AppShell.Main className={classes.main}>
+        <AppShell.Main className={classes.main}>
+          <div className={classes.column}>
             <Suspense fallback={<Loading />}>
               <Outlet />
             </Suspense>
-          </AppShell.Main>
-        </Container>
+          </div>
+        </AppShell.Main>
 
         <AppShell.Footer hiddenFrom="sm" withBorder={false} className={classes.footer}>
           <Footer />

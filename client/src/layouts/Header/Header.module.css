@@ -3,9 +3,25 @@
   height: 60px;
 }
 
+/* Column-width bar that aligns the header content with the feed column. The
+   absolute title/buttons below position relative to this, so they sit over the
+   column rather than the full-width header region. */
+.bar {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
 @media (max-width: 48em) {
   .container {
     height: 50px;
+  }
+
+  .bar {
+    max-width: none;
   }
 }
 
@@ -37,7 +53,6 @@
 
 .tabs {
   width: 100%;
-  max-width: 400px;
   align-self: flex-end;
 }
 
