@@ -51,7 +51,11 @@ export function SearchPage() {
   const { data: trending } = useQuery({
     queryKey: ['trendingPosts', isAuthenticated],
     queryFn: async () =>
-      (await axiosInstance.get<PostSearchResponse>('posts/trending')).data,
+      (
+        await axiosInstance.get<PostSearchResponse>('posts/trending', {
+          params: { limit: 15 },
+        })
+      ).data,
     enabled: !isSearching,
   });
 
@@ -125,21 +129,10 @@ export function SearchPage() {
       </Box>
 
       {!isSearching ? (
-        // Explore: suggestions + trending
+        // Explore: trending first, then a few suggestions (Threads-style)
         <Stack gap={0}>
-          {(recommended?.users.length ?? 0) > 0 && (
-            <>
-              <SectionHeader>Suggested for you</SectionHeader>
-              <Stack gap={0}>
-                {recommended?.users.map((user) => (
-                  <UserItem key={user.id} user={user} />
-                ))}
-              </Stack>
-            </>
-          )}
-
           <SectionHeader>Trending</SectionHeader>
-          <Stack gap="md" px="md">
+          <Stack gap="md" px="md" pb="md">
             {trending?.posts.length ? (
               trending.posts.map((post) => <PostItem key={post.id} post={post} />)
             ) : (
@@ -148,6 +141,17 @@ export function SearchPage() {
               </Text>
             )}
           </Stack>
+
+          {(recommended?.users.length ?? 0) > 0 && (
+            <>
+              <SectionHeader>Suggested for you</SectionHeader>
+              <Stack gap={0}>
+                {recommended?.users.slice(0, 5).map((user) => (
+                  <UserItem key={user.id} user={user} />
+                ))}
+              </Stack>
+            </>
+          )}
         </Stack>
       ) : (
         // Search results: accounts, then posts — one scroll, no tabs
