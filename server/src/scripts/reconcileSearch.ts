@@ -46,9 +46,17 @@ async function bulkIndex<T extends { id: number }>(
   source: AsyncGenerator<T>,
   toDoc: (row: T) => object,
 ): Promise<number> {
+  let queued = 0;
   const result = await es.helpers.bulk({
     datasource: source,
-    onDocument: (row) => ({ index: { _index: index, _id: String(row.id) } }),
+    // Tuple form: the action targets the row by id, the second element is the
+    // trimmed document body actually indexed (so `id`/`isDeleted` aren't stored).
+    onDocument: (row) => {
+      // Heartbeat so a multi-minute backfill of the 1M set shows progress rather
+      // than looking hung (the bulk helper otherwise only resolves at the end).
+      if (++queued % 50_000 === 0) process.stdout.write(`  queued ${queued}...\r`);
+      return [{ index: { _index: index, _id: String(row.id) } }, toDoc(row)];
+    },
     onDrop: (doc) => console.error(`[search:reconcile] dropped ${index} doc:`, doc.error),
   });
   return result.successful;
