@@ -213,23 +213,40 @@ export async function searchPostsFeed(
   };
 }
 
-/** Degraded fallback: case-insensitive substring scan, newest first. */
+/**
+ * Degraded fallback when Elasticsearch is cold/down: Postgres full-text search
+ * over the generated `textsearch` tsvector (GIN-indexed), ranked by ts_rank.
+ * `websearch_to_tsquery` safely parses Google-style input (terms, "phrases",
+ * -negation) so we don't sanitise raw input into tsquery operators. Word/stem
+ * matching, not substring — strictly better than the old `ILIKE '%q%'` seq scan,
+ * though it won't match mid-word or tolerate typos the way the ES path does.
+ * Returns ids in rank order, then reuses the shared id-hydration.
+ */
 async function searchPostsFromDb(
   q: string,
   offset: number,
   limit: number,
   viewerId: number | undefined,
 ) {
+  const rows = await prisma.$queryRaw<{ id: number }[]>`
+    SELECT id FROM "Post"
+    WHERE "isDeleted" = false
+      AND "textsearch" @@ websearch_to_tsquery('english', ${q})
+    ORDER BY ts_rank("textsearch", websearch_to_tsquery('english', ${q})) DESC, id DESC
+    OFFSET ${offset} LIMIT ${limit}
+  `;
+  const ids = rows.map((r) => r.id);
+
   const posts = await prisma.post.findMany({
-    where: { text: { contains: q, mode: 'insensitive' }, isDeleted: false },
-    orderBy: { id: 'desc' },
-    skip: offset,
-    take: limit,
+    where: { id: { in: ids }, isDeleted: false },
     include: feedInclude(viewerId),
   });
+  const byId = new Map(posts.map((p) => [p.id, p]));
+  const ranked = ids.map((id) => byId.get(id)).filter((p) => p !== undefined);
+
   return {
-    posts: await withLikeCounts(posts.map(withIsLiked)),
-    nextCursor: posts.length === limit ? offset + limit : null,
+    posts: await withLikeCounts(ranked.map(withIsLiked)),
+    nextCursor: ids.length === limit ? offset + limit : null,
   };
 }
 
