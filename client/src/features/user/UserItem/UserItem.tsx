@@ -41,8 +41,9 @@ export function UserItem({ user }: UserItemProps) {
   return (
     <>
       <Flex
-        gap="md"
+        gap="sm"
         py="sm"
+        align="center"
         style={{ cursor: 'pointer' }}
         onClick={() => navigate(`/user/${user.username}`)}
       >
@@ -56,46 +57,44 @@ export function UserItem({ user }: UserItemProps) {
           </Box>
         </UserHoverCard>
 
-        <Stack gap={2} flex={1} style={{ minWidth: 0 }}>
-          <Flex justify="space-between" align="start">
-            <Box style={{ minWidth: 0 }}>
-              <UserHoverCard username={user.username}>
-                <Box onClick={(e) => e.stopPropagation()}>
-                  <Text fw={700} size="sm" truncate>
-                    {user.name}
-                  </Text>
-                  <Text size="xs" c="dimmed" truncate>
-                    @{user.username}
-                  </Text>
-                </Box>
-              </UserHoverCard>
+        <Stack gap={0} flex={1} style={{ minWidth: 0 }}>
+          <UserHoverCard username={user.username}>
+            <Box
+              onClick={(e) => e.stopPropagation()}
+              style={{ minWidth: 0, width: 'fit-content' }}
+            >
+              <Text fw={700} size="sm" truncate>
+                {user.name}
+              </Text>
+              <Text size="xs" c="dimmed" truncate>
+                @{user.username}
+              </Text>
             </Box>
-
-            {!isCurrentUser && (
-              <Button
-                size="compact-xs"
-                radius="md"
-                variant={user.isFollowing ? 'outline' : 'filled'}
-                color={user.isFollowing ? 'gray' : 'yellow'}
-                onClick={handleFollow}
-                loading={followMutation.isPending}
-                px="md"
-              >
-                {user.isFollowing ? 'Following' : 'Follow'}
-              </Button>
-            )}
-          </Flex>
-
-          <Text size="xs" c="gray.7" fw={500}>
-            {user.followersCount} followers
-          </Text>
+          </UserHoverCard>
 
           {user.biography && (
-            <Text size="sm" lineClamp={2} mt={2}>
+            <Text size="sm" c="dimmed" lineClamp={1}>
               {user.biography}
             </Text>
           )}
+          <Text size="xs" c="dimmed">
+            {user.followersCount.toLocaleString()} followers
+          </Text>
         </Stack>
+
+        {!isCurrentUser && (
+          <Button
+            size="compact-sm"
+            radius="md"
+            variant={user.isFollowing ? 'default' : 'filled'}
+            color={user.isFollowing ? undefined : 'dark'}
+            onClick={handleFollow}
+            loading={followMutation.isPending}
+            px="lg"
+          >
+            {user.isFollowing ? 'Following' : 'Follow'}
+          </Button>
+        )}
       </Flex>
       <Divider ml={52} />
     </>
