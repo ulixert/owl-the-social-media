@@ -1,29 +1,30 @@
 import { useEffect, useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import { axiosInstance } from '@/api/axiosConfig.ts';
+import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
 import { SearchUser, UserItem } from '@/features/user/UserItem/UserItem.tsx';
 import { PostItem } from '@/features/posts/PostItem/PostItem.tsx';
 import {
   Box,
   Center,
+  Divider,
+  Flex,
   Loader,
   Stack,
-  Tabs,
-  TextInput,
   Text,
+  TextInput,
 } from '@mantine/core';
-import { IconSearch, IconX } from '@tabler/icons-react';
+import { IconHeart, IconSearch, IconX } from '@tabler/icons-react';
 import { useTitleStore } from '@stores/titleStore.ts';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useDebouncedValue } from '@mantine/hooks';
 
-import classes from './HomePage.module.css';
-
 type UserSearchResponse = {
   users: SearchUser[];
-  nextCursor: number | null;
+  nextCursor?: number | null;
 };
 
 type PostSearchResponse = {
@@ -31,72 +32,126 @@ type PostSearchResponse = {
   nextCursor: number | null;
 };
 
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <Text fw={700} size="sm" c="dimmed" px="md" py="sm">
+      {children}
+    </Text>
+  );
+}
+
+// Compact trending row (denser than a full PostItem): author + snippet + likes.
+function TrendingItem({ post }: { post: Post }) {
+  const navigate = useNavigate();
+  return (
+    <>
+      <Flex
+        gap="sm"
+        py="sm"
+        align="flex-start"
+        style={{ cursor: 'pointer' }}
+        onClick={() => navigate(`/posts/${post.id}`)}
+      >
+        <UserAvatar
+          username={post.postedBy.username}
+          avatar={post.postedBy.profilePic}
+          size="md"
+        />
+        <Stack gap={2} flex={1} style={{ minWidth: 0 }}>
+          <Flex gap={6} align="center" style={{ minWidth: 0 }}>
+            <Text fw={700} size="sm" truncate>
+              {post.postedBy.name}
+            </Text>
+            <Text size="xs" c="dimmed" truncate>
+              @{post.postedBy.username}
+            </Text>
+          </Flex>
+          {post.text && (
+            <Text size="sm" lineClamp={2}>
+              {post.text}
+            </Text>
+          )}
+          <Flex gap={4} align="center" mt={2} c="dimmed">
+            <IconHeart size={13} />
+            <Text size="xs" c="dimmed">
+              {post.likesCount.toLocaleString()}
+            </Text>
+          </Flex>
+        </Stack>
+      </Flex>
+      <Divider ml={52} />
+    </>
+  );
+}
+
 export function SearchPage() {
   const setTitle = useTitleStore((state) => state.setTitle);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [query, setQuery] = useState('');
   const [debouncedQuery] = useDebouncedValue(query, 300);
-  const [activeTab, setActiveTab] = useState<string | null>('users');
+  const isSearching = debouncedQuery.length > 0;
 
   useEffect(() => {
-    setTitle('Search');
+    setTitle('Explore');
   }, [setTitle]);
 
-  const {
-    data: userData,
-    fetchNextPage: fetchNextUsers,
-    hasNextPage: hasMoreUsers,
-    isFetching: isFetchingUsers,
-    isLoading: isLoadingUsers,
-  } = useInfiniteQuery({
+  // --- Idle (explore): who to follow + trending posts ---
+  const { data: recommended } = useQuery({
+    queryKey: ['recommendedUsers', isAuthenticated],
+    queryFn: async () =>
+      (await axiosInstance.get<UserSearchResponse>('users/recommended')).data,
+    enabled: !isSearching,
+  });
+
+  const { data: trending } = useQuery({
+    queryKey: ['trendingPosts', isAuthenticated],
+    queryFn: async () =>
+      (
+        await axiosInstance.get<PostSearchResponse>('posts/trending', {
+          params: { limit: 10 },
+        })
+      ).data,
+    enabled: !isSearching,
+  });
+
+  // --- Searching: top matching accounts + an infinite post feed ---
+  const { data: userMatches, isLoading: loadingUsers } = useQuery({
     queryKey: ['search', 'users', debouncedQuery, isAuthenticated],
-    queryFn: async ({ pageParam }): Promise<UserSearchResponse> => {
-      const response = await axiosInstance.get<UserSearchResponse>(
-        'posts/search/users',
-        {
-          params: { q: debouncedQuery, cursor: pageParam || undefined },
-        },
-      );
-      return response.data;
-    },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-    enabled: debouncedQuery.length > 0 && activeTab === 'users',
+    queryFn: async () =>
+      (
+        await axiosInstance.get<UserSearchResponse>('posts/search/users', {
+          params: { q: debouncedQuery },
+        })
+      ).data,
+    enabled: isSearching,
   });
 
   const {
-    data: postData,
-    fetchNextPage: fetchNextPosts,
-    hasNextPage: hasMorePosts,
+    data: postMatches,
+    fetchNextPage,
+    hasNextPage,
     isFetching: isFetchingPosts,
-    isLoading: isLoadingPosts,
+    isLoading: loadingPosts,
   } = useInfiniteQuery({
     queryKey: ['search', 'posts', debouncedQuery, isAuthenticated],
-    queryFn: async ({ pageParam }): Promise<PostSearchResponse> => {
-      const response = await axiosInstance.get<PostSearchResponse>(
-        'posts/search/posts',
-        {
+    queryFn: async ({ pageParam }): Promise<PostSearchResponse> =>
+      (
+        await axiosInstance.get<PostSearchResponse>('posts/search/posts', {
           params: { q: debouncedQuery, cursor: pageParam || undefined },
-        },
-      );
-      return response.data;
-    },
+        })
+      ).data,
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    enabled: debouncedQuery.length > 0 && activeTab === 'posts',
+    enabled: isSearching,
   });
 
   const { ref, inView } = useInView();
-
   useEffect(() => {
-    if (inView) {
-      if (activeTab === 'users' && hasMoreUsers) {
-        void fetchNextUsers();
-      } else if (activeTab === 'posts' && hasMorePosts) {
-        void fetchNextPosts();
-      }
-    }
-  }, [inView, activeTab, hasMoreUsers, hasMorePosts, fetchNextUsers, fetchNextPosts]);
+    if (inView && hasNextPage) void fetchNextPage();
+  }, [inView, hasNextPage, fetchNextPage]);
+
+  const users = userMatches?.users ?? [];
+  const posts = postMatches?.pages.flatMap((page) => page.posts) ?? [];
 
   return (
     <Stack gap={0}>
@@ -120,79 +175,84 @@ export function SearchPage() {
           autoFocus
           styles={{
             input: {
-              backgroundColor: 'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6))',
+              backgroundColor:
+                'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6))',
               border: 'none',
             },
           }}
         />
       </Box>
 
-      <Tabs value={activeTab} onChange={setActiveTab} variant="default">
-        <Tabs.List grow>
-          <Tabs.Tab value="users" fw={600} className={classes.tab} py={12}>
-            Users
-          </Tabs.Tab>
-          <Tabs.Tab value="posts" fw={600} className={classes.tab} py={12}>
-            Posts
-          </Tabs.Tab>
-        </Tabs.List>
+      {!isSearching ? (
+        // Explore: trending first, then a few suggestions (Threads-style)
+        <Stack gap={0}>
+          <SectionHeader>Trending</SectionHeader>
+          <Box px="md">
+            {trending?.posts.length ? (
+              trending.posts.map((post) => (
+                <TrendingItem key={post.id} post={post} />
+              ))
+            ) : (
+              <Text c="dimmed" ta="center" py="xl">
+                Nothing trending yet — check back soon.
+              </Text>
+            )}
+          </Box>
 
-        <Box p="md">
-          {debouncedQuery.length === 0 ? (
-            <Center mt="xl">
-              <Text c="dimmed">Try searching for people or posts</Text>
-            </Center>
-          ) : (
+          {(recommended?.users.length ?? 0) > 0 && (
             <>
-              {activeTab === 'users' && (
-                <Stack gap={0}>
-                  {userData?.pages.map((page) =>
-                    page.users.map((user) => <UserItem key={user.id} user={user} />),
-                  )}
-                  {isLoadingUsers && (
-                    <Center py="xl">
-                      <Loader size="sm" />
-                    </Center>
-                  )}
-                  {!isLoadingUsers && userData?.pages[0].users.length === 0 && (
-                    <Center py="xl">
-                      <Text c="dimmed">No users found</Text>
-                    </Center>
-                  )}
-                </Stack>
-              )}
-
-              {activeTab === 'posts' && (
-                <Stack gap="md">
-                  {postData?.pages.map((page) =>
-                    page.posts.map((post) => <PostItem key={post.id} post={post} />),
-                  )}
-                  {isLoadingPosts && (
-                    <Center py="xl">
-                      <Loader size="sm" />
-                    </Center>
-                  )}
-                  {!isLoadingPosts && postData?.pages[0].posts.length === 0 && (
-                    <Center py="xl">
-                      <Text c="dimmed">No posts found</Text>
-                    </Center>
-                  )}
-                </Stack>
-              )}
-
-              {(hasMoreUsers || hasMorePosts) && (
-                <div ref={ref}>
-                  {(isFetchingUsers || isFetchingPosts) && (
-                    <Center py="md">
-                      <Loader size="xs" />
-                    </Center>
-                  )}
-                </div>
-              )}
+              <SectionHeader>Suggested for you</SectionHeader>
+              <Box px="md">
+                {recommended?.users.slice(0, 5).map((user) => (
+                  <UserItem key={user.id} user={user} />
+                ))}
+              </Box>
             </>
           )}
-        </Box>
-      </Tabs>
+        </Stack>
+      ) : (
+        // Search results: accounts, then posts — one scroll, no tabs
+        <Stack gap={0}>
+          <SectionHeader>Accounts</SectionHeader>
+          {loadingUsers ? (
+            <Center py="md">
+              <Loader size="sm" />
+            </Center>
+          ) : users.length > 0 ? (
+            <Box px="md">
+              {users.map((user) => (
+                <UserItem key={user.id} user={user} />
+              ))}
+            </Box>
+          ) : (
+            <Text c="dimmed" px="md" pb="sm">
+              No accounts found
+            </Text>
+          )}
+
+          <SectionHeader>Posts</SectionHeader>
+          <Stack gap="md" px="md">
+            {posts.map((post) => (
+              <PostItem key={post.id} post={post} />
+            ))}
+            {!loadingPosts && posts.length === 0 && (
+              <Text c="dimmed" ta="center" py="md">
+                No posts found
+              </Text>
+            )}
+          </Stack>
+
+          {hasNextPage && (
+            <div ref={ref}>
+              {isFetchingPosts && (
+                <Center py="md">
+                  <Loader size="xs" />
+                </Center>
+              )}
+            </div>
+          )}
+        </Stack>
+      )}
     </Stack>
   );
 }

@@ -144,6 +144,79 @@ services:
     networks: [appnet]
     restart: "no"
 
+  # --- Flink (trending job). Behind the `flink` profile so `cdc:up` is unaffected;
+  # brought up with `pnpm flink:up` and the job submitted with `pnpm flink:submit`. ---
+  flink-jobmanager:
+    image: flink:1.20.0-scala_2.12-java17
+    profiles: ["flink"]
+    command: jobmanager
+    ports:
+      - "8081:8081" # Flink web UI
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager
+    networks: [appnet]
+
+  flink-taskmanager:
+    image: flink:1.20.0-scala_2.12-java17
+    profiles: ["flink"]
+    command: taskmanager
+    depends_on: [flink-jobmanager]
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 2
+    networks: [appnet]
+
+  # One-shot: build the fat JAR (Maven cache persisted) into the shared volume.
+  trending-build:
+    image: maven:3.9-eclipse-temurin-17
+    profiles: ["flink"]
+    working_dir: /src
+    volumes:
+      - ./trending-job:/src
+      - maven_repo:/root/.m2
+      - flink_jobs:/out
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -e
+        mvn -q -DskipTests package
+        cp target/trending-job.jar /out/trending-job.jar
+        echo "built trending-job.jar"
+    restart: "no"
+
+  # One-shot: wait for the jobmanager, then submit the job. The job reads these
+  # envs in main() (the submit client runs main to build the graph).
+  trending-submit:
+    image: flink:1.20.0-scala_2.12-java17
+    profiles: ["flink"]
+    depends_on:
+      flink-jobmanager:
+        condition: service_started
+      trending-build:
+        condition: service_completed_successfully
+    environment:
+      KAFKA_BROKERS: "redpanda:9092"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      TRENDING_KEY: "trending"
+    volumes:
+      - flink_jobs:/jobs
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        echo "waiting for jobmanager REST..."
+        until flink list -m flink-jobmanager:8081 >/dev/null 2>&1; do sleep 3; done
+        echo "submitting trending job..."
+        flink run -d -m flink-jobmanager:8081 /jobs/trending-job.jar
+    networks: [appnet]
+    restart: "no"
+
 volumes:
   redpanda_data:
   redis_data:
+  flink_jobs:
+  maven_repo:

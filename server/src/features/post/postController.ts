@@ -9,6 +9,21 @@ import {
   postQuerySchema,
 } from '../../types/validation/schemas.js';
 import { withLikeCounts } from './likeCounts.js';
+import { getTrendingFeed } from './trending.js';
+
+export async function getTrendingPosts(req: Request, res: Response) {
+  try {
+    const input = postQuerySchema.safeParse(req.query);
+    const limit = input.success ? input.data.limit : 10;
+
+    const posts = await getTrendingFeed(limit, req.user?.id);
+    // Bounded top-K (the Flink window), so no pagination cursor.
+    res.status(200).json({ posts, nextCursor: null });
+  } catch (error) {
+    res.status(500).json({ error: 'An unknown error occurred' });
+    console.error('Error in getTrendingPosts: ', error);
+  }
+}
 
 export async function getHotPosts(req: Request, res: Response) {
   try {

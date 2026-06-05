@@ -7,7 +7,7 @@ import { withLikeCounts } from './likeCounts.js';
 
 // Shared include shape for feed posts: author summary, parent author (for reply
 // context), and the viewer's own like row (to derive isLiked).
-function feedInclude(viewerId: number | undefined) {
+export function feedInclude(viewerId: number | undefined) {
   return {
     postedBy: { select: { id: true, username: true, name: true, profilePic: true } },
     parentPost: { select: { postedBy: { select: { username: true } } } },
@@ -15,7 +15,7 @@ function feedInclude(viewerId: number | undefined) {
   };
 }
 
-function withIsLiked<T extends { likes?: unknown[] }>(post: T) {
+export function withIsLiked<T extends { likes?: unknown[] }>(post: T) {
   const { likes, ...rest } = post;
   return { ...rest, isLiked: likes ? likes.length > 0 : false };
 }

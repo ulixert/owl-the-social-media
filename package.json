@@ -15,7 +15,10 @@
     "cdc:up": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml up -d db redis redpanda console connect connect-setup",
     "cdc:down": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml down",
     "cdc:status": "curl -s http://localhost:8083/connectors/owl-postgres/status",
-    "cdc:clean": "sh cdc/clean.sh"
+    "cdc:clean": "sh cdc/clean.sh",
+    "flink:up": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml --profile flink up -d flink-jobmanager flink-taskmanager",
+    "flink:submit": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml --profile flink up trending-build trending-submit",
+    "flink:down": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml --profile flink rm -sf flink-jobmanager flink-taskmanager"
   },
   "keywords": [],
   "author": "",
