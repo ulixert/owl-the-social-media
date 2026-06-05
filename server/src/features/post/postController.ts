@@ -8,6 +8,7 @@ import {
   postParamsSchema,
   postQuerySchema,
 } from '../../types/validation/schemas.js';
+import { searchPostsFeed, searchUsersFeed } from '../search/search.js';
 import { withLikeCounts } from './likeCounts.js';
 import { getTrendingFeed } from './trending.js';
 
@@ -443,6 +444,9 @@ const searchQuerySchema = postQuerySchema.extend({
   q: z.string().min(1),
 });
 
+// Search is served from the Elasticsearch view (full-text, fuzzy, relevance
+// ranked), hydrated from Postgres; it falls back to a plain ILIKE query when ES
+// is cold or down. The cursor is an offset on both paths (see search.ts).
 export async function searchUsers(req: Request, res: Response) {
   try {
     const input = searchQuerySchema.safeParse(req.query);
@@ -452,50 +456,8 @@ export async function searchUsers(req: Request, res: Response) {
     }
 
     const { q, cursor, limit } = input.data;
-
-    const users = await prisma.user.findMany({
-      where: {
-        ...(cursor ? { id: { lt: cursor } } : {}),
-        OR: [
-          { username: { contains: q, mode: 'insensitive' } },
-          { name: { contains: q, mode: 'insensitive' } },
-        ],
-      },
-      orderBy: { id: 'desc' },
-      take: limit,
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        profilePic: true,
-        biography: true,
-        followersCount: true,
-      },
-    });
-
-    // Resolve "is the current user following this user" for the whole page in
-    // a single query instead of one lookup per result (N+1).
-    let followedIds = new Set<number>();
-    if (req.user) {
-      const follows = await prisma.userFollows.findMany({
-        where: {
-          followerId: req.user.id,
-          followingId: { in: users.map((user) => user.id) },
-        },
-        select: { followingId: true },
-      });
-      followedIds = new Set(follows.map((follow) => follow.followingId));
-    }
-
-    const usersWithFollowStatus = users.map((user) => ({
-      ...user,
-      isFollowing: followedIds.has(user.id),
-    }));
-
-    const nextCursor =
-      users.length === limit ? users[users.length - 1].id : null;
-
-    res.status(200).json({ users: usersWithFollowStatus, nextCursor });
+    const result = await searchUsersFeed(q, cursor, limit, req.user?.id);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred' });
     console.error('Error in searchUsers: ', error);
@@ -511,58 +473,8 @@ export async function searchPosts(req: Request, res: Response) {
     }
 
     const { q, cursor, limit } = input.data;
-
-    const posts = await prisma.post.findMany({
-      where: {
-        text: { contains: q, mode: 'insensitive' },
-        isDeleted: false,
-        ...(cursor ? { id: { lt: cursor } } : {}),
-      },
-      orderBy: { id: 'desc' },
-      take: limit,
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            profilePic: true,
-          },
-        },
-        parentPost: {
-          select: {
-            postedBy: {
-              select: {
-                username: true,
-              },
-            },
-          },
-        },
-        likes: req.user
-          ? {
-              where: {
-                userId: req.user.id,
-              },
-            }
-          : undefined,
-      },
-    });
-
-    const postsWithIsLiked = posts.map((post) => {
-      const { likes, ...rest } = post;
-      return {
-        ...rest,
-        isLiked: likes ? likes.length > 0 : false,
-      };
-    });
-
-    const nextCursor =
-      posts.length === limit ? posts[posts.length - 1].id : null;
-
-    res.status(200).json({
-      posts: await withLikeCounts(postsWithIsLiked),
-      nextCursor,
-    });
+    const result = await searchPostsFeed(q, cursor, limit, req.user?.id);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred' });
     console.error('Error in searchPosts: ', error);

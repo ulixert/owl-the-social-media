@@ -52,6 +52,11 @@ model Post {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   images        String[]
+  // Full-text search vector over `text`, generated + maintained by Postgres
+  // (see the *_post_text_search migration). Prisma can't represent a GENERATED
+  // tsvector column, so it's Unsupported here and queried via $queryRaw; this
+  // declaration just keeps Prisma aware of it so migrate doesn't drop it.
+  textsearch    Unsupported("tsvector")?
   likes         Like[]
   parentPost    Post?    @relation("ParentPost", fields: [parentPostId], references: [id])
   childPosts    Post[]   @relation("ParentPost")
@@ -62,6 +67,8 @@ model Post {
   // Feed keyset pagination: filter by author/parent, order by id desc.
   @@index([postedById, id])
   @@index([parentPostId, id])
+  // GIN index backing the full-text search fallback (searchPostsFromDb).
+  @@index([textsearch], type: Gin)
 }
 
 model Like {
