@@ -14,7 +14,6 @@ import argon2 from '@node-rs/argon2';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { PrismaClient } from '../../generated/prisma/client.js';
 import { storage } from '../../src/storage/index.js';
@@ -26,7 +25,11 @@ const NOW = Date.now();
 // Override with DEMO_PASSWORD; defaults to something obvious and harmless.
 const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? 'owldemo123';
 
-const ASSET_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'assets');
+// Resolved against the working directory rather than this file's location, so it
+// works both run from source via tsx (cwd = server/) and as the bundled dist
+// build inside the container (cwd = /app); both have prisma/seed/assets. Override
+// with DEMO_ASSET_DIR if needed.
+const ASSET_DIR = process.env.DEMO_ASSET_DIR ?? path.resolve('prisma/seed/assets');
 
 // Push a committed SVG asset through the real storage backend (disk now, S3
 // later) and return the public URL — the same path a user upload takes, so the
