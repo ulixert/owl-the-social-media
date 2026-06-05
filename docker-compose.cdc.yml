@@ -144,6 +144,27 @@ services:
     networks: [appnet]
     restart: "no"
 
+  # --- Elasticsearch (search index). Behind the `es` profile so `cdc:up` is
+  # unaffected; brought up with `pnpm es:up`. Single-node, security off — this is
+  # a local, rebuildable search cache, not a system of record. ~1GB heap. ---
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    profiles: ["es"]
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ports:
+      - "9200:9200" # REST API from the host
+    networks: [appnet]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
   # --- Flink (trending job). Behind the `flink` profile so `cdc:up` is unaffected;
   # brought up with `pnpm flink:up` and the job submitted with `pnpm flink:submit`. ---
   flink-jobmanager:
@@ -220,3 +241,4 @@ volumes:
   redis_data:
   flink_jobs:
   maven_repo:
+  es_data:
