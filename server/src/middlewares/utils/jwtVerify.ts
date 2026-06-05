@@ -7,6 +7,9 @@ type JwtPayload = {
   username: string;
   name: string;
   profilePic: string | null;
+  // Present on refresh tokens (stateful sessions); absent on access tokens.
+  familyId?: string;
+  jti?: string;
   iat: number;
   exp: number;
 };
