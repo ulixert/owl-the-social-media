@@ -27,12 +27,19 @@ const mono: MantineColorsTuple = [
 // shade wasn't flipping the label, leaving white-on-white in dark mode.)
 const variantColorResolver: VariantColorsResolver = (input) => {
   const resolved = defaultVariantColorsResolver(input);
-  if (input.color === 'mono' && input.variant === 'filled') {
+  // Match both the explicit `color="mono"` and the *default* primary (a Button
+  // with no color prop arrives here with color undefined, which is why the Log in
+  // button previously skipped this branch and looked different from Follow).
+  const isMono = input.color === 'mono' || input.color == null;
+  if (isMono && input.variant === 'filled') {
     return {
       ...resolved,
-      background: 'var(--mantine-color-text)',
-      hover: 'light-dark(var(--mantine-color-dark-6), var(--mantine-color-gray-2))',
-      color: 'var(--mantine-color-body)',
+      // Crisp black/white (not the muted --mantine-color-text gray), inverting by
+      // scheme: black button + white text in light, white + black in dark.
+      background: 'light-dark(var(--mantine-color-black), var(--mantine-color-white))',
+      color: 'light-dark(var(--mantine-color-white), var(--mantine-color-black))',
+      // A clearly visible hover: lighten the black button, darken the white one.
+      hover: 'light-dark(var(--mantine-color-dark-5), var(--mantine-color-gray-3))',
       border: 'none',
     };
   }
@@ -45,6 +52,12 @@ export const theme = createTheme({
   // Near-black accents in light mode (shade 9), near-white in dark mode (shade 0)
   // for the non-filled uses (outline/light variants, loaders, text accents).
   primaryShade: { light: 9, dark: 0 },
-  autoContrast: true,
   variantColorResolver,
+  components: {
+    // Default every Button to the monochrome filled look, so a plain <Button>
+    // gets the exact same treatment as one with explicit color="mono"
+    // variant="filled" (which is what made the resolver's bg/hover apply). An
+    // explicit color/variant on a button still overrides these.
+    Button: { defaultProps: { color: 'mono', variant: 'filled' } },
+  },
 });
