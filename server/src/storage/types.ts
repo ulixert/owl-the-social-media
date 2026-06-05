@@ -3,14 +3,14 @@
 // implement `Storage`, register it in the factory in ./index.ts, flip a STORAGE_DRIVER
 // env var. Nothing in the app or the seed imports a concrete backend directly.
 
-export interface StoredFile {
+export type StoredFile = {
   /** Stable identifier within the backend (filename on disk, object key in S3). */
   key: string;
   /** Public URL the client can load the image from. */
   url: string;
 }
 
-export interface Storage {
+export type Storage = {
   /** Persist bytes and return where they now live. */
   save(buffer: Buffer, contentType: string): Promise<StoredFile>;
   /** Remove a previously stored object. Optional: backends may no-op. */
