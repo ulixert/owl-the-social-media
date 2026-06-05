@@ -19,11 +19,17 @@ services:
     image: ghcr.io/ulixert/owl-server:latest
     env_file:
       - ./server/.prod.env
+    environment:
+      # Where DiskStorage writes uploads; backed by the named volume below so
+      # images survive container restarts and redeploys.
+      UPLOAD_DIR: /app/uploads
     depends_on:
       db:
         condition: service_healthy
     networks: [appnet]
     restart: unless-stopped
+    volumes:
+      - uploads:/app/uploads
 
   migrate:
     image: ghcr.io/ulixert/owl-server:latest
@@ -51,3 +57,4 @@ networks:
 
 volumes:
   pg_data:
+  uploads:
