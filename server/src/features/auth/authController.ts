@@ -1,140 +1,140 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 import { LoginSchema, UserCreateSchema } from 'validation';
 
 import argon2 from '@node-rs/argon2';
 
 import { prisma } from '../../db';
+import { JWTError } from '../../errors/errors.js';
 import { jwtVerify } from '../../middlewares/utils/jwtVerify.js';
 import {
   generateAccessToken,
-  generateRefreshTokenAndSetCookie,
+  issueRefreshToken,
 } from '../../utils/generateTokenAndSetCookie.js';
+import { createSession, revokeSession, rotateSession } from './session.js';
 import { checkPassword } from './utils/checkPassword.js';
+
+type AuthUser = {
+  id: number;
+  username: string;
+  name: string;
+  profilePic: string | null;
+};
+
+// Start a session, set the rotating refresh cookie, and return the auth payload.
+async function issueSession(res: Response, user: AuthUser) {
+  const { familyId, jti } = await createSession();
+  issueRefreshToken(res, {
+    userId: user.id,
+    username: user.username,
+    name: user.name,
+    profilePic: user.profilePic,
+    familyId,
+    jti,
+  });
+  return {
+    accessToken: generateAccessToken(user.id),
+    userId: user.id,
+    username: user.username,
+    name: user.name,
+    profilePic: user.profilePic,
+  };
+}
 
 export async function login(req: Request, res: Response) {
   try {
-    // Validate input
     const input = LoginSchema.safeParse(req.body);
     if (!input.success) {
-      res.status(400).json({
-        message: 'Invalid user data',
-      });
+      res.status(400).json({ message: 'Invalid user data' });
       return;
     }
 
     const { email, password } = input.data;
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { password: true, id: true, username: true, name: true, profilePic: true },
+      select: {
+        password: true,
+        id: true,
+        username: true,
+        name: true,
+        profilePic: true,
+      },
     });
     if (!user) {
-      res.status(400).json({
-        message: 'Invalid email or password',
-      });
+      res.status(400).json({ message: 'Invalid email or password' });
       return;
     }
 
-    // Check if password is correct
     const isPasswordCorrect = await checkPassword(user.password, password);
     if (!isPasswordCorrect) {
-      res.status(400).json({
-        message: 'Invalid email or password',
-      });
+      res.status(400).json({ message: 'Invalid email or password' });
       return;
     }
 
-    // Generate tokens
-    generateRefreshTokenAndSetCookie(
-      res,
-      user.id,
-      user.username,
-      user.name,
-      user.profilePic,
-    );
-    res.status(200).json({
-      accessToken: generateAccessToken(user.id),
-      userId: user.id,
-      username: user.username,
-      name: user.name,
-      profilePic: user.profilePic,
-    });
+    res.status(200).json(await issueSession(res, user));
   } catch (error) {
     res.status(500).json({ message: 'An unknown error occurred.' });
     console.error('Error in login: ', error);
   }
 }
 
-export function logout(_req: Request, res: Response) {
-  try {
-    res.clearCookie('refreshToken').status(204).send();
-  } catch (error) {
-    res.status(500).json({
-      message: 'An unknown error occurred.',
-    });
-    console.error('Error in logout: ', error);
-  }
-}
-
 export async function signup(req: Request, res: Response) {
   try {
-    // Validate input
     const input = UserCreateSchema.safeParse(req.body);
     if (!input.success) {
       res.status(400).json({ message: 'Invalid user data' });
       return;
     }
 
-    // Check if user already exists
     const { username, email, password, name } = input.data;
     const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ email }, { username }],
-      },
+      where: { OR: [{ email }, { username }] },
     });
-
     if (existingUser) {
-      res.status(400).json({
-        message: 'User already exists',
-      });
+      res.status(400).json({ message: 'User already exists' });
       return;
     }
 
-    // Create new user
     const hashedPassword = await argon2.hash(password);
-
     const newUser = await prisma.user.create({
-      data: {
-        email,
-        username,
-        password: hashedPassword,
-        name,
-      },
+      data: { email, username, password: hashedPassword, name },
     });
 
-    generateRefreshTokenAndSetCookie(
-      res,
-      newUser.id,
-      newUser.username,
-      newUser.name,
-      newUser.profilePic,
-    );
-    res.status(201).json({
-      accessToken: generateAccessToken(newUser.id),
-      userId: newUser.id,
-      username: newUser.username,
-      name: newUser.name,
-      profilePic: newUser.profilePic,
-    });
+    res.status(201).json(await issueSession(res, newUser));
   } catch (error) {
-    res.status(500).json({
-      message: 'An unknown error occurred.',
-    });
+    res.status(500).json({ message: 'An unknown error occurred.' });
     console.error('Error in signup: ', error);
   }
 }
 
-// Token Refresh Function
+// Best-effort revoke: kill the session family in Redis, then always clear the
+// cookie (even if the token is unverifiable, so the client ends up logged out).
+export async function logout(req: Request, res: Response) {
+  try {
+    const token =
+      typeof req.cookies?.refreshToken === 'string'
+        ? req.cookies.refreshToken
+        : undefined;
+    if (token) {
+      try {
+        const { familyId } = await jwtVerify(
+          token,
+          process.env.REFRESH_TOKEN_SECRET!,
+        );
+        if (familyId) await revokeSession(familyId);
+      } catch {
+        // ignore — clear the cookie regardless
+      }
+    }
+    res.clearCookie('refreshToken').status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: 'An unknown error occurred.' });
+    console.error('Error in logout: ', error);
+  }
+}
+
+// Rotating refresh: verify the JWT, then require its jti to match the family's
+// current jti in Redis. Match → rotate (new jti + cookie). Stale jti → reuse
+// detected (the family is revoked). Missing family → revoked/expired/logged out.
 export async function refreshAccessToken(req: Request, res: Response) {
   try {
     const token =
@@ -142,36 +142,56 @@ export async function refreshAccessToken(req: Request, res: Response) {
         ? req.cookies.refreshToken
         : undefined;
     if (!token) {
+      res.status(401).json({ message: 'Refresh token not found' });
+      return;
+    }
+
+    let payload;
+    try {
+      payload = await jwtVerify(token, process.env.REFRESH_TOKEN_SECRET!);
+    } catch (err) {
+      if (err instanceof JWTError) {
+        res.status(401).json({ message: 'Invalid or expired refresh token.' });
+        return;
+      }
+      throw err;
+    }
+
+    const { userId, username, name, profilePic, familyId, jti } = payload;
+    if (!familyId || !jti) {
+      // Pre-rotation token (no session) — force a fresh login.
+      res.status(401).json({ message: 'Please log in again.' });
+      return;
+    }
+
+    const result = await rotateSession(familyId, jti);
+    if (result.status !== 'rotated') {
       res.status(401).json({
-        message: 'Refresh token not found',
+        message:
+          result.status === 'reuse'
+            ? 'Refresh token reuse detected. Please log in again.'
+            : 'Session expired. Please log in again.',
       });
       return;
     }
 
-    const { userId, username, name, profilePic } = await jwtVerify(
-      token,
-      process.env.REFRESH_TOKEN_SECRET!,
-    );
-
-    const accessToken = generateAccessToken(userId);
-
-    res.status(200).json({ accessToken, userId, username, name, profilePic });
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      res.status(401).json({
-        message: 'Refresh token expired. Please log in again.',
-      });
-      return;
-    } else if (error instanceof jwt.JsonWebTokenError) {
-      res.status(401).json({
-        message: 'Invalid refresh token. Please log in again.',
-      });
-      return;
-    }
-
-    console.error('Error in refreshAccessToken:', error);
-    res.status(500).json({
-      message: 'An unknown error occurred.',
+    issueRefreshToken(res, {
+      userId,
+      username,
+      name,
+      profilePic,
+      familyId,
+      jti: result.jti,
     });
+    res.status(200).json({
+      accessToken: generateAccessToken(userId),
+      userId,
+      username,
+      name,
+      profilePic,
+    });
+  } catch (error) {
+    console.error('Error in refreshAccessToken:', error);
+    res.status(500).json({ message: 'An unknown error occurred.' });
   }
 }
