@@ -34,10 +34,11 @@ const variantColorResolver: VariantColorsResolver = (input) => {
   if (isMono && input.variant === 'filled') {
     return {
       ...resolved,
-      // Crisp black/white (not the muted --mantine-color-text gray), inverting by
-      // scheme: black button + white text in light, white + black in dark.
-      background: 'light-dark(var(--mantine-color-black), var(--mantine-color-white))',
-      color: 'light-dark(var(--mantine-color-white), var(--mantine-color-black))',
+      // Near-black / near-white (not pure #000/#fff, which is harsh at scale),
+      // inverting by scheme: dark button + light text in light mode, and the
+      // reverse in dark mode. These match the logo fills so the two agree.
+      background: 'light-dark(#101010, #f3f5f7)',
+      color: 'light-dark(#f3f5f7, #101010)',
       // A clearly visible hover: lighten the black button, darken the white one.
       hover: 'light-dark(var(--mantine-color-dark-5), var(--mantine-color-gray-3))',
       border: 'none',
