@@ -15,6 +15,20 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
 
+  # Session store for stateful refresh tokens. Persisted so sessions survive
+  # restarts; auth fails closed if it's unavailable.
+  redis:
+    image: redis:7-alpine
+    networks: [appnet]
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis_data:/data
+
   server:
     image: ghcr.io/ulixert/owl-server:latest
     env_file:
@@ -23,8 +37,12 @@ services:
       # Where DiskStorage writes uploads; backed by the named volume below so
       # images survive container restarts and redeploys.
       UPLOAD_DIR: /app/uploads
+      # Stateful refresh-token sessions (see docs/auth-sessions.md).
+      REDIS_URL: redis://redis:6379
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks: [appnet]
     restart: unless-stopped
@@ -81,3 +99,4 @@ networks:
 volumes:
   pg_data:
   uploads:
+  redis_data:
