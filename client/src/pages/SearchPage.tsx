@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import { axiosInstance } from '@/api/axiosConfig.ts';
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
@@ -124,6 +128,9 @@ export function SearchPage() {
         })
       ).data,
     enabled: isSearching,
+    // Keep the prior term's results visible while the next term loads, so the
+    // list doesn't blank to a spinner on every keystroke.
+    placeholderData: keepPreviousData,
   });
 
   const {
@@ -143,6 +150,7 @@ export function SearchPage() {
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: isSearching,
+    placeholderData: keepPreviousData,
   });
 
   const { ref, inView } = useInView();
