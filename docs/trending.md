@@ -17,7 +17,7 @@ owl.public.Like (Redpanda, Debezium JSON)
       │
   GET /api/v1/posts/trending ─▶ ZREVRANGE trending ─▶ hydrate (PG) ─▶ response
       │
-  client: /trending page + nav link
+  client: Explore (search) page — Trending feed + "who to follow"
 ```
 
 - **Truth**: `Like` rows in Postgres. **View**: Redis ZSET `trending`. The Flink job is the single writer; the API only reads it (cache, not truth — DB fallback when cold/down).
@@ -43,10 +43,10 @@ Flink web UI: http://localhost:8081 (watch the job, watermarks, and records in/o
 
 ## Verified
 
-End-to-end on the live stack: inserted a burst of `Like` rows for two posts (with `createdAt` ~2 min in the past) plus a few `now()` "advancer" likes to push the watermark past a window boundary. The window fired and the `trending` ZSET reflected the ranking (`post 100` → score 10 above `post 200` → 6). `GET /posts/trending` serves those posts in rank order; with the ZSET empty it falls back to the DB query. Java unit tests cover the `LikeEvent` parser; server tests cover the endpoint's Redis-hit and fallback paths.
+End-to-end on the live stack: inserted a burst of `Like` rows for two posts (with `createdAt` ~2 min in the past) plus a few `now()` "advancer" likes to push the watermark past a window boundary. The window fired and the `trending` ZSET reflected the ranking (`post 100` above `post 200`). `GET /posts/trending` serves those posts in rank order; with the ZSET empty it falls back to the DB query. The Explore page renders that feed alongside `/users/recommended`. Java unit tests cover the `LikeEvent` parser; server tests cover the endpoint's Redis-hit and fallback paths.
 
 ## Out of scope / next
 
 - **Local only.** The Flink cluster (a JVM jobmanager + taskmanager) is the heaviest component yet; it stays out of prod per the prod-realtime decision, like the other consumers.
 - **Unlike-decrement** isn't modelled — we count likes *given* in the window (op c/r); subtracting unlikes needs the unlike's commit time as its event time. A noted refinement.
-- A compact right-rail Trending sidebar (vs. the current full `/trending` page) is left as homepage polish.
+- Trending is surfaced on the **Explore** (search) page — idle shows the Trending feed + "who to follow" (`/users/recommended`), and typing searches accounts + posts in one scroll (Threads-style). A standalone trending page was intentionally dropped to avoid overlapping Following/For-You.
