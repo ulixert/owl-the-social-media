@@ -8,6 +8,7 @@
 // Not an ML ranker — a heuristic is the right complexity at this scale.
 
 import { prisma } from '../../db/index.js';
+import { getFollowingFeedIds } from './feed.js';
 import { withLikeCounts } from './likeCounts.js';
 import { feedInclude, withIsLiked } from './postSerializers.js';
 import { getTrendingPostIds } from './trending.js';
@@ -95,16 +96,11 @@ export async function getForYouFeed(
   const followedSet = new Set(followedIds);
 
   // --- Candidate generation: bounded, mostly indexed queries ---
-  const [followedPosts, socialLikes, popularPosts, trendingIds] =
+  const [followedFeedIds, socialLikes, popularPosts, trendingIds] =
     await Promise.all([
-      followedIds.length
-        ? prisma.post.findMany({
-            where: { postedById: { in: followedIds }, isDeleted: false },
-            orderBy: { id: 'desc' },
-            take: POOL.followed,
-            select: { id: true },
-          })
-        : [],
+      // Followed authors' recent posts: prefer the precomputed fan-out feed
+      // (O(1) Redis read); null when Redis is cold/down → DB fallback below.
+      getFollowingFeedIds(viewerId, 0, POOL.followed),
       followedIds.length
         ? prisma.like.findMany({
             where: { userId: { in: followedIds } },
@@ -122,6 +118,20 @@ export async function getForYouFeed(
       getTrendingPostIds(POOL.popular), // null when Redis is cold/down
     ]);
 
+  // DB fallback for followed candidates when the fan-out feed isn't available.
+  const followedPostIds =
+    followedFeedIds ??
+    (followedIds.length
+      ? (
+          await prisma.post.findMany({
+            where: { postedById: { in: followedIds }, isDeleted: false },
+            orderBy: { id: 'desc' },
+            take: POOL.followed,
+            select: { id: true },
+          })
+        ).map((p) => p.id)
+      : []);
+
   // Social-proof strength: how many followees liked each candidate.
   const socialCount = new Map<number, number>();
   for (const { postId } of socialLikes) {
@@ -130,7 +140,7 @@ export async function getForYouFeed(
   const trendingSet = new Set(trendingIds ?? []);
 
   const candidateIds = new Set<number>([
-    ...followedPosts.map((p) => p.id),
+    ...followedPostIds,
     ...socialLikes.map((l) => l.postId),
     ...popularPosts.map((p) => p.id),
     ...(trendingIds ?? []),
