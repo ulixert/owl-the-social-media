@@ -19,6 +19,7 @@ import {
   getChildPosts,
   getHotPosts,
   getPostById,
+  getTrendingPosts,
   searchPosts,
   searchUsers,
   updatePost,
@@ -31,6 +32,7 @@ postRouter.get('/search/users', optionalProtectRoute, searchUsers);
 postRouter.get('/search/posts', optionalProtectRoute, searchPosts);
 
 postRouter.get('/hot', optionalProtectRoute, getHotPosts);
+postRouter.get('/trending', optionalProtectRoute, getTrendingPosts);
 postRouter.get('/following', protectRoute, getFollowingPosts);
 postRouter.get('/liked', protectRoute, getLikedPosts);
 postRouter.get('/saved', protectRoute, getSavedPosts);
