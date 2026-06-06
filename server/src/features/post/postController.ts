@@ -8,6 +8,10 @@ import {
   postParamsSchema,
   postQuerySchema,
 } from '../../types/validation/schemas.js';
+import {
+  createNotification,
+  publishNotification,
+} from '../notification/notificationService.js';
 import { searchPostsFeed, searchUsersFeed } from '../search/search.js';
 import { withLikeCounts } from './likeCounts.js';
 import { getTrendingFeed } from './trending.js';
@@ -294,28 +298,42 @@ export async function createPost(req: Request, res: Response) {
       },
     };
 
-    // Verify the parent exists (for a clean 404) before creating a reply.
+    // Verify the parent exists (for a clean 404) before creating a reply, and
+    // capture its author so we can notify them.
+    let parentAuthorId: number | undefined;
     if (parentPostId) {
       const parentPost = await prisma.post.findUnique({
         where: { id: parentPostId },
+        select: { postedById: true },
       });
       if (!parentPost) {
         res.status(404).json({ error: 'Parent post not found' });
         return;
       }
+      parentAuthorId = parentPost.postedById;
     }
 
-    // For a reply, create the post and bump the parent's commentsCount in one
-    // transaction so the count can't drift if either write fails.
+    // For a reply, create the post, bump the parent's commentsCount, and record
+    // the notification in one transaction so nothing can drift if a write fails.
+    let notification: Awaited<ReturnType<typeof createNotification>> = null;
     const post = parentPostId
       ? await prisma.$transaction(async (tx) => {
           await tx.post.update({
             where: { id: parentPostId },
             data: { commentsCount: { increment: 1 } },
           });
-          return tx.post.create(postArgs);
+          const reply = await tx.post.create(postArgs);
+          notification = await createNotification(tx, {
+            recipientId: parentAuthorId!,
+            actorId: currentUserId,
+            type: 'REPLY',
+            postId: reply.id,
+          });
+          return reply;
         })
       : await prisma.post.create(postArgs);
+
+    await publishNotification(notification);
 
     res.status(201).json({ post });
   } catch (error) {
