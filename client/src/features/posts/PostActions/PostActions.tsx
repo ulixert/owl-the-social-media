@@ -104,7 +104,7 @@ export function PostActions({ post }: ActionsProps) {
         </Text>
       </Center>
 
-      <PostAction type="share" color="mono" onClick={() => void handleShare()}>
+      <PostAction type="share" color="yellow" onClick={() => void handleShare()}>
         <IconSend />
       </PostAction>
     </Group>
