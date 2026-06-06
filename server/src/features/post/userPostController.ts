@@ -52,14 +52,22 @@ export async function getUserPosts(
               },
             }
           : undefined,
+        reposts: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
       },
     });
 
     const postsWithIsLiked = posts.map((post) => {
-      const { likes, ...rest } = post;
+      const { likes, reposts, ...rest } = post;
       return {
         ...rest,
         isLiked: likes ? likes.length > 0 : false,
+        isReposted: reposts ? reposts.length > 0 : false,
       };
     });
 
@@ -115,6 +123,13 @@ export async function getUserReplies(
               },
             }
           : undefined,
+        reposts: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
         parentPost: {
           select: {
             id: true,
@@ -134,10 +149,11 @@ export async function getUserReplies(
     });
 
     const postsWithIsLiked = posts.map((post) => {
-      const { likes, ...rest } = post;
+      const { likes, reposts, ...rest } = post;
       return {
         ...rest,
         isLiked: likes ? likes.length > 0 : false,
+        isReposted: reposts ? reposts.length > 0 : false,
       };
     });
 
@@ -151,5 +167,68 @@ export async function getUserReplies(
   } catch (error) {
     res.status(500).json({ error: 'An unknown error occurred' });
     console.error('Error in getUserReplies: ', error);
+  }
+}
+
+export async function getUserReposts(
+  req: Request<{ username: string }>,
+  res: Response,
+) {
+  try {
+    const input = postQuerySchema.safeParse(req.query);
+    if (!input.success) {
+      res.status(400).json({ message: 'Invalid query params' });
+      return;
+    }
+
+    const { username } = req.params;
+    const { cursor, limit } = input.data;
+
+    // Keyset-paginate the Repost rows (most recently reposted first) and join the
+    // post in. nextCursor here is a Repost.id — opaque to the client.
+    const repostRows = await prisma.repost.findMany({
+      where: {
+        user: { username },
+        post: { isDeleted: false },
+        ...(cursor ? { id: { lt: cursor } } : {}),
+      },
+      orderBy: { id: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        post: {
+          include: {
+            postedBy: {
+              select: { id: true, username: true, name: true, profilePic: true },
+            },
+            parentPost: {
+              select: { postedBy: { select: { username: true } } },
+            },
+            likes: req.user ? { where: { userId: req.user.id } } : undefined,
+            reposts: req.user ? { where: { userId: req.user.id } } : undefined,
+          },
+        },
+      },
+    });
+
+    const posts = repostRows.map(({ post }) => {
+      const { likes, reposts, ...rest } = post;
+      return {
+        ...rest,
+        isLiked: likes ? likes.length > 0 : false,
+        isReposted: reposts ? reposts.length > 0 : false,
+      };
+    });
+
+    const nextCursor =
+      repostRows.length === limit ? repostRows[repostRows.length - 1].id : null;
+
+    res.status(200).json({
+      posts: await withLikeCounts(posts),
+      nextCursor,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'An unknown error occurred' });
+    console.error('Error in getUserReposts: ', error);
   }
 }

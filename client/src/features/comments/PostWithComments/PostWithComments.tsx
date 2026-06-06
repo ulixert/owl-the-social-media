@@ -63,7 +63,9 @@ export function PostWithComments() {
 
       {/* Render Child Posts */}
       {childPostsData?.pages.map((page) =>
-        page.childPosts.map((post) => <PostItem key={post.id} post={post} />),
+        page.childPosts.map((post) => (
+          <PostItem key={post.id} post={post} hideReplyContext />
+        )),
       )}
 
       {/* Infinite Scroll Loader */}

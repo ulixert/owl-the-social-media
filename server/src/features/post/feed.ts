@@ -154,7 +154,22 @@ export async function getFollowingFeedIds(
       celebIds = rows.map((r) => r.id);
     }
 
-    return mergeFeedPages(redisIds, celebIds, limit);
+    // The viewer's own recent posts — merged in at read time (like celebrities)
+    // so a post they just made appears in their Following feed, even though the
+    // fan-out only writes to followers' feeds, not the author's own.
+    const ownRows = await prisma.post.findMany({
+      where: {
+        postedById: userId,
+        isDeleted: false,
+        ...(cursor > 0 ? { id: { lt: cursor } } : {}),
+      },
+      orderBy: { id: 'desc' },
+      take: limit,
+      select: { id: true },
+    });
+    const ownIds = ownRows.map((r) => r.id);
+
+    return mergeFeedPages(redisIds, [...celebIds, ...ownIds], limit);
   } catch (err) {
     console.error('[feed] redis read failed, falling back to db:', (err as Error).message);
     return null;

@@ -11,7 +11,7 @@ import { useFollowMutation } from '../hooks/useFollowMutation.ts';
 import classes from './UserHeader.module.css';
 
 type UserHeaderProps = {
-  tab: 'posts' | 'replies';
+  tab: 'posts' | 'replies' | 'reposts';
   onTabChange: (tab: string) => void;
   user: UserProfile;
 };
@@ -123,6 +123,9 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
           </Tabs.Tab>
           <Tabs.Tab value="replies" className={classes.tab} fw={500} c="gray.6">
             Replies
+          </Tabs.Tab>
+          <Tabs.Tab value="reposts" className={classes.tab} fw={500} c="gray.6">
+            Reposts
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>

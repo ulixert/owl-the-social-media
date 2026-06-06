@@ -1,4 +1,7 @@
 import { useLocation } from 'react-router-dom';
+
+import { useUnreadCount } from '@/hooks/useNotifications.ts';
+
 import { NavLink } from './NavLink.tsx';
 import { ProfileNavLink } from './ProfileNavLink.tsx';
 import { icons } from './icons.ts';
@@ -9,6 +12,7 @@ type NavLinksProps = {
 
 export function NavLinks({ isMobile }: NavLinksProps) {
   const location = useLocation();
+  const { data: unreadCount } = useUnreadCount();
 
   return icons.map((link) => {
     // Exact match for home, partial for others (except home itself)
@@ -28,6 +32,7 @@ export function NavLinks({ isMobile }: NavLinksProps) {
         {...link}
         key={link.path}
         active={active}
+        badge={link.path === '/activity' ? unreadCount : undefined}
       />
     );
   });

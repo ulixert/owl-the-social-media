@@ -1,0 +1,12 @@
+.composer {
+  padding: var(--mantine-spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  cursor: text;
+}
+
+.composer:hover {
+  background-color: light-dark(
+    var(--mantine-color-gray-0),
+    var(--mantine-color-dark-6)
+  );
+}

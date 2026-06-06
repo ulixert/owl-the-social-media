@@ -13,9 +13,12 @@ import classes from './PostItem.module.css';
 
 type PostProps = {
   post: Post;
+  // On a post's detail page every reply is to the same post, so the
+  // "> parent" context is redundant and hidden.
+  hideReplyContext?: boolean;
 };
 
-export function PostItem({ post }: PostProps) {
+export function PostItem({ post, hideReplyContext }: PostProps) {
   const navigate = useNavigate();
   return (
     <>
@@ -36,7 +39,9 @@ export function PostItem({ post }: PostProps) {
             <PostHeader
               createdAt={getPostTime(new Date(post.createdAt))}
               post={post}
-              replyToUsername={post.parentPost?.postedBy.username}
+              replyToUsername={
+                hideReplyContext ? undefined : post.parentPost?.postedBy.username
+              }
             />
             <PostContent postText={post.text} postImages={post.images} />
             <PostActions post={post} />

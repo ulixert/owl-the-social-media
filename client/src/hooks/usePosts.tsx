@@ -18,6 +18,7 @@ export type Post = PostType & {
     };
   } | null;
   isLiked: boolean;
+  isReposted: boolean;
 };
 
 type PostsResponse = {
@@ -33,8 +34,15 @@ export function usePosts(endpointArg?: string) {
   // resolved to undefined (→ requests to "postsundefined").
   const endpoint = endpointArg ?? location.pathname;
 
-  const { data, isPending, isError, hasNextPage, fetchNextPage, isFetching } =
-    useInfiniteQuery({
+  const {
+    data,
+    isPending,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
       queryKey: ['posts', isAuthenticated, location.pathname, endpoint],
       queryFn: async ({ pageParam }): Promise<PostsResponse> => {
         const resolvedEndpoint =
@@ -58,6 +66,10 @@ export function usePosts(endpointArg?: string) {
       },
       initialPageParam: 0,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
+      // Keep a recently-loaded feed "fresh" so navigating back to it shows the
+      // cached page instantly (no refetch/loader). An explicit reload — clicking
+      // the active feed — invalidates and refetches regardless of this.
+      staleTime: 60_000,
     });
 
   return {
@@ -67,5 +79,6 @@ export function usePosts(endpointArg?: string) {
     hasNextPage,
     fetchNextPage,
     isFetching,
+    isFetchingNextPage,
   } as const;
 }

@@ -4,6 +4,7 @@ import { Flex, Stack, Text } from '@mantine/core';
 import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 import { useAuthStore } from '@stores/authStore.ts';
 import { Post } from '@/hooks/usePosts.tsx';
+import { IconChevronRight } from '@tabler/icons-react';
 import { PostMoreMenu } from '../PostActions/PostMoreMenu.tsx';
 
 import classes from './PostHeader.module.css';
@@ -32,18 +33,41 @@ export function PostHeader({
               className={classes.username}
               onClick={(e) => e.stopPropagation()}
             >
-              <Text size="sm" fw="700" span truncate>
-                {post.postedBy.name}
-              </Text>
-              <Text size="sm" c="gray.6" span ml={4} truncate>
-                @{post.postedBy.username}
+              <Text size="sm" lh={1.2} fw={700} span truncate>
+                {post.postedBy.username}
               </Text>
             </Link>
           </UserHoverCard>
-          <Text size="sm" c="gray.6">
+
+          {/* Threads-style reply context: "author › parent" inline. */}
+          {replyToUsername && (
+            <>
+              <IconChevronRight
+                size={14}
+                stroke={1.5}
+                style={{
+                  color: 'var(--mantine-color-gray-6)',
+                  flexShrink: 0,
+                }}
+              />
+              <UserHoverCard username={replyToUsername}>
+                <Link
+                  to={`/user/${replyToUsername}`}
+                  className={classes.username}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Text size="sm" lh={1.2} fw={600} span truncate>
+                    {replyToUsername}
+                  </Text>
+                </Link>
+              </UserHoverCard>
+            </>
+          )}
+
+          <Text size="sm" lh={1.2} c="gray.6">
             &bull;
           </Text>
-          <Text size="sm" c="gray.6" style={{ whiteSpace: 'nowrap' }}>
+          <Text size="sm" lh={1.2} c="gray.6" style={{ whiteSpace: 'nowrap' }}>
             {createdAt}
           </Text>
         </Flex>
@@ -52,22 +76,6 @@ export function PostHeader({
           <PostMoreMenu post={post} isOwner={isOwner} />
         </Flex>
       </Flex>
-      {replyToUsername && (
-        <Text size="xs" c="dimmed">
-          Replying to{' '}
-          <UserHoverCard username={replyToUsername}>
-            <Link
-              to={`/user/${replyToUsername}`}
-              style={{ textDecoration: 'none' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Text span c="blue.6">
-                @{replyToUsername}
-              </Text>
-            </Link>
-          </UserHoverCard>
-        </Text>
-      )}
     </Stack>
   );
 }

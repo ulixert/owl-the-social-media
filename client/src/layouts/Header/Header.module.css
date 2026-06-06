@@ -6,24 +6,54 @@
 /* Column-width bar (desktop) that aligns the header content with the feed column.
    A flex row: left-aligned title, actions pushed to the right (Threads-style). */
 .bar {
+  position: relative;
   width: 100%;
   max-width: 640px;
   height: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--mantine-spacing-xs);
-  padding: 0 var(--mantine-spacing-md);
-  /* Reserve the 245px sidebar width on the right so the bar centers in the whole
-     viewport and lines up with the feed column (see AppLayout .column). A literal
-     value, since --app-shell-navbar-width resolves to 0 inside the header. */
-  margin-right: 245px;
+  /* Viewport-centered to match the feed column (reserve the navbar width on the
+     right). The title is absolutely centered within it; the back button and
+     actions sit on the edges. */
 }
 
-/* Left-aligned page/feed title; flex:1 pushes any right-side action to the end. */
+@media (min-width: 48em) and (max-width: 74.99em) {
+  .bar {
+    margin-right: rem(80px);
+  }
+}
+
+@media (min-width: 75em) {
+  .bar {
+    margin-right: rem(245px);
+  }
+}
+
+/* Centered, clickable feed/page title (click = reload the feed). */
 .barTitle {
-  flex: 1;
-  font-weight: 700;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 600;
   font-size: rem(20px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.barLeft,
+.barRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+}
+
+.barLeft {
+  left: var(--mantine-spacing-md);
+}
+
+.barRight {
+  right: var(--mantine-spacing-md);
 }
 
 @media (max-width: 48em) {
@@ -33,7 +63,6 @@
 
   .bar {
     max-width: none;
-    margin-right: 0;
   }
 }
 

@@ -86,7 +86,7 @@ export function ActivityPage() {
   const markAllRead = useMarkAllRead();
 
   useEffect(() => {
-    setTitle('Activity');
+    setTitle('Notifications');
   }, [setTitle]);
 
   // Viewing the page clears the unread badge.
@@ -113,7 +113,7 @@ export function ActivityPage() {
             <IconBell size={28} stroke={1.5} />
           </ThemeIcon>
           <Text fw={700} size="lg">
-            Activity
+            Notifications
           </Text>
           <Text c="dimmed" ta="center" maw={320}>
             Likes, follows, and replies will show up here.

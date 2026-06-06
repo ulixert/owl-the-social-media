@@ -8,7 +8,8 @@ import { useUserProfile } from '@/hooks/useUserProfile.ts';
 export function ProfilePage() {
   const navigate = useNavigate();
   const { tab, username } = useParams<{ username: string; tab?: string }>();
-  const activeTab = tab == 'replies' ? 'replies' : 'posts';
+  const activeTab =
+    tab === 'replies' ? 'replies' : tab === 'reposts' ? 'reposts' : 'posts';
 
   const { data: user, isLoading, isError } = useUserProfile(username);
 
@@ -20,16 +21,16 @@ export function ProfilePage() {
     return <div>User not found</div>;
   }
 
-  const endpoint =
-    activeTab == 'posts'
-      ? `/user/${username}/posts`
-      : `/user/${username}/replies`;
+  const endpoint = `/user/${username}/${activeTab}`;
 
   return (
     <>
       <UserHeader
         tab={activeTab}
-        onTabChange={(tab) => navigate(`/profile/${tab}`)}
+        // Stay on the profile being viewed. `/profile/...` redirects to the
+        // logged-in user, so switching tabs on someone else's profile would
+        // otherwise bounce to your own.
+        onTabChange={(tab) => navigate(`/user/${username}/${tab}`)}
         user={user}
       />
       <PostList endpoint={endpoint} />

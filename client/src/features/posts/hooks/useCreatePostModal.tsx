@@ -12,8 +12,10 @@ export function useCreatePostModal() {
         <CreatePost
           parentPost={parentPost}
           isModal
-          onCancel={() => modals.close(modalId)}
-          onSuccess={() => modals.close(modalId)}
+          // closeAll (not close(modalId)) — there's only ever one compose modal,
+          // and close-by-id wasn't reliably matching, so Cancel did nothing.
+          onCancel={() => modals.closeAll()}
+          onSuccess={() => modals.closeAll()}
         />
       ),
       size: 'lg',

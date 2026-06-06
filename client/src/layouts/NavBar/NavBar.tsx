@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/Logo/Logo.tsx';
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation.ts';
 import { useUnreadCount } from '@/hooks/useNotifications.ts';
+import { useReloadFeed } from '@/hooks/useReloadFeed.ts';
 import {
   Box,
   Menu,
@@ -20,7 +21,6 @@ import {
   IconHeart,
   IconHome,
   IconLogout,
-  IconMail,
   IconMenu2,
   IconMoon,
   IconPlus,
@@ -38,7 +38,7 @@ import navClasses from '../NavLinks/NavLinks.module.css';
 // Two groups (Threads order) with a gap between: the primary actions on top, the
 // personal/account items below.
 const TOP_ITEMS = [
-  { icon: IconHome, label: 'Home', path: '/', type: 'link' as const },
+  { icon: IconHome, label: 'For you', path: '/', type: 'link' as const },
   {
     icon: IconPlus,
     label: 'New post',
@@ -50,8 +50,7 @@ const TOP_ITEMS = [
 ];
 
 const BOTTOM_ITEMS = [
-  { icon: IconMail, label: 'Messages', path: '/messages', type: 'link' as const, needLogin: true },
-  { icon: IconBell, label: 'Activity', path: '/activity', type: 'link' as const, needLogin: true },
+  { icon: IconBell, label: 'Notifications', path: '/activity', type: 'link' as const, needLogin: true },
   { icon: IconUser, label: 'Profile', path: '/profile', type: 'link' as const, needLogin: true },
   { icon: IconHeart, label: 'Liked', path: '/liked', type: 'link' as const, needLogin: true },
 ];
@@ -59,10 +58,16 @@ const BOTTOM_ITEMS = [
 // "Home" above is the For You feed, so Feeds lists only the alternative feeds.
 const FEED_ITEMS = [
   { label: 'Following', path: '/following' },
-  { label: 'Hot', path: '/hot' },
+  { label: 'Trending', path: '/trending' },
 ];
 
-export function NavBar() {
+type NavBarProps = {
+  // Whether the sidebar is expanded (labels + feeds) or a collapsed icon rail.
+  // Driven by AppLayout so the width overlay and content stay in sync.
+  expanded: boolean;
+};
+
+export function NavBar({ expanded }: NavBarProps) {
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('light');
   const mutation = useLogoutMutation();
@@ -70,6 +75,7 @@ export function NavBar() {
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: unreadCount } = useUnreadCount();
+  const reloadFeeds = useReloadFeed();
 
   function handleColorSchemeChange() {
     setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light');
@@ -82,11 +88,21 @@ export function NavBar() {
 
   return (
     <Stack h="100%" gap={4} px={4}>
-      <Box px={14} py="md">
-        <Logo size={34} justify="flex-start" />
+      {/* 60px band matching the header height so the logo's vertical center
+          lines up with the header title (the navbar drops its top padding). */}
+      <Box
+        px={expanded ? 14 : 0}
+        h={60}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: expanded ? 'flex-start' : 'center',
+        }}
+      >
+        <Logo size={34} justify={expanded ? 'flex-start' : 'center'} />
       </Box>
 
-      <Stack gap={2}>
+      <Stack gap={2} align={expanded ? 'stretch' : 'center'}>
         {TOP_ITEMS.map((item) => (
           <NavLink
             key={item.path}
@@ -96,12 +112,16 @@ export function NavBar() {
             type={item.type}
             needLogin={item.needLogin}
             active={isMainActive(item.path)}
-            expanded
+            // Reload only when already on this feed; from another page just navigate.
+            onClick={
+              item.path === '/' && isMainActive('/') ? reloadFeeds : undefined
+            }
+            expanded={expanded}
           />
         ))}
       </Stack>
 
-      <Stack gap={2} mt="md">
+      <Stack gap={2} mt="md" align={expanded ? 'stretch' : 'center'}>
         {BOTTOM_ITEMS.map((item) => (
           <NavLink
             key={item.path}
@@ -112,35 +132,58 @@ export function NavBar() {
             needLogin={item.needLogin}
             active={isMainActive(item.path)}
             badge={item.path === '/activity' ? unreadCount : undefined}
-            expanded
+            expanded={expanded}
           />
         ))}
       </Stack>
 
-      <Text className={navClasses.sectionLabel} mt="md">
-        Feeds
-      </Text>
-      <Stack gap={2}>
-        {FEED_ITEMS.map((feed) => (
-          <UnstyledButton
-            key={feed.path}
-            className={navClasses.feedLink}
-            data-active={location.pathname === feed.path ? 'true' : undefined}
-            onClick={() => void navigate(feed.path)}
-          >
-            {feed.label}
-          </UnstyledButton>
-        ))}
-      </Stack>
+      {/* Feeds section only when expanded — hidden on the collapsed rail. */}
+      {expanded && (
+        <>
+          <Text className={navClasses.sectionLabel} mt="md">
+            Feeds
+          </Text>
+          <Stack gap={2}>
+            {FEED_ITEMS.map((feed) => (
+              <UnstyledButton
+                key={feed.path}
+                className={navClasses.feedLink}
+                data-active={
+                  location.pathname === feed.path ? 'true' : undefined
+                }
+                onClick={() => {
+                  // Already here → reload; otherwise just navigate (no reload).
+                  if (location.pathname === feed.path) reloadFeeds();
+                  else void navigate(feed.path);
+                }}
+              >
+                {feed.label}
+              </UnstyledButton>
+            ))}
+          </Stack>
+        </>
+      )}
 
       <Box style={{ flex: 1 }} />
 
       <Menu position="right-end" shadow="md" width={220}>
         <Menu.Target>
-          <UnstyledButton className={navClasses.linkExpanded}>
-            <IconMenu2 style={{ width: rem(26), height: rem(26) }} stroke={1.5} />
-            <Text className={navClasses.linkLabel}>More</Text>
-          </UnstyledButton>
+          {expanded ? (
+            <UnstyledButton className={navClasses.linkExpanded}>
+              <IconMenu2
+                style={{ width: rem(26), height: rem(26) }}
+                stroke={1.5}
+              />
+              <Text className={navClasses.linkLabel}>More</Text>
+            </UnstyledButton>
+          ) : (
+            <UnstyledButton className={navClasses.link} style={{ alignSelf: 'center' }}>
+              <IconMenu2
+                style={{ width: rem(26), height: rem(26) }}
+                stroke={1.5}
+              />
+            </UnstyledButton>
+          )}
         </Menu.Target>
 
         <Menu.Dropdown>

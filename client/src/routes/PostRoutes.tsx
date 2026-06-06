@@ -11,6 +11,17 @@ export const PostRoutes = [
     },
     hydrateFallbackElement: <Loading />,
   },
+  {
+    // Trending feed (Flink windowed top-K, served from Redis with a DB
+    // fallback). Public; HomePage sets the title and PostList derives the
+    // endpoint from the path.
+    path: 'trending',
+    async lazy() {
+      const { HomePage } = await import('../pages/HomePage.tsx');
+      return { Component: HomePage };
+    },
+    hydrateFallbackElement: <Loading />,
+  },
   ...['for-you', 'following'].map((path) => ({
     path,
     async lazy() {
