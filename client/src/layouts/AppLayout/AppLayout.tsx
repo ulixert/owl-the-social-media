@@ -24,14 +24,13 @@ export function AppLayout() {
       <AppShell
         layout="alt"
         padding={0}
-        navbar={{ width: 245, breakpoint: 'sm' }}
+        navbar={{ width: 245, breakpoint: 'sm', collapsed: { mobile: true } }}
         transitionDuration={500}
         transitionTimingFunction="ease"
       >
         <AppShell.Navbar
           p="md"
           pt={0}
-          visibleFrom="sm"
           withBorder={false}
           className={classes.navbar}
         >

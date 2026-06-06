@@ -40,13 +40,9 @@
   border: 1px solid var(--border-color);
   border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
 
-  /* The main region starts right of the 245px sidebar, so a plain center would
-     sit right-of-screen-center. Reserve the sidebar width on the right so the
-     centered column lands in the middle of the whole viewport (like Threads). */
-  @media (min-width: 48em) {
-    margin-right: 245px; /* the sidebar width — keep in sync with AppLayout navbar */
-  }
-
+  /* Centered in the area beside the sidebar (.main is justify-content:center),
+     like Threads/Twitter. No viewport-centering margin hack — that squished the
+     column at medium widths. */
   @media (max-width: 48em) {
     max-width: none;
     border: none;

@@ -13,10 +13,8 @@
   align-items: center;
   gap: var(--mantine-spacing-xs);
   padding: 0 var(--mantine-spacing-md);
-  /* Reserve the 245px sidebar width on the right so the bar centers in the whole
-     viewport and lines up with the feed column (see AppLayout .column). A literal
-     value, since --app-shell-navbar-width resolves to 0 inside the header. */
-  margin-right: 245px;
+  /* Centered in the header region (which starts right of the sidebar), matching
+     the feed column. */
 }
 
 /* Left-aligned page/feed title; flex:1 pushes any right-side action to the end. */
