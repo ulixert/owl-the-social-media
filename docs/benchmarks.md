@@ -140,3 +140,55 @@ at every level.
   user follows many active accounts, so newest-first matches are found quickly.
   A user following a few low-activity accounts still scans far back by id. That
   ceiling is what a precomputed per-user timeline (fan-out) would remove.
+
+## Trending pipeline (CDC → Flink → Redis)
+
+End-to-end measurement of the streaming trending path (`docs/trending.md`):
+a `Like` row in Postgres → Debezium → Redpanda → Flink event-time window →
+Redis ZSET the API serves. Captured with the committed generator
+`MODE=… pnpm --filter server loadtest:trending`, against the live local stack
+(`pnpm cdc:up && pnpm flink:up && pnpm flink:submit`).
+
+### Method
+
+- One Postgres + Debezium + single-partition Redpanda + a 1-slot Flink
+  taskmanager + Redis, all local. The harness writes real `Like` rows; numbers
+  come from the live job's Redis output and Flink's own metrics REST API.
+- **Freshness** uses a controlled burst (posts A/B/C with 60/40/20 likes) whose
+  event-times are ~2.5 min in the past plus a few `now()` "advancer" likes —
+  this pushes the watermark *past* the burst's windows so they're immediately
+  complete. That removes the window-completion wait and isolates **pipeline
+  propagation** (commit → Debezium → Kafka → Flink → window fire → ZSET).
+- **Headroom** samples the Flink source operator's `numRecordsOutPerSecond`,
+  `busyTimeMsPerSecond`, and `backPressuredTimeMsPerSecond` during a sustained
+  insert.
+
+### Results
+
+| Metric | Value |
+| --- | --- |
+| End-to-end freshness (PG commit → trending ZSET, window-wait removed) | **~0.8 s** |
+| Ranking correctness | exact (A:60 > B:40 > C:20 in the ZSET) |
+| Sustained arrival rate observed | ~5,000 events/s |
+| Flink source busy time @ 5k/s | **~20–28 ms/s (~2–3% busy)** |
+| Backpressure | **0** throughout |
+
+### Reading the numbers
+
+- **Sub-second freshness end-to-end.** ~0.8 s from a Postgres commit to the
+  ranking being live in Redis, *through* CDC + a stream processor. The honest
+  caveat: this is the propagation cost with the window-completion delay
+  deliberately engineered to ~0. In normal operation a like also waits for its
+  sliding window to close (slide interval + the 30 s watermark) before it can
+  affect the ranking — that wait is **by design** (completeness vs latency), not
+  pipeline slowness.
+- **Flink is nowhere near the bottleneck.** At ~5k events/s the window job runs
+  **~2–3% busy with zero backpressure** — roughly 30–40× headroom on a single
+  1-slot taskmanager before it would saturate. The real ingest ceiling here is
+  Postgres `Like` write throughput (multi-row inserts measured at ~10–34k
+  rows/s depending on batch/cache warmth), not the stream processing. This is
+  the quantified version of "Flink earns its place on *correctness* (windowing/
+  watermarks), not because the volume demands it" — see `docs/trending.md`.
+- **Caveats:** single local node, single Kafka partition (no parallelism),
+  loopback, dev hardware. Useful for the *shape* (sub-second propagation, large
+  processing headroom, where the real bottleneck sits), not a production SLA.
