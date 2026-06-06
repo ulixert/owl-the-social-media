@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+// An image location: either an absolute URL (external / S3) or a relative media
+// path served by the API (disk storage returns e.g. "/api/v1/media/<id>.jpg").
+// z.string().url() rejects relative paths, which broke posting/profile-pic
+// updates for uploaded images.
+const mediaUrl = z
+  .string()
+  .refine((s) => /^https?:\/\//.test(s) || s.startsWith('/'), {
+    message: 'Must be an absolute URL or a relative media path',
+  });
+
 /////////////////////////////////////////
 // Role Schema
 /////////////////////////////////////////
@@ -25,7 +35,7 @@ export const UserSchema = z.object({
     .max(20, 'Name must be at most 20 characters'),
   role: RoleSchema.default('USER'),
   active: z.boolean().default(true),
-  profilePic: z.string().url().nullable().default(null),
+  profilePic: mediaUrl.nullable().default(null),
   biography: z.string().nullable().default(null),
   followingCount: z.number().int().default(0),
   followersCount: z.number().int().default(0),
@@ -59,7 +69,7 @@ export const PostSchema = z.object({
   postedById: z.number().int(),
   parentPostId: z.number().int().nullable(),
   text: z.string().max(280).optional(),
-  images: z.array(z.string().url()).optional(),
+  images: z.array(mediaUrl).optional(),
   likesCount: z.number().default(0),
   commentsCount: z.number().default(0),
   repostsCount: z.number().default(0),
