@@ -3,18 +3,27 @@
   height: 60px;
 }
 
-/* Column-width bar that aligns the header content with the feed column. The
-   absolute title/buttons below position relative to this, so they sit over the
-   column rather than the full-width header region. */
+/* Column-width bar (desktop) that aligns the header content with the feed column.
+   A flex row: left-aligned title, actions pushed to the right (Threads-style). */
 .bar {
-  position: relative;
   width: 100%;
   max-width: 640px;
   height: 100%;
   display: flex;
   align-items: center;
-  /* Match the feed column's viewport-centering (see AppLayout .column). */
-  margin-right: var(--app-shell-navbar-width, 245px);
+  gap: var(--mantine-spacing-xs);
+  padding: 0 var(--mantine-spacing-md);
+  /* Reserve the 245px sidebar width on the right so the bar centers in the whole
+     viewport and lines up with the feed column (see AppLayout .column). A literal
+     value, since --app-shell-navbar-width resolves to 0 inside the header. */
+  margin-right: 245px;
+}
+
+/* Left-aligned page/feed title; flex:1 pushes any right-side action to the end. */
+.barTitle {
+  flex: 1;
+  font-weight: 700;
+  font-size: rem(20px);
 }
 
 @media (max-width: 48em) {
@@ -24,6 +33,7 @@
 
   .bar {
     max-width: none;
+    margin-right: 0;
   }
 }
 

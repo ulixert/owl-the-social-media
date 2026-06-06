@@ -34,9 +34,10 @@ import navClasses from '../NavLinks/NavLinks.module.css';
 // Main navigation, top to bottom. `New thread` opens the compose modal (handled
 // in NavLink); Messages/Activity are scaffolded placeholders for the upcoming
 // real-time work.
-const MAIN_ITEMS = [
+// Two groups (Threads order) with a gap between: the primary actions on top, the
+// personal/account items below.
+const TOP_ITEMS = [
   { icon: IconHome, label: 'Home', path: '/', type: 'link' as const },
-  { icon: IconSearch, label: 'Search', path: '/search', type: 'link' as const },
   {
     icon: IconPlus,
     label: 'New post',
@@ -44,10 +45,14 @@ const MAIN_ITEMS = [
     type: 'action' as const,
     needLogin: true,
   },
+  { icon: IconSearch, label: 'Search', path: '/search', type: 'link' as const },
+];
+
+const BOTTOM_ITEMS = [
   { icon: IconMail, label: 'Messages', path: '/messages', type: 'link' as const, needLogin: true },
   { icon: IconBell, label: 'Activity', path: '/activity', type: 'link' as const, needLogin: true },
-  { icon: IconHeart, label: 'Liked', path: '/liked', type: 'link' as const, needLogin: true },
   { icon: IconUser, label: 'Profile', path: '/profile', type: 'link' as const, needLogin: true },
+  { icon: IconHeart, label: 'Liked', path: '/liked', type: 'link' as const, needLogin: true },
 ];
 
 // "Home" above is the For You feed, so Feeds lists only the alternative feeds.
@@ -80,7 +85,22 @@ export function NavBar() {
       </Box>
 
       <Stack gap={2}>
-        {MAIN_ITEMS.map((item) => (
+        {TOP_ITEMS.map((item) => (
+          <NavLink
+            key={item.path}
+            icon={item.icon}
+            label={item.label}
+            path={item.path}
+            type={item.type}
+            needLogin={item.needLogin}
+            active={isMainActive(item.path)}
+            expanded
+          />
+        ))}
+      </Stack>
+
+      <Stack gap={2} mt="md">
+        {BOTTOM_ITEMS.map((item) => (
           <NavLink
             key={item.path}
             icon={item.icon}
