@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
-import { Badge, Text, UnstyledButton, rem } from '@mantine/core';
+import { Indicator, Text, UnstyledButton, rem } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useTitleStore } from '@stores/titleStore.ts';
@@ -40,6 +40,25 @@ export function NavLink({
   const navigate = useNavigate();
   const setTitle = useTitleStore((state) => state.setTitle);
   const openLoginModal = useOpenLoginModal();
+
+  // The icon, with the unread count overlaid as a corner indicator so it's
+  // visible even in icon-only modes (mobile footer, collapsed rail).
+  const renderIcon = (size: number) => {
+    const icon = <Icon style={{ width: rem(size), height: rem(size) }} stroke={1.5} />;
+    if (!badge) return icon;
+    return (
+      <Indicator
+        inline
+        size={16}
+        offset={2}
+        color="red"
+        label={badge > 99 ? '99+' : badge}
+        aria-label={`${badge} unread`}
+      >
+        {icon}
+      </Indicator>
+    );
+  };
 
   function handleClick() {
     onClick?.();
@@ -85,13 +104,8 @@ export function NavLink({
         className={classes.linkExpanded}
         data-active={active ? 'true' : undefined}
       >
-        <Icon style={{ width: rem(26), height: rem(26) }} stroke={1.5} />
+        {renderIcon(26)}
         <Text className={classes.linkLabel}>{label}</Text>
-        {badge ? (
-          <Badge color="mono" size="sm" circle ml="auto">
-            {badge}
-          </Badge>
-        ) : null}
       </UnstyledButton>
     );
   }
@@ -102,7 +116,7 @@ export function NavLink({
       className={classes.link}
       data-active={active ? 'true' : undefined}
     >
-      <Icon style={{ width: rem(30), height: rem(30) }} stroke={1.5} />
+      {renderIcon(30)}
     </UnstyledButton>
   );
 }
