@@ -15,6 +15,7 @@ import {
   useMantineColorScheme,
 } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
+import { useHover, useMediaQuery } from '@mantine/hooks';
 import {
   IconBell,
   IconBookmark,
@@ -71,6 +72,15 @@ export function NavBar() {
   const { data: unreadCount } = useUnreadCount();
   const reloadFeeds = useReloadFeed();
 
+  // Below `lg` the sidebar is a narrow icon rail; hovering expands it to the
+  // full labelled sidebar (the CSS in AppLayout widens it as an overlay). At
+  // `lg`+ it's always expanded.
+  const isLarge = useMediaQuery('(min-width: 75em)', true, {
+    getInitialValueInEffect: false,
+  });
+  const { hovered, ref } = useHover<HTMLDivElement>();
+  const expanded = isLarge || hovered;
+
   function handleColorSchemeChange() {
     setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light');
   }
@@ -81,14 +91,22 @@ export function NavBar() {
       : location.pathname.startsWith(path);
 
   return (
-    <Stack h="100%" gap={4} px={4}>
+    <Stack ref={ref} h="100%" gap={4} px={4}>
       {/* 60px band matching the header height so the logo's vertical center
           lines up with the header title (the navbar drops its top padding). */}
-      <Box px={14} h={60} style={{ display: 'flex', alignItems: 'center' }}>
-        <Logo size={34} justify="flex-start" />
+      <Box
+        px={expanded ? 14 : 0}
+        h={60}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: expanded ? 'flex-start' : 'center',
+        }}
+      >
+        <Logo size={34} justify={expanded ? 'flex-start' : 'center'} />
       </Box>
 
-      <Stack gap={2}>
+      <Stack gap={2} align={expanded ? 'stretch' : 'center'}>
         {TOP_ITEMS.map((item) => (
           <NavLink
             key={item.path}
@@ -102,12 +120,12 @@ export function NavBar() {
             onClick={
               item.path === '/' && isMainActive('/') ? reloadFeeds : undefined
             }
-            expanded
+            expanded={expanded}
           />
         ))}
       </Stack>
 
-      <Stack gap={2} mt="md">
+      <Stack gap={2} mt="md" align={expanded ? 'stretch' : 'center'}>
         {BOTTOM_ITEMS.map((item) => (
           <NavLink
             key={item.path}
@@ -118,39 +136,58 @@ export function NavBar() {
             needLogin={item.needLogin}
             active={isMainActive(item.path)}
             badge={item.path === '/activity' ? unreadCount : undefined}
-            expanded
+            expanded={expanded}
           />
         ))}
       </Stack>
 
-      <Text className={navClasses.sectionLabel} mt="md">
-        Feeds
-      </Text>
-      <Stack gap={2}>
-        {FEED_ITEMS.map((feed) => (
-          <UnstyledButton
-            key={feed.path}
-            className={navClasses.feedLink}
-            data-active={location.pathname === feed.path ? 'true' : undefined}
-            onClick={() => {
-              // Already here → reload; otherwise just navigate (no reload).
-              if (location.pathname === feed.path) reloadFeeds();
-              else void navigate(feed.path);
-            }}
-          >
-            {feed.label}
-          </UnstyledButton>
-        ))}
-      </Stack>
+      {/* Feeds section only when expanded — hidden on the collapsed rail. */}
+      {expanded && (
+        <>
+          <Text className={navClasses.sectionLabel} mt="md">
+            Feeds
+          </Text>
+          <Stack gap={2}>
+            {FEED_ITEMS.map((feed) => (
+              <UnstyledButton
+                key={feed.path}
+                className={navClasses.feedLink}
+                data-active={
+                  location.pathname === feed.path ? 'true' : undefined
+                }
+                onClick={() => {
+                  // Already here → reload; otherwise just navigate (no reload).
+                  if (location.pathname === feed.path) reloadFeeds();
+                  else void navigate(feed.path);
+                }}
+              >
+                {feed.label}
+              </UnstyledButton>
+            ))}
+          </Stack>
+        </>
+      )}
 
       <Box style={{ flex: 1 }} />
 
       <Menu position="right-end" shadow="md" width={220}>
         <Menu.Target>
-          <UnstyledButton className={navClasses.linkExpanded}>
-            <IconMenu2 style={{ width: rem(26), height: rem(26) }} stroke={1.5} />
-            <Text className={navClasses.linkLabel}>More</Text>
-          </UnstyledButton>
+          {expanded ? (
+            <UnstyledButton className={navClasses.linkExpanded}>
+              <IconMenu2
+                style={{ width: rem(26), height: rem(26) }}
+                stroke={1.5}
+              />
+              <Text className={navClasses.linkLabel}>More</Text>
+            </UnstyledButton>
+          ) : (
+            <UnstyledButton className={navClasses.link} style={{ alignSelf: 'center' }}>
+              <IconMenu2
+                style={{ width: rem(26), height: rem(26) }}
+                stroke={1.5}
+              />
+            </UnstyledButton>
+          )}
         </Menu.Target>
 
         <Menu.Dropdown>

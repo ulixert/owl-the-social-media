@@ -24,7 +24,13 @@ export function AppLayout() {
       <AppShell
         layout="alt"
         padding={0}
-        navbar={{ width: 245, breakpoint: 'sm', collapsed: { mobile: true } }}
+        // Icon rail (80px) below lg, full labelled sidebar (245px) at lg+;
+        // hidden on mobile. The rail expands to 245px on hover (CSS overlay).
+        navbar={{
+          width: { base: 80, lg: 245 },
+          breakpoint: 'sm',
+          collapsed: { mobile: true },
+        }}
         transitionDuration={500}
         transitionTimingFunction="ease"
       >

@@ -10,9 +10,21 @@
   width: 100%;
   max-width: 640px;
   height: 100%;
-  /* Centered in the header region (which starts right of the sidebar), matching
-     the feed column. The title is absolutely centered within it; the back button
-     and actions sit on the edges. */
+  /* Viewport-centered to match the feed column (reserve the navbar width on the
+     right). The title is absolutely centered within it; the back button and
+     actions sit on the edges. */
+}
+
+@media (min-width: 48em) and (max-width: 74.99em) {
+  .bar {
+    margin-right: rem(80px);
+  }
+}
+
+@media (min-width: 75em) {
+  .bar {
+    margin-right: rem(245px);
+  }
 }
 
 /* Centered, clickable feed/page title (click = reload the feed). */
