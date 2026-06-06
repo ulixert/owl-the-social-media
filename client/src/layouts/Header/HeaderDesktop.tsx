@@ -1,7 +1,7 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { ReturnButton } from '@/components/ReturnButton/ReturnButton.tsx';
 import { LoginButton } from '@/components/LoginButton/LoginButton.tsx';
-import { Flex, Tabs, Text, Box } from '@mantine/core';
+import { Flex, Text } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useTitleStore } from '@stores/titleStore.ts';
 
@@ -11,58 +11,19 @@ export function HeaderDesktop() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const title = useTitleStore((state) => state.title);
   const location = useLocation();
-  const navigate = useNavigate();
 
   const isHomeFeed = ['/', '/for-you', '/following'].includes(location.pathname);
-  const activeTab = location.pathname === '/following' ? 'following' : 'for-you';
-
-  const handleTabChange = (value: string | null) => {
-    if (value) {
-      void navigate(value === 'for-you' ? '/for-you' : '/following');
-    }
-  };
 
   return (
-    <Flex justify="center" align="center" h="100%" px="md" className={classes.container}>
-      {!isHomeFeed && (
-        <>
-          <Box className={classes.backButton}>
-            <ReturnButton />
-          </Box>
-          <Text className={classes.title}>
-            {title}
-          </Text>
-        </>
-      )}
-
-      {isHomeFeed && isAuthenticated && (
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          className={classes.tabs}
-          variant="unstyled"
-        >
-          <Tabs.List grow>
-            <Tabs.Tab value="for-you" className={classes.tab}>
-              For You
-            </Tabs.Tab>
-            <Tabs.Tab value="following" className={classes.tab}>
-              Following
-            </Tabs.Tab>
-          </Tabs.List>
-        </Tabs>
-      )}
-
-      {isHomeFeed && !isAuthenticated && (
-        <>
-          <Text className={classes.title}>
-            Home
-          </Text>
-          <Box className={classes.rightButton}>
-            <LoginButton />
-          </Box>
-        </>
-      )}
+    // Threads-style: a left-aligned feed/page title (with a back button before it
+    // on detail pages) and any actions pushed to the right — centered over the
+    // feed column via the same compensation the column uses.
+    <Flex justify="center" align="center" h="100%" className={classes.container}>
+      <Flex className={classes.bar} align="center" gap="xs">
+        {!isHomeFeed && <ReturnButton />}
+        <Text className={classes.barTitle}>{title}</Text>
+        {isHomeFeed && !isAuthenticated && <LoginButton />}
+      </Flex>
     </Flex>
   );
 }

@@ -9,7 +9,7 @@ export function useOpenLoginModal() {
   return () =>
     modals.openConfirmModal({
       title: (
-        <Text fz={20} fw={600} c="yellow">
+        <Text fz={20} fw={600}>
           Say more with Owls
         </Text>
       ),

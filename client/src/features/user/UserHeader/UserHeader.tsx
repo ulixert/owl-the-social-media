@@ -92,7 +92,7 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
         <Button
           fullWidth
           variant={user.isFollowing ? 'outline' : 'filled'}
-          color={user.isFollowing ? 'gray' : 'yellow'}
+          color={user.isFollowing ? 'gray' : 'mono'}
           radius="md"
           onClick={handleFollow}
           loading={followMutation.isPending}

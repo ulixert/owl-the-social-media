@@ -501,7 +501,7 @@ export function CreatePost({
               <Button
                 radius="xl"
                 size="compact-sm"
-                color="yellow"
+                color="mono"
                 onClick={handlePost}
                 disabled={postDisabled}
                 loading={createPostMutation.isPending}

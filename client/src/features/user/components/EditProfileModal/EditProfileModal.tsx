@@ -114,7 +114,7 @@ export function EditProfileModal({ user, onClose }: EditProfileModalProps) {
           fullWidth
           radius="xl"
           size="md"
-          color="yellow"
+          color="mono"
           onClick={handleSave}
           loading={mutation.isPending}
         >

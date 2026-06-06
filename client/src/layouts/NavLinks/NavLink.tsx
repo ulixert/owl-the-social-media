@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
-import { UnstyledButton, rem } from '@mantine/core';
+import { Text, UnstyledButton, rem } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useTitleStore } from '@stores/titleStore.ts';
@@ -17,6 +17,10 @@ type NavLinkProps = {
   needLogin?: boolean;
   path: string;
   type?: 'link' | 'action';
+  // When provided with `expanded`, the item renders as a labelled row (the
+  // desktop sidebar). Without it, it stays an icon-only button (mobile footer).
+  label?: string;
+  expanded?: boolean;
 };
 
 export function NavLink({
@@ -26,6 +30,8 @@ export function NavLink({
   needLogin,
   path,
   type = 'link',
+  label,
+  expanded,
 }: NavLinkProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const navigate = useNavigate();
@@ -65,6 +71,19 @@ export function NavLink({
         setTitle(path[1].toUpperCase() + path.slice(2));
       }
     }
+  }
+
+  if (expanded && label) {
+    return (
+      <UnstyledButton
+        onClick={handleClick}
+        className={classes.linkExpanded}
+        data-active={active ? 'true' : undefined}
+      >
+        <Icon style={{ width: rem(26), height: rem(26) }} stroke={1.5} />
+        <Text className={classes.linkLabel}>{label}</Text>
+      </UnstyledButton>
+    );
   }
 
   return (

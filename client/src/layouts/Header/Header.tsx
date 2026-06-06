@@ -10,7 +10,10 @@ export function Header() {
       <Container size={640} className={classes.container} hiddenFrom="sm">
         <HeaderMobile />
       </Container>
-      <Container size={640} className={classes.container} visibleFrom="sm">
+      {/* Full-width on desktop so HeaderDesktop's inner bar can center across the
+          whole header region (and line up with the viewport-centered feed column),
+          rather than being trapped in a 640px box that centers itself. */}
+      <Container fluid p={0} className={classes.container} visibleFrom="sm">
         <HeaderDesktop />
       </Container>
     </>

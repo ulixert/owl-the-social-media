@@ -83,7 +83,7 @@ export function PostActions({ post }: ActionsProps) {
 
       <PostAction
         type="share"
-        color="yellow"
+        color="mono"
         onClick={() =>
           handleProtectedAction(() => {
             console.log('share');

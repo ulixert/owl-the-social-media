@@ -14,27 +14,42 @@
   border-top: 1px solid var(--border-color);
 }
 
+/* Scroll region right of the sidebar. The feed column is centered (balanced gaps
+   on both sides) and dropped a little below the top bar, with rounded top corners
+   — a clean card rather than a heavy floating one. */
 .main {
-  border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
-  background-color: var(--alt-bg-color);
+  background-color: var(--bg-color);
   color: var(--text-color);
-  box-shadow: var(--mantine-shadow-lg);
-  border: 1px solid var(--border-color);
   margin-top: 60px;
-  padding-bottom: 0;
   min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  padding-top: var(--mantine-spacing-sm);
 
   @media (max-width: 48em) {
-    border-radius: 0;
     margin-top: 50px;
+    padding-top: 0;
   }
 }
 
-.container {
-  padding: 0;
+.column {
+  width: 100%;
+  max-width: 640px;
+  min-height: calc(100vh - 60px);
+  background-color: var(--alt-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
+
+  /* The main region starts right of the 245px sidebar, so a plain center would
+     sit right-of-screen-center. Reserve the sidebar width on the right so the
+     centered column lands in the middle of the whole viewport (like Threads). */
+  @media (min-width: 48em) {
+    margin-right: 245px; /* the sidebar width — keep in sync with AppLayout navbar */
+  }
 
   @media (max-width: 48em) {
     max-width: none;
+    border: none;
     border-radius: 0;
   }
 }

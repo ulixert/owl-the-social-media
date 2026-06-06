@@ -1,12 +1,6 @@
+/* Inline back arrow that sits before the page title in the header bar (no longer
+   a floating circular button). The subtle ActionIcon variant supplies the hover. */
 .return {
-  position: absolute;
-  left: 1em;
-  background-color: var(--bg-color);
   color: var(--text-color);
-  box-shadow: var(--mantine-shadow-lg);
-  border: 1px solid var(--border-color);
-
-  &:hover {
-    transform: scale(1.1);
-  }
+  margin-left: rem(-6px);
 }
