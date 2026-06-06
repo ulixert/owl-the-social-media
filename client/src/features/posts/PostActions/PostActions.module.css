@@ -3,6 +3,11 @@
   stroke: var(--mantine-color-red-5);
 }
 
+.reposted {
+  color: var(--mantine-color-green-6);
+  stroke: var(--mantine-color-green-6);
+}
+
 .count {
   margin-bottom: 2px;
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-2));

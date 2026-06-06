@@ -133,16 +133,18 @@ export async function getLikedPosts(req: Request, res: Response) {
               select: { postedBy: { select: { username: true } } },
             },
             likes: req.user ? { where: { userId: req.user.id } } : undefined,
+            reposts: req.user ? { where: { userId: req.user.id } } : undefined,
           },
         },
       },
     });
 
     const postsWithIsLiked = likeRows.map(({ post }) => {
-      const { likes, ...rest } = post;
+      const { likes, reposts, ...rest } = post;
       return {
         ...rest,
         isLiked: likes ? likes.length > 0 : false,
+        isReposted: reposts ? reposts.length > 0 : false,
       };
     });
 
@@ -191,16 +193,18 @@ export async function getSavedPosts(req: Request, res: Response) {
               select: { postedBy: { select: { username: true } } },
             },
             likes: req.user ? { where: { userId: req.user.id } } : undefined,
+            reposts: req.user ? { where: { userId: req.user.id } } : undefined,
           },
         },
       },
     });
 
     const postsWithIsLiked = saveRows.map(({ post }) => {
-      const { likes, ...rest } = post;
+      const { likes, reposts, ...rest } = post;
       return {
         ...rest,
         isLiked: likes ? likes.length > 0 : false,
+        isReposted: reposts ? reposts.length > 0 : false,
       };
     });
 

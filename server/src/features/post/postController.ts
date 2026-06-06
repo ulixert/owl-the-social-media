@@ -68,14 +68,22 @@ export async function getHotPosts(req: Request, res: Response) {
               },
             }
           : undefined,
+        reposts: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
       },
     });
 
     const postsWithIsLiked = posts.map((post) => {
-      const { likes, ...rest } = post;
+      const { likes, reposts, ...rest } = post;
       return {
         ...rest,
         isLiked: likes ? likes.length > 0 : false,
+        isReposted: reposts ? reposts.length > 0 : false,
       };
     });
 
@@ -129,6 +137,13 @@ export async function getPostById(req: Request, res: Response) {
               },
             }
           : undefined,
+        reposts: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
       },
     });
 
@@ -155,15 +170,17 @@ export async function getPostById(req: Request, res: Response) {
           commentsCount: 0,
           repostsCount: 0,
           isLiked: false,
+          isReposted: false,
         },
       });
       return;
     }
 
-    const { likes, ...rest } = post;
+    const { likes, reposts, ...rest } = post;
     const postWithIsLiked = {
       ...rest,
       isLiked: Array.isArray(likes) && likes.length > 0,
+      isReposted: Array.isArray(reposts) && reposts.length > 0,
     };
 
     await withLikeCounts([postWithIsLiked]);
@@ -225,14 +242,22 @@ export async function getChildPosts(req: Request, res: Response) {
               },
             }
           : undefined,
+        reposts: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
       },
     });
 
     const postsWithIsLiked = childPosts.map((post) => {
-      const { likes, ...rest } = post;
+      const { likes, reposts, ...rest } = post;
       return {
         ...rest,
         isLiked: likes ? likes.length > 0 : false,
+        isReposted: reposts ? reposts.length > 0 : false,
       };
     });
 

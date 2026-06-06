@@ -52,14 +52,22 @@ export async function getUserPosts(
               },
             }
           : undefined,
+        reposts: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
       },
     });
 
     const postsWithIsLiked = posts.map((post) => {
-      const { likes, ...rest } = post;
+      const { likes, reposts, ...rest } = post;
       return {
         ...rest,
         isLiked: likes ? likes.length > 0 : false,
+        isReposted: reposts ? reposts.length > 0 : false,
       };
     });
 
@@ -115,6 +123,13 @@ export async function getUserReplies(
               },
             }
           : undefined,
+        reposts: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+            }
+          : undefined,
         parentPost: {
           select: {
             id: true,
@@ -134,10 +149,11 @@ export async function getUserReplies(
     });
 
     const postsWithIsLiked = posts.map((post) => {
-      const { likes, ...rest } = post;
+      const { likes, reposts, ...rest } = post;
       return {
         ...rest,
         isLiked: likes ? likes.length > 0 : false,
+        isReposted: reposts ? reposts.length > 0 : false,
       };
     });
 

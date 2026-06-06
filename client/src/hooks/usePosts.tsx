@@ -18,6 +18,7 @@ export type Post = PostType & {
     };
   } | null;
   isLiked: boolean;
+  isReposted: boolean;
 };
 
 type PostsResponse = {
