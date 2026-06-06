@@ -9,8 +9,12 @@ export function HomePage() {
   const location = useLocation();
 
   useEffect(() => {
-    // '/' and '/for-you' are the same feed; only '/following' differs.
-    setTitle(location.pathname === '/following' ? 'Following' : 'For you');
+    // '/' and '/for-you' are the same feed (For you); the others are distinct.
+    const titles: Record<string, string> = {
+      '/following': 'Following',
+      '/trending': 'Trending',
+    };
+    setTitle(titles[location.pathname] ?? 'For you');
   }, [setTitle, location.pathname]);
 
   return <PostList />;

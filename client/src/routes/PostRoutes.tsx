@@ -13,13 +13,12 @@ export const PostRoutes = [
   },
   {
     // Trending feed (Flink windowed top-K, served from Redis with a DB
-    // fallback). Public like /hot; PostList derives the endpoint from the path.
+    // fallback). Public; HomePage sets the title and PostList derives the
+    // endpoint from the path.
     path: 'trending',
     async lazy() {
-      const { PostList } = await import(
-        '../features/posts/PostList/PostList.tsx'
-      );
-      return { Component: PostList };
+      const { HomePage } = await import('../pages/HomePage.tsx');
+      return { Component: HomePage };
     },
     hydrateFallbackElement: <Loading />,
   },

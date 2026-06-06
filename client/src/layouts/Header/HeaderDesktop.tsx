@@ -12,7 +12,11 @@ export function HeaderDesktop() {
   const title = useTitleStore((state) => state.title);
   const location = useLocation();
 
-  const isHomeFeed = ['/', '/for-you', '/following'].includes(location.pathname);
+  // Top-level feed routes show a left-aligned title with no back button; detail
+  // pages (a post, a profile) get the back button instead.
+  const isHomeFeed = ['/', '/for-you', '/following', '/trending'].includes(
+    location.pathname,
+  );
 
   return (
     // Threads-style: a left-aligned feed/page title (with a back button before it
