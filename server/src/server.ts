@@ -1,9 +1,13 @@
 import { app } from './app.js';
+import { attachWebSocket } from './realtime/wsHub.js';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const server = app.listen(PORT, '0.0.0.0', () =>
   console.log(`Server listening on ${PORT}`),
 );
+
+// Real-time notifications: upgrade WebSocket connections on the same HTTP server.
+attachWebSocket(server);
 
 // Handle promise rejections outside express (e.g. database connection error)
 process.on('unhandledRejection', (err) => {
