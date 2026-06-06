@@ -30,6 +30,7 @@ export function AppLayout() {
       >
         <AppShell.Navbar
           p="md"
+          pt={0}
           visibleFrom="sm"
           withBorder={false}
           className={classes.navbar}

@@ -80,7 +80,9 @@ export function NavBar() {
 
   return (
     <Stack h="100%" gap={4} px={4}>
-      <Box px={14} py="md">
+      {/* 60px band matching the header height so the logo's vertical center
+          lines up with the header title (the navbar drops its top padding). */}
+      <Box px={14} h={60} style={{ display: 'flex', alignItems: 'center' }}>
         <Logo size={34} justify="flex-start" />
       </Box>
 
