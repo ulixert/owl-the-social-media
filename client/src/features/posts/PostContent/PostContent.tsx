@@ -140,7 +140,9 @@ export function PostContent({ postText, postImages }: PostContentProps) {
   };
 
   return (
-    <Box mt={4}>
+    // Negative top margin tightens the gap to the header (Threads-style), while
+    // PostMain's gap keeps normal spacing down to the actions row.
+    <Box mt={-4}>
       {postText && (
         <Text size="sm" mb={imageCount > 0 ? 'xs' : 0}>
           {postText}
