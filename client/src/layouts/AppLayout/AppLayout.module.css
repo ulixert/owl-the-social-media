@@ -1,19 +1,8 @@
 .navbar {
   background-color: var(--bg-color);
   color: var(--text-color);
-  overflow: visible;
+  /* Width transitions when AppLayout overlay-expands the rail on hover. */
   transition: width 150ms ease;
-}
-
-/* Below lg the navbar is an 80px rail; hovering expands it to the full 245px
-   sidebar as an overlay (the main offset stays at the rail width, so the
-   expanded panel floats over the feed rather than shifting it). */
-@media (max-width: 74.99em) {
-  .navbar:hover {
-    width: rem(245px);
-    box-shadow: var(--mantine-shadow-md);
-    z-index: 201;
-  }
 }
 
 .header {

@@ -15,7 +15,6 @@ import {
   useMantineColorScheme,
 } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
-import { useHover, useMediaQuery } from '@mantine/hooks';
 import {
   IconBell,
   IconBookmark,
@@ -62,7 +61,13 @@ const FEED_ITEMS = [
   { label: 'Trending', path: '/trending' },
 ];
 
-export function NavBar() {
+type NavBarProps = {
+  // Whether the sidebar is expanded (labels + feeds) or a collapsed icon rail.
+  // Driven by AppLayout so the width overlay and content stay in sync.
+  expanded: boolean;
+};
+
+export function NavBar({ expanded }: NavBarProps) {
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('light');
   const mutation = useLogoutMutation();
@@ -71,15 +76,6 @@ export function NavBar() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: unreadCount } = useUnreadCount();
   const reloadFeeds = useReloadFeed();
-
-  // Below `lg` the sidebar is a narrow icon rail; hovering expands it to the
-  // full labelled sidebar (the CSS in AppLayout widens it as an overlay). At
-  // `lg`+ it's always expanded.
-  const isLarge = useMediaQuery('(min-width: 75em)', true, {
-    getInitialValueInEffect: false,
-  });
-  const { hovered, ref } = useHover<HTMLDivElement>();
-  const expanded = isLarge || hovered;
 
   function handleColorSchemeChange() {
     setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light');
@@ -91,7 +87,7 @@ export function NavBar() {
       : location.pathname.startsWith(path);
 
   return (
-    <Stack ref={ref} h="100%" gap={4} px={4}>
+    <Stack h="100%" gap={4} px={4}>
       {/* 60px band matching the header height so the logo's vertical center
           lines up with the header title (the navbar drops its top padding). */}
       <Box
