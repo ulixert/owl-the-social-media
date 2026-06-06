@@ -5,15 +5,10 @@
 
 .originalPost {
   cursor: pointer;
-  transition: background-color 150ms ease;
   border-radius: var(--mantine-radius-md);
   margin: 0 -12px;
   padding: 0 12px;
 }
 
-.originalPost:hover {
-  background-color: light-dark(
-    var(--mantine-color-gray-0),
-    var(--mantine-color-dark-6)
-  );
-}
+/* No hover background on the detail page (the main post isn't a navigation
+   target, and Threads doesn't highlight it on hover). */
