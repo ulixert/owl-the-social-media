@@ -51,7 +51,7 @@ export function NavLink({
         inline
         size={16}
         offset={2}
-        color="red"
+        color="mono"
         label={badge > 99 ? '99+' : badge}
         aria-label={`${badge} unread`}
       >
