@@ -32,13 +32,6 @@ export const router = createBrowserRouter([
         },
       },
       {
-        path: '/messages',
-        async lazy() {
-          const { MessagesPage } = await import('../pages/MessagesPage.tsx');
-          return { Component: MessagesPage };
-        },
-      },
-      {
         path: '/activity',
         async lazy() {
           const { ActivityPage } = await import('../pages/ActivityPage.tsx');

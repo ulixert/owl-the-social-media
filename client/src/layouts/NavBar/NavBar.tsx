@@ -20,7 +20,6 @@ import {
   IconHeart,
   IconHome,
   IconLogout,
-  IconMail,
   IconMenu2,
   IconMoon,
   IconPlus,
@@ -50,7 +49,6 @@ const TOP_ITEMS = [
 ];
 
 const BOTTOM_ITEMS = [
-  { icon: IconMail, label: 'Messages', path: '/messages', type: 'link' as const, needLogin: true },
   { icon: IconBell, label: 'Notifications', path: '/activity', type: 'link' as const, needLogin: true },
   { icon: IconUser, label: 'Profile', path: '/profile', type: 'link' as const, needLogin: true },
   { icon: IconHeart, label: 'Liked', path: '/liked', type: 'link' as const, needLogin: true },
