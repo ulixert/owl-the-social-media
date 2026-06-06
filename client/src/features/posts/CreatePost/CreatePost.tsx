@@ -286,6 +286,9 @@ export function CreatePost({
           )}
 
           <Textarea
+            // Mantine's modal focus-trap focuses the [data-autofocus] element
+            // first, so the cursor lands in the input, not the Cancel button.
+            data-autofocus={isModal ? true : undefined}
             placeholder={parentPost ? 'Post your reply' : "What's new?"}
             variant="unstyled"
             autosize

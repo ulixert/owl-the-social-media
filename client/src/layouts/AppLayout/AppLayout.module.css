@@ -41,6 +41,9 @@
   background-color: var(--alt-bg-color);
   border: 1px solid var(--border-color);
   border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
+  /* Clip children (e.g. the composer's hover background) to the rounded top
+     corners. Menus/hovercards render in portals, so they're unaffected. */
+  overflow: hidden;
 
   /* Viewport-center the column: reserve the navbar's reserved width on the right
      so the centered column lands in the middle of the whole window (the rail is

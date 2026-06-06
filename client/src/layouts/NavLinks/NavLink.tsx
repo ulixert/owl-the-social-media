@@ -57,8 +57,10 @@ export function NavLink({
           children: (
             <CreatePost
               isModal
-              onCancel={() => modals.close(modalId)}
-              onSuccess={() => modals.close(modalId)}
+              // closeAll, not close(modalId) — close-by-id wasn't matching, so
+              // Cancel did nothing (there's only one compose modal anyway).
+              onCancel={() => modals.closeAll()}
+              onSuccess={() => modals.closeAll()}
             />
           ),
           size: 'lg',
