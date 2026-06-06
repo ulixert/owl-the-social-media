@@ -4,6 +4,7 @@ import { Flex, Stack, Text } from '@mantine/core';
 import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 import { useAuthStore } from '@stores/authStore.ts';
 import { Post } from '@/hooks/usePosts.tsx';
+import { IconChevronRight } from '@tabler/icons-react';
 import { PostMoreMenu } from '../PostActions/PostMoreMenu.tsx';
 
 import classes from './PostHeader.module.css';
@@ -37,6 +38,32 @@ export function PostHeader({
               </Text>
             </Link>
           </UserHoverCard>
+
+          {/* Threads-style reply context: "author › parent" inline. */}
+          {replyToUsername && (
+            <>
+              <IconChevronRight
+                size={14}
+                stroke={1.5}
+                style={{
+                  color: 'var(--mantine-color-gray-6)',
+                  flexShrink: 0,
+                }}
+              />
+              <UserHoverCard username={replyToUsername}>
+                <Link
+                  to={`/user/${replyToUsername}`}
+                  className={classes.username}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Text size="sm" fw={600} span truncate>
+                    {replyToUsername}
+                  </Text>
+                </Link>
+              </UserHoverCard>
+            </>
+          )}
+
           <Text size="sm" c="gray.6">
             &bull;
           </Text>
@@ -49,22 +76,6 @@ export function PostHeader({
           <PostMoreMenu post={post} isOwner={isOwner} />
         </Flex>
       </Flex>
-      {replyToUsername && (
-        <Text size="xs" c="dimmed">
-          Replying to{' '}
-          <UserHoverCard username={replyToUsername}>
-            <Link
-              to={`/user/${replyToUsername}`}
-              style={{ textDecoration: 'none' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Text span c="dimmed" fw={600}>
-                @{replyToUsername}
-              </Text>
-            </Link>
-          </UserHoverCard>
-        </Text>
-      )}
     </Stack>
   );
 }
