@@ -29,7 +29,10 @@ export function ProfilePage() {
     <>
       <UserHeader
         tab={activeTab}
-        onTabChange={(tab) => navigate(`/profile/${tab}`)}
+        // Stay on the profile being viewed. `/profile/...` redirects to the
+        // logged-in user, so switching tabs on someone else's profile would
+        // otherwise bounce to your own.
+        onTabChange={(tab) => navigate(`/user/${username}/${tab}`)}
         user={user}
       />
       <PostList endpoint={endpoint} />
