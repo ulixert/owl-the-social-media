@@ -29,7 +29,7 @@ import {
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
-import { IconPhoto, IconX } from '@tabler/icons-react';
+import { IconPhoto } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import classes from './CreatePost.module.css';
@@ -194,18 +194,24 @@ export function CreatePost({
   return (
     <Box>
       {isModal && (
-        <Box mb="md">
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="lg"
-            onClick={onCancel}
-            aria-label="Cancel"
-            style={{ marginLeft: -8 }}
-          >
-            <IconX size={20} />
-          </ActionIcon>
-        </Box>
+        <>
+          <Flex align="center" justify="space-between" mb="sm">
+            <Button
+              variant="subtle"
+              color="gray"
+              size="compact-sm"
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+            <Text fw={700}>
+              {editingPost ? 'Edit post' : parentPost ? 'Reply' : 'New post'}
+            </Text>
+            {/* spacer the width of the Cancel button so the title stays centered */}
+            <Box w={64} />
+          </Flex>
+          <Divider mb="md" mx={-16} />
+        </>
       )}
 
       {isModal && parentPost && (
