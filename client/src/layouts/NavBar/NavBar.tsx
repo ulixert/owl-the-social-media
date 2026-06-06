@@ -14,6 +14,7 @@ import {
   useMantineColorScheme,
 } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   IconBell,
   IconBookmark,
@@ -68,6 +69,14 @@ export function NavBar() {
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: unreadCount } = useUnreadCount();
+  const queryClient = useQueryClient();
+
+  // Clicking a feed reloads it (Threads-style): scroll back to the top and
+  // re-fetch, so the same nav item visibly refreshes instead of doing nothing.
+  const reloadFeeds = () => {
+    void queryClient.invalidateQueries({ queryKey: ['posts'] });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   function handleColorSchemeChange() {
     setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light');
@@ -96,6 +105,7 @@ export function NavBar() {
             type={item.type}
             needLogin={item.needLogin}
             active={isMainActive(item.path)}
+            onClick={item.path === '/' ? reloadFeeds : undefined}
             expanded
           />
         ))}
@@ -126,7 +136,10 @@ export function NavBar() {
             key={feed.path}
             className={navClasses.feedLink}
             data-active={location.pathname === feed.path ? 'true' : undefined}
-            onClick={() => void navigate(feed.path)}
+            onClick={() => {
+              reloadFeeds();
+              void navigate(feed.path);
+            }}
           >
             {feed.label}
           </UnstyledButton>

@@ -34,8 +34,15 @@ export function usePosts(endpointArg?: string) {
   // resolved to undefined (→ requests to "postsundefined").
   const endpoint = endpointArg ?? location.pathname;
 
-  const { data, isPending, isError, hasNextPage, fetchNextPage, isFetching } =
-    useInfiniteQuery({
+  const {
+    data,
+    isPending,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
       queryKey: ['posts', isAuthenticated, location.pathname, endpoint],
       queryFn: async ({ pageParam }): Promise<PostsResponse> => {
         const resolvedEndpoint =
@@ -68,5 +75,6 @@ export function usePosts(endpointArg?: string) {
     hasNextPage,
     fetchNextPage,
     isFetching,
+    isFetchingNextPage,
   } as const;
 }

@@ -14,8 +14,15 @@ type PostListProps = {
 };
 
 export function PostList({ endpoint }: PostListProps) {
-  const { data, isPending, isError, hasNextPage, fetchNextPage, isFetching } =
-    usePosts(endpoint);
+  const {
+    data,
+    isPending,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = usePosts(endpoint);
   const { ref, inView } = useInView();
   const location = useLocation();
 
@@ -41,8 +48,17 @@ export function PostList({ endpoint }: PostListProps) {
     return <FollowingEmpty />;
   }
 
+  // A full-feed refetch (e.g. clicking the active feed to reload) — show a small
+  // spinner at the top while it's in flight, distinct from infinite-scroll.
+  const isReloading = isFetching && !isFetchingNextPage;
+
   return (
     <Stack p="md" pb={0}>
+      {isReloading && (
+        <Center py={4}>
+          <Loader size="sm" type="dots" />
+        </Center>
+      )}
       {data?.pages.map((page) =>
         page.posts.map((post) => <PostItem key={post.id} post={post} />),
       )}
