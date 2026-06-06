@@ -98,7 +98,10 @@ export function NavBar() {
             type={item.type}
             needLogin={item.needLogin}
             active={isMainActive(item.path)}
-            onClick={item.path === '/' ? reloadFeeds : undefined}
+            // Reload only when already on this feed; from another page just navigate.
+            onClick={
+              item.path === '/' && isMainActive('/') ? reloadFeeds : undefined
+            }
             expanded
           />
         ))}
@@ -130,8 +133,9 @@ export function NavBar() {
             className={navClasses.feedLink}
             data-active={location.pathname === feed.path ? 'true' : undefined}
             onClick={() => {
-              reloadFeeds();
-              void navigate(feed.path);
+              // Already here → reload; otherwise just navigate (no reload).
+              if (location.pathname === feed.path) reloadFeeds();
+              else void navigate(feed.path);
             }}
           >
             {feed.label}
