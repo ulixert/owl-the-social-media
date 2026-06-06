@@ -86,6 +86,51 @@ the global OR entirely; candidate sources are bounded/indexed (~1 ms social-proo
 ~0.4 ms recent-popular; followed authors O(1) from the fan-out feed when warm, or a
 ~168 ms backward-PK-scan DB fallback). See `docs/for-you.md`.
 
+## Real-time notification fan-out (WebSocket + Redis pub/sub)
+
+How far the notification path (`docs/notifications.md`) scales on a single API
+instance, and what delivery latency looks like under load. Captured with the
+committed harness: `CONN=<n> ROUNDS=5 pnpm --filter server loadtest:notifications`.
+
+### Method
+
+- One Node API instance + one Redis, local. The harness opens `CONN` concurrent
+  authenticated WebSocket connections, then each round **publishes one message to
+  every connection's channel at once** and records `receive − publish` (wall-clock,
+  ms) per delivery. Publishing direct to Redis isolates the ws + pub/sub transport
+  from the DB write.
+- This is a **synchronised broadcast** — all `CONN` messages fan out in the same
+  instant — so it's the worst case for a single-threaded event loop, not a
+  steady-state trickle. Round 1 is dropped as warm-up.
+
+### Results
+
+| Concurrent connections | Delivery | Fan-out p50 | Fan-out p99 |
+| --- | --- | --- | --- |
+| 1,000  | 100% | 11 ms  | 16 ms  |
+| 5,000  | 100% | 45 ms  | 54 ms  |
+| 10,000 | 100% | 69 ms  | 94 ms  |
+| 16,324 | 100% | 101 ms | 171 ms |
+
+Connection establishment held ~4,000 conn/s up to 10k. **Zero dropped messages**
+at every level.
+
+### Reading the numbers
+
+- **A single Node instance holds 10k live connections and fans a simultaneous
+  broadcast out to all of them with p99 < 100 ms, 100% delivery.** Latency scales
+  roughly linearly because every round pushes `CONN` sends through one event loop in
+  one burst; in production, notifications arrive spread over time, not all at once,
+  so steady-state per-event latency is far below these synchronised-broadcast figures.
+- **The ~16k ceiling is the test client, not the server.** Asking for 20k, only
+  16,324 connected — that's the loopback **ephemeral-port range** of a single client
+  process (macOS ~49152–65535). The server never errored or dropped; horizontal
+  client spread (or more instances) would go further. The honest single-instance
+  number is therefore "≥10k comfortable; client-bound past ~16k."
+- **Caveats:** localhost loopback (no real network RTT), single API instance, single
+  test client, ms-resolution wall clock. Useful for the *shape* (linear fan-out cost,
+  100% delivery, where one instance saturates), not as an absolute production SLA.
+
 ## What this doesn't fix (next steps)
 
 - **Search** still uses `ILIKE '%q%'` (`searchPosts`/`searchUsers`), which can't
