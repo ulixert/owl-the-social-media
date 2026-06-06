@@ -24,7 +24,11 @@ import {
   searchUsers,
   updatePost,
 } from './postController.js';
-import { getUserPosts, getUserReplies } from './userPostController.js';
+import {
+  getUserPosts,
+  getUserReplies,
+  getUserReposts,
+} from './userPostController.js';
 
 export const postRouter: Router = express.Router();
 
@@ -55,3 +59,4 @@ postRouter.put('/:postId/repost', protectRoute, repostUnrepost);
 // Get user posts, replies, and reposts by username
 postRouter.get('/user/:username/posts', optionalProtectRoute, getUserPosts);
 postRouter.get('/user/:username/replies', optionalProtectRoute, getUserReplies);
+postRouter.get('/user/:username/reposts', optionalProtectRoute, getUserReposts);

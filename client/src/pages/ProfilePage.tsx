@@ -8,7 +8,8 @@ import { useUserProfile } from '@/hooks/useUserProfile.ts';
 export function ProfilePage() {
   const navigate = useNavigate();
   const { tab, username } = useParams<{ username: string; tab?: string }>();
-  const activeTab = tab == 'replies' ? 'replies' : 'posts';
+  const activeTab =
+    tab === 'replies' ? 'replies' : tab === 'reposts' ? 'reposts' : 'posts';
 
   const { data: user, isLoading, isError } = useUserProfile(username);
 
@@ -20,10 +21,7 @@ export function ProfilePage() {
     return <div>User not found</div>;
   }
 
-  const endpoint =
-    activeTab == 'posts'
-      ? `/user/${username}/posts`
-      : `/user/${username}/replies`;
+  const endpoint = `/user/${username}/${activeTab}`;
 
   return (
     <>
