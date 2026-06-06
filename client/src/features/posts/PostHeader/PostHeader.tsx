@@ -33,7 +33,7 @@ export function PostHeader({
               className={classes.username}
               onClick={(e) => e.stopPropagation()}
             >
-              <Text size="sm" fw={700} span truncate>
+              <Text size="sm" lh={1.2} fw={700} span truncate>
                 {post.postedBy.username}
               </Text>
             </Link>
@@ -56,7 +56,7 @@ export function PostHeader({
                   className={classes.username}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <Text size="sm" fw={600} span truncate>
+                  <Text size="sm" lh={1.2} fw={600} span truncate>
                     {replyToUsername}
                   </Text>
                 </Link>
@@ -64,10 +64,10 @@ export function PostHeader({
             </>
           )}
 
-          <Text size="sm" c="gray.6">
+          <Text size="sm" lh={1.2} c="gray.6">
             &bull;
           </Text>
-          <Text size="sm" c="gray.6" style={{ whiteSpace: 'nowrap' }}>
+          <Text size="sm" lh={1.2} c="gray.6" style={{ whiteSpace: 'nowrap' }}>
             {createdAt}
           </Text>
         </Flex>
