@@ -24,12 +24,13 @@ export function ReturnButton() {
       <ActionIcon
         className={styles.return}
         onClick={handleBack}
-        variant="filled"
-        radius={100}
+        variant="subtle"
+        radius="xl"
         color="gray"
-        size={24}
+        size={34}
+        aria-label="Go back"
       >
-        <IconArrowLeft size={16} />
+        <IconArrowLeft size={20} />
       </ActionIcon>
     )
   );
