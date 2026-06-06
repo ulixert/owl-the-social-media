@@ -71,3 +71,8 @@ export type Repost = Prisma.RepostModel
  * 
  */
 export type Save = Prisma.SaveModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel

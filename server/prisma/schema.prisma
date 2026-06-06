@@ -28,6 +28,9 @@ model User {
   saves          Save[]
   following      UserFollows[] @relation("Following")
   followers      UserFollows[] @relation("Followers")
+  // Notifications this user receives, and the ones their actions triggered.
+  notifications        Notification[] @relation("Recipient")
+  triggeredNotifications Notification[] @relation("Actor")
 }
 
 model UserFollows {
@@ -63,6 +66,7 @@ model Post {
   postedBy      User     @relation(fields: [postedById], references: [id])
   reposts       Repost[]
   saves         Save[]
+  notifications Notification[]
 
   // Feed keyset pagination: filter by author/parent, order by id desc.
   @@index([postedById, id])
@@ -110,6 +114,29 @@ model Save {
   @@unique([userId, postId])
   // Saved feed keyset: filter by user, order by id desc.
   @@index([userId, id])
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  recipientId Int
+  actorId     Int
+  type        NotificationType
+  // The post involved, for LIKE (liked post) and REPLY (the reply). Null for FOLLOW.
+  postId      Int?
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  recipient   User             @relation("Recipient", fields: [recipientId], references: [id])
+  actor       User             @relation("Actor", fields: [actorId], references: [id])
+  post        Post?            @relation(fields: [postId], references: [id])
+
+  // Activity feed keyset: filter by recipient, order by id desc.
+  @@index([recipientId, id])
+}
+
+enum NotificationType {
+  LIKE
+  FOLLOW
+  REPLY
 }
 
 enum Role {

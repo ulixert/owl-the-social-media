@@ -9,6 +9,15 @@
 * 🟢 You can import this file directly.
 */
 
+export const NotificationType = {
+  LIKE: 'LIKE',
+  FOLLOW: 'FOLLOW',
+  REPLY: 'REPLY'
+} as const
+
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]
+
+
 export const Role = {
   USER: 'USER',
   ADMIN: 'ADMIN'
