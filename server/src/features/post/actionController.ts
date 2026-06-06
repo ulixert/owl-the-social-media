@@ -2,6 +2,10 @@ import { Request, Response } from 'express';
 
 import { prisma } from '../../db/index.js';
 import { postParamsSchema } from '../../types/validation/schemas.js';
+import {
+  createNotification,
+  publishNotification,
+} from '../notification/notificationService.js';
 
 export async function likeUnlikePost(req: Request, res: Response) {
   try {
@@ -16,7 +20,7 @@ export async function likeUnlikePost(req: Request, res: Response) {
 
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      select: { likes: true },
+      select: { postedById: true },
     });
 
     if (!post) {
@@ -46,12 +50,18 @@ export async function likeUnlikePost(req: Request, res: Response) {
         },
       });
     } else {
-      await prisma.like.create({
-        data: {
-          userId: currentUserId,
+      // Like + notification commit together; we publish only on the positive
+      // action (never on unlike), so toggling can't spam the author.
+      const notification = await prisma.$transaction(async (tx) => {
+        await tx.like.create({ data: { userId: currentUserId, postId } });
+        return createNotification(tx, {
+          recipientId: post.postedById,
+          actorId: currentUserId,
+          type: 'LIKE',
           postId,
-        },
+        });
       });
+      await publishNotification(notification);
     }
 
     res.status(204).send();

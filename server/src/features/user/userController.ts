@@ -2,6 +2,10 @@ import { Request, Response } from 'express';
 import { UserUpdateSchema } from 'validation';
 
 import { prisma } from '../../db';
+import {
+  createNotification,
+  publishNotification,
+} from '../notification/notificationService.js';
 
 // "Who to follow": the most-followed accounts, excluding the viewer and anyone
 // they already follow. Powers the Explore page's suggestions.
@@ -106,23 +110,30 @@ export async function followAndUnfollowUser(
 
       res.status(204).send();
     } else {
-      // Follow: create the edge and adjust both counters atomically.
-      await prisma.$transaction([
-        prisma.userFollows.create({
+      // Follow: create the edge, adjust both counters, and record the
+      // notification atomically. Publish only after the commit.
+      const notification = await prisma.$transaction(async (tx) => {
+        await tx.userFollows.create({
           data: {
             followerId: currentUserId,
             followingId: targetUserId,
           },
-        }),
-        prisma.user.update({
+        });
+        await tx.user.update({
           where: { id: targetUserId },
           data: { followersCount: { increment: 1 } },
-        }),
-        prisma.user.update({
+        });
+        await tx.user.update({
           where: { id: currentUserId },
           data: { followingCount: { increment: 1 } },
-        }),
-      ]);
+        });
+        return createNotification(tx, {
+          recipientId: targetUserId,
+          actorId: currentUserId,
+          type: 'FOLLOW',
+        });
+      });
+      await publishNotification(notification);
 
       res.status(204).send();
     }

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
-import { Text, UnstyledButton, rem } from '@mantine/core';
+import { Badge, Text, UnstyledButton, rem } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useTitleStore } from '@stores/titleStore.ts';
@@ -21,6 +21,8 @@ type NavLinkProps = {
   // desktop sidebar). Without it, it stays an icon-only button (mobile footer).
   label?: string;
   expanded?: boolean;
+  // Unread count shown as a pill on the labelled row (e.g. Activity).
+  badge?: number;
 };
 
 export function NavLink({
@@ -32,6 +34,7 @@ export function NavLink({
   type = 'link',
   label,
   expanded,
+  badge,
 }: NavLinkProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const navigate = useNavigate();
@@ -82,6 +85,11 @@ export function NavLink({
       >
         <Icon style={{ width: rem(26), height: rem(26) }} stroke={1.5} />
         <Text className={classes.linkLabel}>{label}</Text>
+        {badge ? (
+          <Badge color="mono" size="sm" circle ml="auto">
+            {badge}
+          </Badge>
+        ) : null}
       </UnstyledButton>
     );
   }

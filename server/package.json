@@ -40,6 +40,7 @@
     "pg": "^8.21.0",
     "prisma": "^7.8.0",
     "validation": "workspace:^",
+    "ws": "^8.21.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -51,6 +52,7 @@
     "@types/node": "^25.9.1",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^7.2.0",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.60.1",
     "@typescript-eslint/parser": "^8.60.1",
     "eslint": "^9.39.4",

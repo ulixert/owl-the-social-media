@@ -3,6 +3,7 @@ import express, { Application, NextFunction } from 'express';
 
 import { NotFoundError } from './errors/errors.js';
 import { authRouter } from './features/auth/authRouter.js';
+import { notificationRouter } from './features/notification/notificationRouter.js';
 import { postRouter } from './features/post/postRouter.js';
 import { uploadRouter } from './features/upload/uploadRouter.js';
 import { userRouter } from './features/user/userRouter.js';
@@ -20,6 +21,7 @@ export const API_PREFIX = process.env.API_PREFIX ?? '/api/v1';
 app.use(`${API_PREFIX}/users`, userRouter);
 app.use(`${API_PREFIX}/posts`, postRouter);
 app.use(`${API_PREFIX}/auth`, authRouter);
+app.use(`${API_PREFIX}/notifications`, notificationRouter);
 app.use(`${API_PREFIX}/upload`, uploadRouter);
 
 // Serve disk-backed uploads. Long-lived cache: each file has a unique name, so

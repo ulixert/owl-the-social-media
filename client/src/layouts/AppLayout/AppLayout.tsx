@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Outlet, useNavigation } from 'react-router-dom';
 
 import { Loading } from '@/components/Loading/Loading.tsx';
+import { useNotificationSocket } from '@/hooks/useNotificationSocket.ts';
 import { AppShell } from '@mantine/core';
 import { ModalsProvider } from '@mantine/modals';
 
@@ -12,6 +13,9 @@ import classes from './AppLayout.module.css';
 
 export function AppLayout() {
   const navigation = useNavigation();
+
+  // Keep one live notification socket open for the whole authenticated session.
+  useNotificationSocket();
 
   return (
     <ModalsProvider>

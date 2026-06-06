@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Logo } from '@/components/Logo/Logo.tsx';
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation.ts';
+import { useUnreadCount } from '@/hooks/useNotifications.ts';
 import {
   Box,
   Menu,
@@ -68,6 +69,7 @@ export function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { data: unreadCount } = useUnreadCount();
 
   function handleColorSchemeChange() {
     setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light');
@@ -109,6 +111,7 @@ export function NavBar() {
             type={item.type}
             needLogin={item.needLogin}
             active={isMainActive(item.path)}
+            badge={item.path === '/activity' ? unreadCount : undefined}
             expanded
           />
         ))}
