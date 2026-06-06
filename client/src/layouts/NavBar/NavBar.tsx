@@ -50,8 +50,8 @@ const MAIN_ITEMS = [
   { icon: IconUser, label: 'Profile', path: '/profile', type: 'link' as const, needLogin: true },
 ];
 
+// "Home" above is the For You feed, so Feeds lists only the alternative feeds.
 const FEED_ITEMS = [
-  { label: 'For You', path: '/for-you' },
   { label: 'Following', path: '/following' },
   { label: 'Hot', path: '/hot' },
 ];
@@ -70,13 +70,13 @@ export function NavBar() {
 
   const isMainActive = (path: string) =>
     path === '/'
-      ? location.pathname === '/'
+      ? location.pathname === '/' || location.pathname === '/for-you'
       : location.pathname.startsWith(path);
 
   return (
     <Stack h="100%" gap={4} px={4}>
-      <Box px={10} py="md">
-        <Logo />
+      <Box px={14} py="md">
+        <Logo size={34} justify="flex-start" />
       </Box>
 
       <Stack gap={2}>

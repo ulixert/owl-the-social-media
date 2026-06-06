@@ -13,6 +13,8 @@
   height: 100%;
   display: flex;
   align-items: center;
+  /* Match the feed column's viewport-centering (see AppLayout .column). */
+  margin-right: var(--app-shell-navbar-width, 245px);
 }
 
 @media (max-width: 48em) {

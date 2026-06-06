@@ -62,6 +62,10 @@
   &[data-active] {
     &,
     &:hover {
+      background-color: light-dark(
+        var(--mantine-color-gray-1),
+        var(--mantine-color-dark-5)
+      );
       color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
     }
   }
@@ -70,6 +74,11 @@
 .linkLabel {
   font-size: var(--mantine-font-size-md);
   font-weight: 600;
+}
+
+/* Bolder label on the active item for clearer emphasis. */
+.linkExpanded[data-active] .linkLabel {
+  font-weight: 700;
 }
 
 .sectionLabel {
