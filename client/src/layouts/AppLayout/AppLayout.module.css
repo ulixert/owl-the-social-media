@@ -14,19 +14,21 @@
   border-top: 1px solid var(--border-color);
 }
 
-/* Scroll region right of the sidebar. The feed sits in a left-aligned column so
-   it hugs the sidebar (empty space falls on the right — where step-3 columns go),
-   rather than floating centered in the leftover width. */
+/* Scroll region right of the sidebar. The feed column is centered (balanced gaps
+   on both sides) and dropped a little below the top bar, with rounded top corners
+   — a clean card rather than a heavy floating one. */
 .main {
   background-color: var(--bg-color);
   color: var(--text-color);
   margin-top: 60px;
   min-height: calc(100vh - 60px);
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
+  padding-top: var(--mantine-spacing-sm);
 
   @media (max-width: 48em) {
     margin-top: 50px;
+    padding-top: 0;
   }
 }
 
@@ -35,12 +37,12 @@
   max-width: 640px;
   min-height: calc(100vh - 60px);
   background-color: var(--alt-bg-color);
-  border-left: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
 
   @media (max-width: 48em) {
     max-width: none;
-    border-left: none;
-    border-right: none;
+    border: none;
+    border-radius: 0;
   }
 }

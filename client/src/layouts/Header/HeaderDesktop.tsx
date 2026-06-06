@@ -23,9 +23,9 @@ export function HeaderDesktop() {
   };
 
   return (
-    // Left-aligned so the header bar sits over the feed column (which hugs the
-    // sidebar), matching the main content rather than spanning the full width.
-    <Flex justify="flex-start" align="center" h="100%" className={classes.container}>
+    // Centered so the header bar sits over the centered feed column (same
+    // max-width), keeping the tabs/title aligned with the content below.
+    <Flex justify="center" align="center" h="100%" className={classes.container}>
       <Box className={classes.bar}>
         {!isHomeFeed && (
           <>
