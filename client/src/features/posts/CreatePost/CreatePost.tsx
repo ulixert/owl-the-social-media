@@ -71,6 +71,9 @@ export function CreatePost({
   const [text, setText] = useState(editingPost?.text ?? '');
   const [images, setImages] = useState<string[]>(editingPost?.images ?? []);
   const [error, setError] = useState<string | null>(null);
+  // Inline reply composer starts collapsed (just a placeholder + button) and
+  // expands to the full composer on click; the modal is always expanded.
+  const [focused, setFocused] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadImages = useUploadImages();
 
@@ -153,6 +156,7 @@ export function CreatePost({
         }
         setText('');
         setImages([]);
+        setFocused(false);
         onSuccess?.(post);
         if (isModal) {
           modals.closeAll();
@@ -190,6 +194,33 @@ export function CreatePost({
   const postDisabled = isEmpty || isOverLimit || createPostMutation.isPending;
 
   const buttonLabel = editingPost ? 'Save' : parentPost ? 'Reply' : 'Post';
+
+  // Collapsed inline composer: avatar + placeholder + button on one row. Clicking
+  // expands to the full composer (which autofocuses the textarea).
+  if (!isModal && !editingPost && !focused) {
+    return (
+      <Box>
+        <Flex
+          gap={12}
+          align="center"
+          onClick={() => setFocused(true)}
+          style={{ cursor: 'text' }}
+        >
+          <UserAvatar
+            username={userData?.username ?? 'You'}
+            avatar={userData?.profilePic ?? null}
+          />
+          <Text c="dimmed" size="sm" style={{ flex: 1 }}>
+            {parentPost ? 'Post your reply' : "What's new?"}
+          </Text>
+          <Button radius="xl" size="compact-sm" color="mono" disabled>
+            {buttonLabel}
+          </Button>
+        </Flex>
+        <Divider mt="md" mx={-16} />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -274,17 +305,6 @@ export function CreatePost({
         </Stack>
 
         <Box style={{ flex: 1, minWidth: 0 }}>
-          {!isModal && (
-            <Group gap={4} mb={4}>
-              <Text size="sm" fw={700}>
-                {userData?.name ?? 'You'}
-              </Text>
-              <Text size="sm" c="dimmed">
-                @{userData?.username ?? 'you'}
-              </Text>
-            </Group>
-          )}
-
           <Textarea
             // Mantine's modal focus-trap focuses the [data-autofocus] element
             // first, so the cursor lands in the input, not the Cancel button.
@@ -311,7 +331,7 @@ export function CreatePost({
                 padding: 0,
               },
             }}
-            autoFocus={isModal}
+            autoFocus={isModal ? true : focused}
           />
 
           {images.length > 0 && (
