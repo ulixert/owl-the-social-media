@@ -61,12 +61,20 @@ export function serializeNotification(n: HydratedNotification) {
 // Fan a committed notification out to the recipient's live sockets via Redis
 // pub/sub. Call this AFTER the transaction commits so a rolled-back row can
 // never be delivered. A no-op for null (self-notify, skipped above).
+//
+// Best-effort: the row is already durably stored and will show up on the next
+// Activity fetch, so a Redis hiccup must never fail the source action (a like
+// shouldn't 500 because live delivery was unavailable). We log and move on.
 export async function publishNotification(
   n: HydratedNotification | null,
 ): Promise<void> {
   if (!n) return;
-  await redis.publish(
-    notificationChannel(n.recipientId),
-    JSON.stringify(serializeNotification(n)),
-  );
+  try {
+    await redis.publish(
+      notificationChannel(n.recipientId),
+      JSON.stringify(serializeNotification(n)),
+    );
+  } catch (err) {
+    console.error('[notification] publish failed:', (err as Error).message);
+  }
 }
