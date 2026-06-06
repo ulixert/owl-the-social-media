@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/Logo/Logo.tsx';
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation.ts';
 import { useUnreadCount } from '@/hooks/useNotifications.ts';
+import { useReloadFeed } from '@/hooks/useReloadFeed.ts';
 import {
   Box,
   Menu,
@@ -14,7 +15,6 @@ import {
   useMantineColorScheme,
 } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   IconBell,
   IconBookmark,
@@ -69,14 +69,7 @@ export function NavBar() {
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: unreadCount } = useUnreadCount();
-  const queryClient = useQueryClient();
-
-  // Clicking a feed reloads it (Threads-style): scroll back to the top and
-  // re-fetch, so the same nav item visibly refreshes instead of doing nothing.
-  const reloadFeeds = () => {
-    void queryClient.invalidateQueries({ queryKey: ['posts'] });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const reloadFeeds = useReloadFeed();
 
   function handleColorSchemeChange() {
     setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light');
