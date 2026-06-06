@@ -32,11 +32,8 @@ export function PostHeader({
               className={classes.username}
               onClick={(e) => e.stopPropagation()}
             >
-              <Text size="sm" fw="700" span truncate>
-                {post.postedBy.name}
-              </Text>
-              <Text size="sm" c="gray.6" span ml={4} truncate>
-                @{post.postedBy.username}
+              <Text size="sm" fw={700} span truncate>
+                {post.postedBy.username}
               </Text>
             </Link>
           </UserHoverCard>
@@ -61,7 +58,7 @@ export function PostHeader({
               style={{ textDecoration: 'none' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <Text span c="blue.6">
+              <Text span c="dimmed" fw={600}>
                 @{replyToUsername}
               </Text>
             </Link>
