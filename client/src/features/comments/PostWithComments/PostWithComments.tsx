@@ -20,7 +20,6 @@ import { useCreatePostModal } from '../../posts/hooks/useCreatePostModal.tsx';
 import { CreatePost } from '../../posts/CreatePost/CreatePost.tsx';
 import { PostItem } from '../../posts/PostItem/PostItem.tsx';
 import { OriginalPost } from '../OriginalPost/OriginalPost.tsx';
-import { ReplyThread } from '../ReplyThread/ReplyThread.tsx';
 import classes from './PostWithComments.module.css';
 
 const SORT_LABELS: Record<CommentSort, string> = {
@@ -138,10 +137,17 @@ export function PostWithComments() {
           </>
         )}
 
-        {/* Replies. Each can lazily expand its own nested replies. */}
+        {/* No replies yet. */}
+        {currentPost && currentPost.post.commentsCount === 0 && (
+          <Text c="dimmed" size="sm" fw={600}>
+            No replies yet
+          </Text>
+        )}
+
+        {/* Replies — a flat list of all replies. */}
         {childPostsData?.pages.map((page) =>
           page.childPosts.map((post) => (
-            <ReplyThread key={post.id} post={post} />
+            <PostItem key={post.id} post={post} hideReplyContext />
           )),
         )}
 
