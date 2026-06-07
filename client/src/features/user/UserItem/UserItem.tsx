@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
+import { UserAvatarButton } from '../UserAvatarButton/UserAvatarButton.tsx';
 import { useFollowMutation } from '../hooks/useFollowMutation.ts';
 import { useAuthStore } from '@stores/authStore.ts';
 import { useOpenLoginModal } from '@/hooks/useOpenLoginModal.tsx';
@@ -53,15 +53,12 @@ export function UserItem({ user }: UserItemProps) {
         style={{ cursor: 'pointer' }}
         onClick={() => navigate(`/user/${user.username}`)}
       >
-        <UserHoverCard username={user.username}>
-          <Box onClick={(e) => e.stopPropagation()}>
-            <UserAvatar
-              username={user.username}
-              avatar={user.profilePic}
-              size="md"
-            />
-          </Box>
-        </UserHoverCard>
+        <UserAvatarButton
+          username={user.username}
+          avatar={user.profilePic}
+          size="md"
+          withBadge={false}
+        />
 
         <Stack gap={0} flex={1} style={{ minWidth: 0 }}>
           <UserHoverCard username={user.username}>

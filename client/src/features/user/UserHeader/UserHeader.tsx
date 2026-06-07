@@ -74,14 +74,6 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
           <Anchor c="inherit" size="sm">
             <span>{user.followersCount}</span> followers
           </Anchor>
-          <Text>&bull;</Text>
-          <Anchor c="inherit" size="sm">
-            <span>{user.followingCount}</span> following
-          </Anchor>
-          <Text>&bull;</Text>
-          <Anchor c="inherit" size="sm">
-            <span>{user.likesCount}</span> likes
-          </Anchor>
         </Flex>
         <Flex gap={12}>
           <UserMoreMenu />

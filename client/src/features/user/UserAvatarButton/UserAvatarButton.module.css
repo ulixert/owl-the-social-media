@@ -1,0 +1,22 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+  border-radius: 50%;
+}
+
+/* Threads-style "+" follow badge in the avatar's bottom-right corner. */
+.badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  /* Ring in the page background so the badge reads as a separate chip. */
+  border: 2px solid var(--bg-color);
+}

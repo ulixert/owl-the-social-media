@@ -1,7 +1,4 @@
-import { Link } from 'react-router-dom';
-
-import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
-import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
+import { UserAvatarButton } from '@/features/user/UserAvatarButton/UserAvatarButton.tsx';
 import { Stack } from '@mantine/core';
 
 import classes from './PostLeftBar.module.css';
@@ -25,15 +22,7 @@ export function PostLeftBar({
   return (
     <Stack align="center" gap={0} className={classes.column}>
       {connectTop && <div className={classes.lineTop} />}
-      <UserHoverCard username={username}>
-        <Link
-          to={`/user/${username}`}
-          onClick={(e) => e.stopPropagation()}
-          className={classes.post}
-        >
-          <UserAvatar username={username} avatar={avatar} />
-        </Link>
-      </UserHoverCard>
+      <UserAvatarButton username={username} avatar={avatar} />
       {connectBottom && <div className={classes.line} />}
     </Stack>
   );

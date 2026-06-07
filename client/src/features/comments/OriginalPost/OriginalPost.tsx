@@ -1,7 +1,6 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
-import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
+import { UserAvatarButton } from '@/features/user/UserAvatarButton/UserAvatarButton.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import { Flex } from '@mantine/core';
@@ -63,17 +62,10 @@ export function OriginalPost({ post, hideReplyContext }: OriginalPostProps) {
     >
       <PostMain>
         <Flex gap={12}>
-          <UserHoverCard username={post.postedBy.username}>
-            <Link
-              to={`/user/${post.postedBy.username}`}
-              className={classes.avatar}
-            >
-              <UserAvatar
-                username={post.postedBy.username}
-                avatar={post.postedBy.profilePic}
-              />
-            </Link>
-          </UserHoverCard>
+          <UserAvatarButton
+            username={post.postedBy.username}
+            avatar={post.postedBy.profilePic}
+          />
           <PostHeader
             post={post}
             createdAt={getPostTime(new Date(post.createdAt))}
