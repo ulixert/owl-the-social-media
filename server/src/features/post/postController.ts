@@ -191,6 +191,98 @@ export async function getPostById(req: Request, res: Response) {
   }
 }
 
+// The ancestor chain above a post, root-first, excluding the post itself — what
+// the detail page renders above the focused post so you can scroll up through
+// the whole thread.
+export async function getPostAncestors(req: Request, res: Response) {
+  try {
+    const params = postParamsSchema.safeParse(req.params);
+    if (!params.success) {
+      res.status(400).json({ error: 'Invalid post data' });
+      return;
+    }
+
+    const postId = params.data.postId;
+
+    // Walk parentPostId up from the focused post in one query. depth 1 is the
+    // immediate parent, higher is closer to the root; capped to bound
+    // pathological chains.
+    const rows = await prisma.$queryRaw<{ id: number; depth: number }[]>`
+      WITH RECURSIVE ancestors AS (
+        SELECT p."parentPostId" AS id, 1 AS depth
+        FROM "Post" p
+        WHERE p.id = ${postId} AND p."parentPostId" IS NOT NULL
+        UNION ALL
+        SELECT p."parentPostId" AS id, a.depth + 1
+        FROM "Post" p
+        JOIN ancestors a ON p.id = a.id
+        WHERE p."parentPostId" IS NOT NULL AND a.depth < 50
+      )
+      SELECT id, depth FROM ancestors
+    `;
+
+    if (rows.length === 0) {
+      res.status(200).json({ ancestors: [] });
+      return;
+    }
+
+    // Root-first: matches how the chain reads top-to-bottom on screen.
+    const orderedIds = rows.sort((a, b) => b.depth - a.depth).map((r) => r.id);
+
+    const posts = await prisma.post.findMany({
+      where: { id: { in: orderedIds } },
+      include: {
+        postedBy: {
+          select: { id: true, username: true, name: true, profilePic: true },
+        },
+        parentPost: {
+          select: { postedBy: { select: { username: true } } },
+        },
+        likes: req.user ? { where: { userId: req.user.id } } : undefined,
+        reposts: req.user ? { where: { userId: req.user.id } } : undefined,
+      },
+    });
+
+    const byId = new Map(posts.map((post) => [post.id, post]));
+
+    const ancestors = orderedIds
+      .map((id) => byId.get(id))
+      .filter((post) => post !== undefined)
+      .map((post) => {
+        if (post.isDeleted) {
+          // Same tombstone shape getPostById returns, so a deleted ancestor
+          // still keeps the chain intact.
+          return {
+            id: post.id,
+            parentPostId: post.parentPostId,
+            isDeleted: true,
+            createdAt: post.createdAt,
+            postedBy: { username: '', name: '', profilePic: null },
+            text: 'This post has been deleted.',
+            images: [] as string[],
+            likesCount: 0,
+            commentsCount: 0,
+            repostsCount: 0,
+            isLiked: false,
+            isReposted: false,
+          };
+        }
+        const { likes, reposts, ...rest } = post;
+        return {
+          ...rest,
+          isLiked: Array.isArray(likes) && likes.length > 0,
+          isReposted: Array.isArray(reposts) && reposts.length > 0,
+        };
+      });
+
+    await withLikeCounts(ancestors);
+    res.status(200).json({ ancestors });
+  } catch (error) {
+    res.status(500).json({ message: 'An unknown error occurred' });
+    console.error('Error in getPostAncestors: ', error);
+  }
+}
+
 export async function getChildPosts(req: Request, res: Response) {
   try {
     const params = postParamsSchema.safeParse(req.params);
