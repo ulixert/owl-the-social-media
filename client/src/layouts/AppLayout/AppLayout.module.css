@@ -16,35 +16,30 @@
   border-top: 1px solid var(--border-color);
 }
 
-/* Fixed-height region right of the sidebar that does NOT scroll itself — the
-   inner .column scrolls instead, so the card's rounded top stays pinned under
-   the header (Threads-style) while content moves. */
+/* Scroll region right of the sidebar — the page (window) scrolls normally,
+   Threads-style. The feed column is centered and dropped a little below the
+   top bar. */
 .main {
   background-color: var(--bg-color);
   color: var(--text-color);
   margin-top: 60px;
-  height: calc(100vh - 60px);
-  overflow: hidden;
+  min-height: calc(100vh - 60px);
   display: flex;
   justify-content: center;
   padding-top: var(--mantine-spacing-sm);
 
   @media (max-width: 48em) {
     margin-top: 50px;
-    height: calc(100vh - 50px);
     padding-top: 0;
   }
 }
 
-/* The scroll container: a floating card, same colour as the surrounding page,
-   rounded on all corners, with a little gap below it. Content scrolls inside so
-   the rounded corners stay visible. */
+/* A floating card, same colour as the surrounding page, rounded on all corners,
+   with a little gap below it. */
 .column {
   width: 100%;
   max-width: 640px;
-  height: 100%;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  min-height: calc(100vh - 78px);
   background-color: var(--bg-color);
   border: 1px solid var(--border-color);
   border-radius: var(--mantine-radius-lg);
@@ -63,6 +58,7 @@
 
   @media (max-width: 48em) {
     max-width: none;
+    min-height: calc(100vh - 50px);
     border: none;
     border-radius: 0;
     margin-bottom: 0;

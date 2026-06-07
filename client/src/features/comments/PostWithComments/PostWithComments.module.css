@@ -4,10 +4,12 @@
    scrolling up). The column itself scrolls, so scroll-margin-top is just a
    small gap below the card's rounded top. */
 .thread {
-  min-height: calc(100dvh - 80px);
-  scroll-margin-top: 8px;
+  min-height: calc(100dvh - 60px);
+  /* Pin below the fixed 60px header (window scroll) with a small gap. */
+  scroll-margin-top: 68px;
 
   @media (max-width: 48em) {
-    min-height: calc(100dvh - 60px);
+    min-height: calc(100dvh - 50px);
+    scroll-margin-top: 58px;
   }
 }

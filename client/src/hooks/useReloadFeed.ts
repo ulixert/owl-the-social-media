@@ -8,10 +8,6 @@ export function useReloadFeed() {
 
   return () => {
     void queryClient.invalidateQueries({ queryKey: ['posts'] });
-    // The main column scrolls internally now (its rounded top stays put), so
-    // scroll that container rather than the window.
-    document
-      .getElementById('main-scroll')
-      ?.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 }

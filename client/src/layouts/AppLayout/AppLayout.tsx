@@ -10,6 +10,7 @@ import { ModalsProvider } from '@mantine/modals';
 import { Footer } from '../Footer/Footer.tsx';
 import { Header } from '../Header/Header.tsx';
 import { NavBar } from '../NavBar/NavBar.tsx';
+import { SiteFooter } from '../SiteFooter/SiteFooter.tsx';
 import classes from './AppLayout.module.css';
 
 export function AppLayout() {
@@ -72,10 +73,11 @@ export function AppLayout() {
         </AppShell.Header>
 
         <AppShell.Main className={classes.main}>
-          <div id="main-scroll" className={classes.column}>
+          <div className={classes.column}>
             <Suspense fallback={<Loading />}>
               <Outlet />
             </Suspense>
+            <SiteFooter />
           </div>
         </AppShell.Main>
 
