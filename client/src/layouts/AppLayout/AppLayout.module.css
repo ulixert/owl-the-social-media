@@ -37,7 +37,7 @@
 /* Holds the card + the footer below it, centered. The navbar's reserved width
    is subtracted on the right so the column lands in the middle of the window. */
 .columnWrap {
-  --card-radius: 1.25rem;
+  --card-radius: 1.75rem;
   width: 100%;
   max-width: 640px;
   display: flex;
@@ -55,16 +55,15 @@
   }
 }
 
-/* The card, same colour as the surrounding page. Its top corners + top border
-   are drawn by the sticky .cap (so they stay under the header while scrolling);
-   the card itself rounds only the bottom. */
+/* The card, same colour as the surrounding page. Fully rounded with a full
+   border — its rounded top coincides with the sticky .cap at rest, so there's
+   no straight border showing through the rounded corners. */
 .column {
   position: relative;
   min-height: calc(100vh - 78px);
   background-color: var(--bg-color);
   border: 1px solid var(--border-color);
-  border-top: none;
-  border-radius: 0 0 var(--card-radius) var(--card-radius);
+  border-radius: var(--card-radius);
 
   @media (max-width: 48em) {
     min-height: calc(100vh - 50px);
