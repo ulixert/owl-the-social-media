@@ -1,9 +1,8 @@
 .footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--mantine-spacing-md);
-  flex-wrap: wrap;
-  padding: var(--mantine-spacing-md);
-  border-top: 1px solid var(--border-color);
+  justify-content: center;
+  /* Sit well below the card. */
+  margin-top: 3rem;
+  padding: 2rem var(--mantine-spacing-md);
 }

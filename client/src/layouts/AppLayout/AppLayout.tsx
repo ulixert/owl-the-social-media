@@ -73,10 +73,15 @@ export function AppLayout() {
         </AppShell.Header>
 
         <AppShell.Main className={classes.main}>
-          <div className={classes.column}>
-            <Suspense fallback={<Loading />}>
-              <Outlet />
-            </Suspense>
+          <div className={classes.columnWrap}>
+            <div className={classes.column}>
+              {/* Sticky cap keeps the rounded top corner tucked under the header
+                  as the page scrolls. */}
+              <div className={classes.cap} />
+              <Suspense fallback={<Loading />}>
+                <Outlet />
+              </Suspense>
+            </div>
             <SiteFooter />
           </div>
         </AppShell.Main>

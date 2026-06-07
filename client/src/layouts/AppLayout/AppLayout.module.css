@@ -34,21 +34,15 @@
   }
 }
 
-/* A floating card, same colour as the surrounding page, rounded on all corners,
-   with a little gap below it. */
-.column {
+/* Holds the card + the footer below it, centered. The navbar's reserved width
+   is subtracted on the right so the column lands in the middle of the window. */
+.columnWrap {
+  --card-radius: 1.25rem;
   width: 100%;
   max-width: 640px;
-  min-height: calc(100vh - 78px);
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--mantine-radius-lg);
-  /* Float: leave a gap below the card before the bottom of the viewport. */
-  margin-bottom: var(--mantine-spacing-sm);
+  display: flex;
+  flex-direction: column;
 
-  /* Viewport-center the column: reserve the navbar's reserved width on the right
-     so the centered column lands in the middle of the whole window (the rail is
-     narrow enough that this no longer squishes the column at medium widths). */
   @media (min-width: 48em) and (max-width: 74.99em) {
     margin-right: rem(80px); /* icon-rail width */
   }
@@ -58,9 +52,41 @@
 
   @media (max-width: 48em) {
     max-width: none;
+  }
+}
+
+/* The card, same colour as the surrounding page. Its top corners + top border
+   are drawn by the sticky .cap (so they stay under the header while scrolling);
+   the card itself rounds only the bottom. */
+.column {
+  position: relative;
+  min-height: calc(100vh - 78px);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--card-radius) var(--card-radius);
+
+  @media (max-width: 48em) {
     min-height: calc(100vh - 50px);
     border: none;
     border-radius: 0;
-    margin-bottom: 0;
+  }
+}
+
+/* Sticky rounded cap: the card's top edge. Sticks just under the fixed header,
+   so the rounded top corner stays visible as content scrolls behind it. */
+.cap {
+  position: sticky;
+  top: 60px;
+  height: var(--card-radius);
+  margin: 0 -1px; /* overlay the column's side borders for a continuous edge */
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  border-radius: var(--card-radius) var(--card-radius) 0 0;
+  z-index: 2;
+
+  @media (max-width: 48em) {
+    display: none;
   }
 }
