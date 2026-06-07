@@ -29,7 +29,7 @@ import {
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
-import { IconPhoto } from '@tabler/icons-react';
+import { IconArrowsDiagonal, IconPhoto } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import classes from './CreatePost.module.css';
@@ -54,6 +54,10 @@ type CreatePostProps = {
   onSuccess?: (post: CreatedPost) => void;
   onCancel?: () => void;
   isModal?: boolean;
+  // Collapsed reply bar only: opens the full composer in a modal (the wired-up
+  // caller passes the useCreatePostModal opener). When absent, the expand icon
+  // is hidden.
+  onExpand?: () => void;
 };
 
 export function CreatePost({
@@ -62,6 +66,7 @@ export function CreatePost({
   onSuccess,
   onCancel,
   isModal,
+  onExpand,
 }: CreatePostProps) {
   const userData = useAuthStore((s) => s.userData);
   const queryClient = useQueryClient();
@@ -195,29 +200,52 @@ export function CreatePost({
 
   const buttonLabel = editingPost ? 'Save' : parentPost ? 'Reply' : 'Post';
 
-  // Collapsed inline composer: avatar + placeholder + button on one row. Clicking
-  // expands to the full composer (which autofocuses the textarea).
+  // Collapsed inline composer: a Threads-style pill. Clicking the text expands
+  // to the full inline composer; the image icon does the same (then add images);
+  // the expand icon opens the composer in a modal.
   if (!isModal && !editingPost && !focused) {
+    const placeholder = parentPost
+      ? `Reply to ${parentPost.postedBy.username}`
+      : "What's new?";
     return (
       <Box>
-        <Flex
-          gap={12}
-          align="center"
-          onClick={() => setFocused(true)}
-          style={{ cursor: 'text' }}
-        >
+        <Flex gap={12} align="center" className={classes.replyPill}>
           <UserAvatar
             username={userData?.username ?? 'You'}
             avatar={userData?.profilePic ?? null}
+            size="sm"
           />
-          <Text c="dimmed" size="sm" style={{ flex: 1 }}>
-            {parentPost ? 'Post your reply' : "What's new?"}
+          <Text
+            c="dimmed"
+            size="sm"
+            style={{ flex: 1, cursor: 'text' }}
+            onClick={() => setFocused(true)}
+          >
+            {placeholder}
           </Text>
-          <Button radius="xl" size="compact-sm" color="mono" disabled>
-            {buttonLabel}
-          </Button>
+          <Group gap={2}>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              radius="xl"
+              onClick={() => setFocused(true)}
+              aria-label="Add image"
+            >
+              <IconPhoto size={18} />
+            </ActionIcon>
+            {onExpand && (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                radius="xl"
+                onClick={onExpand}
+                aria-label="Open full composer"
+              >
+                <IconArrowsDiagonal size={18} />
+              </ActionIcon>
+            )}
+          </Group>
         </Flex>
-        <Divider mt="md" mx={-16} />
       </Box>
     );
   }

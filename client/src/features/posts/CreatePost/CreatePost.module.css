@@ -18,3 +18,11 @@
   flex: 1;
   margin-top: 4px;
 }
+
+/* Collapsed reply bar: a rounded Threads-style pill, subtly filled. */
+.replyPill {
+  background-color: var(--alt-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--mantine-radius-xl);
+  padding: 6px 8px 6px 12px;
+}

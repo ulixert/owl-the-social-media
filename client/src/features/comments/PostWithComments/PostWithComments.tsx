@@ -5,6 +5,7 @@ import { usePostWithChildPosts } from '@/hooks/usePostWithChildPosts.ts';
 import { Center, Divider, Loader, Stack } from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
 
+import { useCreatePostModal } from '../../posts/hooks/useCreatePostModal.tsx';
 import { CreatePost } from '../../posts/CreatePost/CreatePost.tsx';
 import { PostItem } from '../../posts/PostItem/PostItem.tsx';
 import { OriginalPost } from '../OriginalPost/OriginalPost.tsx';
@@ -24,6 +25,7 @@ export function PostWithComments() {
   } = usePostWithChildPosts();
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { openCreatePostModal } = useCreatePostModal();
 
   const { ref, inView } = useInView();
 
@@ -84,7 +86,10 @@ export function PostWithComments() {
         <Divider mx={-16} />
 
         {isAuthenticated && currentPost && (
-          <CreatePost parentPost={currentPost.post} />
+          <CreatePost
+            parentPost={currentPost.post}
+            onExpand={() => openCreatePostModal(currentPost.post)}
+          />
         )}
 
         {/* Render Child Posts. A reply with its own replies gets a connector
