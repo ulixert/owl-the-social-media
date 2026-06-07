@@ -6,7 +6,7 @@
 .thread {
   min-height: calc(100dvh - 60px);
   /* Pin below the fixed header + the sticky rounded cap. */
-  scroll-margin-top: 86px;
+  scroll-margin-top: 96px;
 
   @media (max-width: 48em) {
     min-height: calc(100dvh - 50px);

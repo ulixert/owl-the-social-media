@@ -55,15 +55,16 @@
   }
 }
 
-/* The card, same colour as the surrounding page. Fully rounded with a full
-   border — its rounded top coincides with the sticky .cap at rest, so there's
-   no straight border showing through the rounded corners. */
+/* The card body, same colour as the surrounding page. Square top with no top
+   border — the sticky .cap above it draws the top edge + rounded corners — so
+   there's exactly one top border and no straight border in the corners. */
 .column {
   position: relative;
-  min-height: calc(100vh - 78px);
+  min-height: calc(100vh - 106px);
   background-color: var(--bg-color);
   border: 1px solid var(--border-color);
-  border-radius: var(--card-radius);
+  border-top: none;
+  border-radius: 0 0 var(--card-radius) var(--card-radius);
 
   @media (max-width: 48em) {
     min-height: calc(100vh - 50px);
@@ -72,13 +73,14 @@
   }
 }
 
-/* Sticky rounded cap: the card's top edge. Sticks just under the fixed header,
-   so the rounded top corner stays visible as content scrolls behind it. */
+/* Sticky rounded cap = the card's top edge (top + side borders, rounded top).
+   A sibling directly above .column so the borders form one continuous shape;
+   sticks just under the fixed header so the rounded corner stays visible while
+   content scrolls behind it. */
 .cap {
   position: sticky;
   top: 60px;
   height: var(--card-radius);
-  margin: 0 -1px; /* overlay the column's side borders for a continuous edge */
   background-color: var(--bg-color);
   border: 1px solid var(--border-color);
   border-bottom: none;

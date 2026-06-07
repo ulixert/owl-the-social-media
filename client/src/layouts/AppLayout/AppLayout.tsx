@@ -74,10 +74,11 @@ export function AppLayout() {
 
         <AppShell.Main className={classes.main}>
           <div className={classes.columnWrap}>
+            {/* Sticky cap = the card's rounded top edge. Kept as a sibling above
+                the column so only it draws the top border/corners (no doubling),
+                and it stays tucked under the header as the page scrolls. */}
+            <div className={classes.cap} />
             <div className={classes.column}>
-              {/* Sticky cap keeps the rounded top corner tucked under the header
-                  as the page scrolls. */}
-              <div className={classes.cap} />
               <Suspense fallback={<Loading />}>
                 <Outlet />
               </Suspense>
