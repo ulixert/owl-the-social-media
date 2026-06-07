@@ -5,7 +5,7 @@
    small gap below the card's rounded top. */
 .thread {
   min-height: calc(100dvh - 80px);
-  scroll-margin-top: 12px;
+  scroll-margin-top: 8px;
 
   @media (max-width: 48em) {
     min-height: calc(100dvh - 60px);

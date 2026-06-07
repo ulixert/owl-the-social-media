@@ -16,7 +16,10 @@
   width: 2px;
   flex: 1;
   min-height: 8px;
+  /* Gaps so the line floats clear of the avatar above and the one below — and
+     so nothing peeks above the focused avatar once it's pinned to the top. */
   margin-top: 4px;
+  margin-bottom: 10px;
   background-color: var(--border-color);
   border-radius: 1px;
 }
