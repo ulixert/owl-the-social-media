@@ -4,6 +4,7 @@ import { optionalProtectRoute } from '../../middlewares/optionalProtectRoute.js'
 import { protectRoute } from '../../middlewares/protectRoute.js';
 import {
   followAndUnfollowUser,
+  getFollowingIds,
   getMyData,
   getRecommendedUsers,
   getUserProfile,
@@ -20,3 +21,6 @@ userRouter.get('/:username', optionalProtectRoute, getUserProfile);
 userRouter.put('/follow/:id', protectRoute, followAndUnfollowUser);
 userRouter.put('/me/profile', protectRoute, updateUserProfile);
 userRouter.get('/me/data', protectRoute, getMyData);
+// Ids of everyone the current user follows — drives the avatar follow badges
+// client-side without re-deriving follow state per post.
+userRouter.get('/me/following', protectRoute, getFollowingIds);

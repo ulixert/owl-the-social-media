@@ -21,7 +21,11 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openLoginModal = useOpenLoginModal();
   const isCurrentUser = currentUser?.userId === user.id;
-  const followMutation = useFollowMutation(user.id, user.username);
+  const followMutation = useFollowMutation(
+    user.id,
+    user.username,
+    user.isFollowing,
+  );
 
   const handleEditProfile = () => {
     const modalId = 'edit-profile-modal';

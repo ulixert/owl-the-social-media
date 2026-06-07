@@ -4,6 +4,7 @@ import { Stack } from '@mantine/core';
 import classes from './PostLeftBar.module.css';
 
 type PostLeftBarProps = {
+  userId: number;
   username: string;
   avatar: string | null;
   // Thread-line connectors in the avatar column. `connectBottom` fills the rest
@@ -14,6 +15,7 @@ type PostLeftBarProps = {
 };
 
 export function PostLeftBar({
+  userId,
   username,
   avatar,
   connectTop,
@@ -22,7 +24,7 @@ export function PostLeftBar({
   return (
     <Stack align="center" gap={0} className={classes.column}>
       {connectTop && <div className={classes.lineTop} />}
-      <UserAvatarButton username={username} avatar={avatar} />
+      <UserAvatarButton userId={userId} username={username} avatar={avatar} />
       {connectBottom && <div className={classes.line} />}
     </Stack>
   );

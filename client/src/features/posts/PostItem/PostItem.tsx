@@ -50,6 +50,7 @@ export function PostItem({
       >
         <Flex gap={12}>
           <PostLeftBar
+            userId={post.postedBy.id}
             username={post.postedBy.username}
             avatar={post.postedBy.profilePic}
             connectBottom={connectBottom}

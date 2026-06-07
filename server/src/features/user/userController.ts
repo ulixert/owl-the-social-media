@@ -203,6 +203,22 @@ export async function getUserProfile(
   }
 }
 
+// Ids of every user the current user follows. The client caches this once and
+// uses it to render the avatar follow badges, so it never has to re-derive
+// follow state per post in the feed.
+export async function getFollowingIds(req: Request, res: Response) {
+  try {
+    const rows = await prisma.userFollows.findMany({
+      where: { followerId: req.user!.id },
+      select: { followingId: true },
+    });
+    res.status(200).json({ ids: rows.map((r) => r.followingId) });
+  } catch (error) {
+    res.status(500).json({ message: 'An unknown error occurred.' });
+    console.error('Error in getFollowingIds: ', error);
+  }
+}
+
 export async function getMyData(req: Request, res: Response) {
   try {
     const currentUserId = req.user!.id;

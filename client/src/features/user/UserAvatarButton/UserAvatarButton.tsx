@@ -1,25 +1,31 @@
 import { UnstyledButton } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
-import { IconPlus } from '@tabler/icons-react';
+import { useFollowBadgeStore } from '@stores/followBadgeStore.ts';
+import { IconCheck, IconPlus } from '@tabler/icons-react';
 
 import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
+import { useFollowingIds } from '@/hooks/useFollowingIds.ts';
 import { UserCard } from '../UserCard/UserCard.tsx';
 import classes from './UserAvatarButton.module.css';
 
 type UserAvatarButtonProps = {
+  userId: number;
   username: string;
   avatar: string | null;
   size?: string;
-  // Hide the "+" badge where a separate follow button already exists (e.g. user
+  // Hide the badge where a separate follow button already exists (e.g. user
   // list rows).
   withBadge?: boolean;
 };
 
 // Avatar that opens the Threads-style profile card in a modal on click (replaces
-// the old hover-to-show-card behaviour). A "+" badge marks other users; clicking
-// either the avatar or the badge opens the same modal, where you follow.
+// the old hover-to-show-card behaviour). The badge mirrors Threads:
+//   - not following  → "+"
+//   - just followed this session → "✓"
+//   - already following (steady state, e.g. after reload) → no badge
 export function UserAvatarButton({
+  userId,
   username,
   avatar,
   size,
@@ -27,6 +33,22 @@ export function UserAvatarButton({
 }: UserAvatarButtonProps) {
   const currentUser = useAuthStore((state) => state.userData);
   const isSelf = currentUser?.username === username;
+
+  const { data: followingIds } = useFollowingIds();
+  const justFollowed = useFollowBadgeStore((state) =>
+    state.justFollowed.has(userId),
+  );
+  const isFollowing = followingIds?.includes(userId) ?? false;
+
+  // null = no badge.
+  const badge: 'follow' | 'followed' | null =
+    isSelf || !withBadge
+      ? null
+      : justFollowed
+        ? 'followed'
+        : isFollowing
+          ? null
+          : 'follow';
 
   const openCard = (e: React.MouseEvent) => {
     // Sit inside a post (which navigates on click) — don't bubble to it.
@@ -53,9 +75,13 @@ export function UserAvatarButton({
       aria-label={`View ${username}'s profile`}
     >
       <UserAvatar username={username} avatar={avatar} size={size} />
-      {withBadge && !isSelf && (
+      {badge && (
         <span className={classes.badge} aria-hidden>
-          <IconPlus size={11} stroke={3.5} />
+          {badge === 'followed' ? (
+            <IconCheck size={11} stroke={3.5} />
+          ) : (
+            <IconPlus size={11} stroke={3.5} />
+          )}
         </span>
       )}
     </UnstyledButton>

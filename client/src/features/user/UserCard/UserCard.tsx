@@ -24,7 +24,11 @@ export function UserCard({ username, onNavigate }: UserCardProps) {
   const currentUser = useAuthStore((state) => state.userData);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openLoginModal = useOpenLoginModal();
-  const followMutation = useFollowMutation(user?.id ?? 0, username);
+  const followMutation = useFollowMutation(
+    user?.id ?? 0,
+    username,
+    user?.isFollowing ?? false,
+  );
 
   const isCurrentUser = currentUser?.userId === user?.id;
 

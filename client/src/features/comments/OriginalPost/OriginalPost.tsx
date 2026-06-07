@@ -63,6 +63,7 @@ export function OriginalPost({ post, hideReplyContext }: OriginalPostProps) {
       <PostMain>
         <Flex gap={12}>
           <UserAvatarButton
+            userId={post.postedBy.id}
             username={post.postedBy.username}
             avatar={post.postedBy.profilePic}
           />

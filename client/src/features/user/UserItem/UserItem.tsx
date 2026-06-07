@@ -30,7 +30,11 @@ export function UserItem({ user }: UserItemProps) {
   const currentUser = useAuthStore((state) => state.userData);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openLoginModal = useOpenLoginModal();
-  const followMutation = useFollowMutation(user.id, user.username);
+  const followMutation = useFollowMutation(
+    user.id,
+    user.username,
+    user.isFollowing,
+  );
 
   const isCurrentUser = currentUser?.userId === user.id;
   const isVerified = user.biography === VERIFIED_BIO;
@@ -54,6 +58,7 @@ export function UserItem({ user }: UserItemProps) {
         onClick={() => navigate(`/user/${user.username}`)}
       >
         <UserAvatarButton
+          userId={user.id}
           username={user.username}
           avatar={user.profilePic}
           size="md"
