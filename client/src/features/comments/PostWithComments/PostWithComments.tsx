@@ -20,6 +20,7 @@ import { useCreatePostModal } from '../../posts/hooks/useCreatePostModal.tsx';
 import { CreatePost } from '../../posts/CreatePost/CreatePost.tsx';
 import { PostItem } from '../../posts/PostItem/PostItem.tsx';
 import { OriginalPost } from '../OriginalPost/OriginalPost.tsx';
+import { ReplyThread } from '../ReplyThread/ReplyThread.tsx';
 import classes from './PostWithComments.module.css';
 
 const SORT_LABELS: Record<CommentSort, string> = {
@@ -102,6 +103,33 @@ export function PostWithComments() {
 
         <Divider mx={-16} />
 
+        {/* Row above the composer: sort control when there are replies,
+            otherwise "No replies yet" (Threads-style). */}
+        {currentPost &&
+          (currentPost.post.commentsCount > 0 ? (
+            <Menu position="bottom-start" width={160}>
+              <Menu.Target>
+                <UnstyledButton w="fit-content">
+                  <Group gap={6}>
+                    <IconArrowsSort size={16} />
+                    <Text size="sm" fw={600}>
+                      {SORT_LABELS[sort]}
+                    </Text>
+                    <IconChevronDown size={14} />
+                  </Group>
+                </UnstyledButton>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item onClick={() => setSort('top')}>Top</Menu.Item>
+                <Menu.Item onClick={() => setSort('recent')}>Recent</Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          ) : (
+            <Text c="dimmed" size="sm" fw={600}>
+              No replies yet
+            </Text>
+          ))}
+
         {isAuthenticated && currentPost && (
           <CreatePost
             parentPost={currentPost.post}
@@ -109,45 +137,14 @@ export function PostWithComments() {
           />
         )}
 
-        {/* Sort control — only meaningful once there are replies. */}
         {currentPost && currentPost.post.commentsCount > 0 && (
-          <>
-            <Group justify="space-between" align="center">
-              <Menu position="bottom-start" width={160}>
-                <Menu.Target>
-                  <UnstyledButton>
-                    <Group gap={6}>
-                      <IconArrowsSort size={16} />
-                      <Text size="sm" fw={600}>
-                        {SORT_LABELS[sort]}
-                      </Text>
-                      <IconChevronDown size={14} />
-                    </Group>
-                  </UnstyledButton>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item onClick={() => setSort('top')}>Top</Menu.Item>
-                  <Menu.Item onClick={() => setSort('recent')}>
-                    Recent
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            </Group>
-            <Divider mx={-16} />
-          </>
+          <Divider mx={-16} />
         )}
 
-        {/* No replies yet. */}
-        {currentPost && currentPost.post.commentsCount === 0 && (
-          <Text c="dimmed" size="sm" fw={600}>
-            No replies yet
-          </Text>
-        )}
-
-        {/* Replies — a flat list of all replies. */}
+        {/* Replies — all of them, with nested replies shown inline. */}
         {childPostsData?.pages.map((page) =>
           page.childPosts.map((post) => (
-            <PostItem key={post.id} post={post} hideReplyContext />
+            <ReplyThread key={post.id} post={post} />
           )),
         )}
 

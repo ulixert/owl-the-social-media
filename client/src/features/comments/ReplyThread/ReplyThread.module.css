@@ -1,0 +1,7 @@
+/* Nested replies: indented under the parent with a vertical thread line down
+   the left, so the conversation structure reads at a glance. */
+.nested {
+  margin-left: 19px;
+  padding-left: 17px;
+  border-left: 2px solid var(--border-color);
+}
