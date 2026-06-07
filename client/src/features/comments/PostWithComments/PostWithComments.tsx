@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import { usePostWithChildPosts } from '@/hooks/usePostWithChildPosts.ts';
@@ -57,13 +57,17 @@ export function PostWithComments() {
   }
 
   return (
-    <Stack p="md" pb={0}>
-      {/* Ancestor chain, root-first, above the focused post. */}
+    <Stack p="md" pb={0} gap={0}>
+      {/* Ancestor chain, root-first, connected to the focused post by the
+          thread line (rendered flush, no dividers). */}
       {ancestors.map((ancestor) => (
-        <Fragment key={ancestor.id}>
-          <OriginalPost post={ancestor} />
-          <Divider mx={-16} />
-        </Fragment>
+        <PostItem
+          key={ancestor.id}
+          post={ancestor}
+          hideReplyContext
+          connectBottom
+          hideDivider
+        />
       ))}
 
       {/* Focused post + replies. Given its own min-height so it can always be
@@ -73,7 +77,9 @@ export function PostWithComments() {
         gap="md"
         className={hasAncestors ? classes.thread : undefined}
       >
-        {currentPost && <OriginalPost post={currentPost.post} />}
+        {currentPost && (
+          <OriginalPost post={currentPost.post} hideReplyContext={hasAncestors} />
+        )}
 
         <Divider mx={-16} />
 
@@ -81,10 +87,16 @@ export function PostWithComments() {
           <CreatePost parentPost={currentPost.post} />
         )}
 
-        {/* Render Child Posts */}
+        {/* Render Child Posts. A reply with its own replies gets a connector
+            stub to signal the sub-thread. */}
         {childPostsData?.pages.map((page) =>
           page.childPosts.map((post) => (
-            <PostItem key={post.id} post={post} hideReplyContext />
+            <PostItem
+              key={post.id}
+              post={post}
+              hideReplyContext
+              connectBottom={post.commentsCount > 0}
+            />
           )),
         )}
 

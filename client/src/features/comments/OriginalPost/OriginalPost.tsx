@@ -14,9 +14,12 @@ import classes from './OriginalPost.module.css';
 
 type OriginalPostProps = {
   post: Post;
+  // When the ancestor chain is shown above this post, the inline "> parent"
+  // context is redundant.
+  hideReplyContext?: boolean;
 };
 
-export function OriginalPost({ post }: OriginalPostProps) {
+export function OriginalPost({ post, hideReplyContext }: OriginalPostProps) {
   const navigate = useNavigate();
   const location = useLocation();
   // The post whose detail page we're already on — clicking it shouldn't
@@ -70,7 +73,9 @@ export function OriginalPost({ post }: OriginalPostProps) {
           <PostHeader
             post={post}
             createdAt={getPostTime(new Date(post.createdAt))}
-            replyToUsername={post.parentPost?.postedBy.username}
+            replyToUsername={
+              hideReplyContext ? undefined : post.parentPost?.postedBy.username
+            }
           />
         </Flex>
         <PostContent postText={post.text} postImages={post.images} />

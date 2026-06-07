@@ -16,10 +16,23 @@ type PostProps = {
   // On a post's detail page every reply is to the same post, so the
   // "> parent" context is redundant and hidden.
   hideReplyContext?: boolean;
+  // Draw the thread-line connector below the avatar (links the post to the one
+  // rendered flush below it in a chain).
+  connectBottom?: boolean;
+  // Suppress the trailing divider (chained ancestors connect via the line).
+  hideDivider?: boolean;
 };
 
-export function PostItem({ post, hideReplyContext }: PostProps) {
+export function PostItem({
+  post,
+  hideReplyContext,
+  connectBottom,
+  hideDivider,
+}: PostProps) {
   const navigate = useNavigate();
+  // Chained ancestors (connector + no divider) get bottom padding so the line
+  // has room to run down to the next avatar.
+  const isChained = connectBottom && hideDivider;
   return (
     <>
       <div
@@ -33,9 +46,10 @@ export function PostItem({ post, hideReplyContext }: PostProps) {
           <PostLeftBar
             username={post.postedBy.username}
             avatar={post.postedBy.profilePic}
+            connectBottom={connectBottom}
           />
 
-          <PostMain>
+          <PostMain pb={isChained ? 12 : undefined}>
             <PostHeader
               createdAt={getPostTime(new Date(post.createdAt))}
               post={post}
@@ -49,7 +63,7 @@ export function PostItem({ post, hideReplyContext }: PostProps) {
         </Flex>
       </div>
 
-      <Divider className={classes.divider} />
+      {!hideDivider && <Divider className={classes.divider} />}
     </>
   );
 }

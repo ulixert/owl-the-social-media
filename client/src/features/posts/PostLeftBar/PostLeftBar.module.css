@@ -3,29 +3,28 @@
   color: inherit;
 }
 
-.postContent {
-  flex: 1;
+/* Avatar column stretches to the full row height so the connector below the
+   avatar can flex-fill down to the next post's avatar. */
+.column {
+  align-self: stretch;
 }
 
-.avatars {
-  position: relative;
-}
-
-.avatars div {
-  position: absolute;
-  border-radius: 100px;
-}
-
-.avatars image {
-  border-radius: 100px;
-}
-
-.box {
-  border-radius: 1.5rem;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-}
-
+/* Thread line. `.line` fills the space under the avatar to the row's bottom;
+   when chain rows are flush it meets the next avatar, forming one continuous
+   line. `.lineTop` is a short stub above the avatar. */
 .line {
+  width: 2px;
   flex: 1;
+  min-height: 8px;
+  margin-top: 4px;
+  background-color: var(--border-color);
+  border-radius: 1px;
+}
+
+.lineTop {
+  width: 2px;
+  height: 6px;
+  margin-bottom: 4px;
+  background-color: var(--border-color);
+  border-radius: 1px;
 }
