@@ -2,6 +2,12 @@ services:
   server:
     env_file:
       - .env.local
+    # .env.local points DATABASE_URL at localhost for host-run `pnpm dev`. When
+    # the server runs as a container (e.g. the load-balanced `lb:up` demo) it
+    # must reach Postgres over the compose network instead. `environment` wins
+    # over `env_file`, so this overrides only the in-container case.
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
 
   db:
     env_file:
