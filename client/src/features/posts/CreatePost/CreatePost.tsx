@@ -220,7 +220,7 @@ export function CreatePost({
             e.target.value = '';
           }}
         />
-        <Flex gap={12} align="flex-end" className={classes.replyPill}>
+        <Flex gap={12} align="center" className={classes.replyPill}>
           <UserAvatar
             username={userData?.username ?? 'You'}
             avatar={userData?.profilePic ?? null}
