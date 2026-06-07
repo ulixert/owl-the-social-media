@@ -53,14 +53,20 @@ export function PostWithComments() {
     }
   }, [inView, hasNextPage, fetchNextPage]);
 
-  // Pin the focused post to the top of the column when it has parents, so the
-  // ancestor chain sits above it and is revealed by scrolling up (Threads-style).
+  // Position the focused post on navigation. react-router doesn't reset scroll
+  // between routes, so without this the feed's old scroll offset carries over and
+  // the focused post ends up scrolled off the top.
+  //   - With parents: pin the focused post to the top of the column so the
+  //     ancestor chain sits above it and is revealed by scrolling up (Threads-style).
+  //   - Without parents: it's the root of the thread, so scroll to the very top.
   const focusedPostId = currentPost?.post.id;
   const threadRef = useRef<HTMLDivElement>(null);
   const hasAncestors = ancestors.length > 0;
   useLayoutEffect(() => {
     if (hasAncestors) {
       threadRef.current?.scrollIntoView({ block: 'start' });
+    } else {
+      window.scrollTo(0, 0);
     }
   }, [focusedPostId, hasAncestors]);
 
