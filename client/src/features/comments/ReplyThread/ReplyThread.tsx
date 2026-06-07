@@ -14,14 +14,14 @@ type ReplyThreadProps = {
   depth?: number;
 };
 
-// Renders a reply and, inline beneath it, all of its own replies (recursively),
-// connected by the thread line — the whole conversation is shown directly, no
-// "view more" step.
+// Renders a reply and, inline beneath it, its own reply — but only when it has
+// exactly one (a linear continuation, Threads-style). A reply with zero or
+// several replies isn't expanded here; you open it to see those.
 export function ReplyThread({ post, depth = 0 }: ReplyThreadProps) {
-  const hasReplies = post.commentsCount > 0 && depth < MAX_DEPTH;
+  const hasSingleReply = post.commentsCount === 1 && depth < MAX_DEPTH;
 
-  // Eagerly fetch this reply's children when it has any.
-  const { data } = useChildPosts(post.id, 'recent', hasReplies);
+  // Eagerly fetch the single continuation reply.
+  const { data } = useChildPosts(post.id, 'recent', hasSingleReply);
   const children = data?.pages.flatMap((page) => page.childPosts) ?? [];
 
   return (
