@@ -41,6 +41,7 @@
     "multer": "^2.1.1",
     "pg": "^8.21.0",
     "prisma": "^7.8.0",
+    "rate-limiter-flexible": "^11.1.1",
     "validation": "workspace:^",
     "ws": "^8.21.0",
     "zod": "^4.4.3"
