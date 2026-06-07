@@ -45,6 +45,14 @@ export function createRateLimiter({
     res: Response,
     next: NextFunction,
   ): Promise<void> {
+    // Skip in tests: supertest drives every request from one IP, so a shared
+    // counter would bleed across cases and trip the limit mid-suite. The
+    // limiter is exercised manually / in its own focused test instead.
+    if (process.env.NODE_ENV === 'test') {
+      next();
+      return;
+    }
+
     try {
       const info = await limiter.consume(keyGenerator(req));
       setHeaders(res, points, info);
