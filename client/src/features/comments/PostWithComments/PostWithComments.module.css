@@ -5,8 +5,10 @@
    small gap below the card's rounded top. */
 .thread {
   min-height: calc(100dvh - 60px);
-  /* Pin below the fixed header + the sticky rounded cap (window scroll). */
-  scroll-margin-top: 84px;
+  /* Pin the focused post just under the fixed header (60px) plus the connector
+     line's bottom margin (10px, see PostLeftBar .line). That tucks the parent's
+     thread line up under the header so no line stub peeks above the avatar. */
+  scroll-margin-top: 70px;
 
   @media (max-width: 48em) {
     min-height: calc(100dvh - 50px);

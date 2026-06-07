@@ -148,13 +148,16 @@ export function PostWithComments() {
         )}
 
         {/* Replies — a divider separates each top-level reply; a single-reply
-            chain stays connected by the thread line (no divider within it). */}
+            chain stays connected by the thread line (no divider within it).
+            Each post carries 12px below its content (PostMain pb), so the
+            divider gets 12px below it too — keeping it centered and giving every
+            reply, not just the first, equal breathing room above its avatar. */}
         <Stack gap={0}>
           {childPostsData?.pages
             .flatMap((page) => page.childPosts)
             .map((post, i) => (
               <Fragment key={post.id}>
-                {i > 0 && <Divider mx={-16} />}
+                {i > 0 && <Divider mx={-16} mb={12} />}
                 <ReplyThread post={post} />
               </Fragment>
             ))}

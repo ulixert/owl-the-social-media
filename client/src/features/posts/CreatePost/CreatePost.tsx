@@ -235,6 +235,15 @@ export function CreatePost({
               placeholder={`Reply to ${parentPost.postedBy.username}`}
               value={text}
               onChange={(e) => setText(e.currentTarget.value)}
+              onKeyDown={(e) => {
+                // Enter sends; Shift+Enter inserts a newline.
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!postDisabled) {
+                    handlePost();
+                  }
+                }
+              }}
               styles={{
                 input: { padding: 0, minHeight: 0, lineHeight: 1.4 },
               }}
