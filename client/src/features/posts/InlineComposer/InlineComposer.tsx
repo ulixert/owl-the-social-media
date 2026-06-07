@@ -29,7 +29,7 @@ export function InlineComposer() {
         <Button
           radius="xl"
           size="compact-sm"
-          color="mono"
+          variant="default"
           onClick={(e) => {
             e.stopPropagation();
             open();
