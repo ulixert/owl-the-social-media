@@ -166,7 +166,10 @@ export function CreatePost({
         if (isModal) {
           modals.closeAll();
         }
-        if (!editingPost) {
+        // Inline reply: stay put and let the refetched list show the new reply.
+        // New posts (and modal replies) navigate to the created post.
+        const isInlineReply = parentPost && !isModal;
+        if (!editingPost && !isInlineReply) {
           void navigate(`/posts/${post.id}`);
         }
       },
@@ -200,35 +203,66 @@ export function CreatePost({
 
   const buttonLabel = editingPost ? 'Save' : parentPost ? 'Reply' : 'Post';
 
-  // Collapsed inline composer: a Threads-style pill. Clicking the text expands
-  // to the full inline composer; the image icon does the same (then add images);
-  // the expand icon opens the composer in a modal.
-  if (!isModal && !editingPost && !focused) {
-    const placeholder = parentPost
-      ? `Reply to ${parentPost.postedBy.username}`
-      : "What's new?";
+  // Inline reply composer (detail page): an always-editable Threads-style pill.
+  // Typing happens right here — no style change, no navigation on submit. The
+  // expand icon opens the full composer in a modal for richer editing.
+  if (parentPost && !isModal && !editingPost) {
     return (
       <Box>
-        <Flex gap={12} align="center" className={classes.replyPill}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={(e) => {
+            void handleFiles(e.target.files);
+            e.target.value = '';
+          }}
+        />
+        <Flex gap={12} align="flex-end" className={classes.replyPill}>
           <UserAvatar
             username={userData?.username ?? 'You'}
             avatar={userData?.profilePic ?? null}
             size="sm"
           />
-          <Text
-            c="dimmed"
-            size="sm"
-            style={{ flex: 1, cursor: 'text' }}
-            onClick={() => setFocused(true)}
-          >
-            {placeholder}
-          </Text>
-          <Group gap={2}>
+          <Box style={{ flex: 1, minWidth: 0 }}>
+            <Textarea
+              variant="unstyled"
+              autosize
+              minRows={1}
+              maxRows={8}
+              placeholder={`Reply to ${parentPost.postedBy.username}`}
+              value={text}
+              onChange={(e) => setText(e.currentTarget.value)}
+              styles={{ input: { padding: 0 } }}
+            />
+            {images.length > 0 && (
+              <Group gap="xs" mt="xs">
+                {images.map((url) => (
+                  <Box key={url} pos="relative" className={classes.imageWrap}>
+                    <Image src={url} w={60} h={60} fit="cover" />
+                    <CloseButton
+                      size="xs"
+                      pos="absolute"
+                      top={2}
+                      right={2}
+                      className={classes.imageClose}
+                      onClick={() => removeImage(url)}
+                    />
+                  </Box>
+                ))}
+              </Group>
+            )}
+          </Box>
+          <Group gap={2} align="center">
             <ActionIcon
               variant="subtle"
               color="gray"
               radius="xl"
-              onClick={() => setFocused(true)}
+              onClick={() => fileInputRef.current?.click()}
+              loading={uploadImages.isPending}
+              disabled={images.length >= MAX_IMAGES}
               aria-label="Add image"
             >
               <IconPhoto size={18} />
@@ -244,7 +278,50 @@ export function CreatePost({
                 <IconArrowsDiagonal size={18} />
               </ActionIcon>
             )}
+            {!isEmpty && (
+              <Button
+                radius="xl"
+                size="compact-sm"
+                color="mono"
+                onClick={handlePost}
+                disabled={postDisabled}
+                loading={createPostMutation.isPending}
+              >
+                Reply
+              </Button>
+            )}
           </Group>
+        </Flex>
+        {error && (
+          <Text c="red" size="sm" mt={6}>
+            {error}
+          </Text>
+        )}
+      </Box>
+    );
+  }
+
+  // Collapsed new-post composer (no parent): placeholder pill that expands on click.
+  if (!isModal && !editingPost && !focused) {
+    return (
+      <Box>
+        <Flex gap={12} align="center" className={classes.replyPill}>
+          <UserAvatar
+            username={userData?.username ?? 'You'}
+            avatar={userData?.profilePic ?? null}
+            size="sm"
+          />
+          <Text
+            c="dimmed"
+            size="sm"
+            style={{ flex: 1, cursor: 'text' }}
+            onClick={() => setFocused(true)}
+          >
+            What&apos;s new?
+          </Text>
+          <Button radius="xl" size="compact-sm" color="mono" disabled>
+            {buttonLabel}
+          </Button>
         </Flex>
       </Box>
     );
