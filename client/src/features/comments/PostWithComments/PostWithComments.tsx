@@ -20,6 +20,7 @@ import { useCreatePostModal } from '../../posts/hooks/useCreatePostModal.tsx';
 import { CreatePost } from '../../posts/CreatePost/CreatePost.tsx';
 import { PostItem } from '../../posts/PostItem/PostItem.tsx';
 import { OriginalPost } from '../OriginalPost/OriginalPost.tsx';
+import { ReplyThread } from '../ReplyThread/ReplyThread.tsx';
 import classes from './PostWithComments.module.css';
 
 const SORT_LABELS: Record<CommentSort, string> = {
@@ -137,16 +138,10 @@ export function PostWithComments() {
           </>
         )}
 
-        {/* Render Child Posts. A reply with its own replies gets a connector
-            stub to signal the sub-thread. */}
+        {/* Replies. Each can lazily expand its own nested replies. */}
         {childPostsData?.pages.map((page) =>
           page.childPosts.map((post) => (
-            <PostItem
-              key={post.id}
-              post={post}
-              hideReplyContext
-              connectBottom={post.commentsCount > 0}
-            />
+            <ReplyThread key={post.id} post={post} />
           )),
         )}
 

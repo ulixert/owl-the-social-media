@@ -15,6 +15,7 @@ export type CommentSort = 'recent' | 'top';
 export function useChildPosts(
   parentPostId: number,
   sort: CommentSort = 'recent',
+  enabled = true,
 ) {
   const location = useLocation();
 
@@ -33,6 +34,7 @@ export function useChildPosts(
       },
       initialPageParam: 0,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
+      enabled,
     });
 
   return {
