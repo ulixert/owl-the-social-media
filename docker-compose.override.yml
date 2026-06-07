@@ -8,3 +8,9 @@ services:
       - .env.local
     ports:
       - "5432:5432"
+
+  # Expose Redis to the host so a host-run `pnpm dev` can reach the session
+  # store and rate limiter (the base compose keeps it internal to appnet).
+  redis:
+    ports:
+      - "6379:6379"
