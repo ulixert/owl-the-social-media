@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Fragment, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import { usePostWithChildPosts } from '@/hooks/usePostWithChildPosts.ts';
@@ -12,9 +12,9 @@ import { OriginalPost } from '../OriginalPost/OriginalPost.tsx';
 export function PostWithComments() {
   const {
     currentPost,
-    parentPost,
-    isParentLoading,
-    isParentError,
+    ancestors,
+    isLoading,
+    isError,
     childPostsData,
     isChildFetching,
     isChildError,
@@ -32,7 +32,7 @@ export function PostWithComments() {
     }
   }, [inView, hasNextPage, fetchNextPage]);
 
-  if (isParentLoading) {
+  if (isLoading) {
     return (
       <Center mt="xl">
         <Loader />
@@ -40,18 +40,19 @@ export function PostWithComments() {
     );
   }
 
-  if (isParentError) {
+  if (isError) {
     return <div>Error loading post</div>;
   }
 
   return (
     <Stack p="md" pb={0}>
-      {parentPost && (
-        <>
-          <OriginalPost post={parentPost.post} />
+      {/* Ancestor chain, root-first, above the focused post. */}
+      {ancestors.map((ancestor) => (
+        <Fragment key={ancestor.id}>
+          <OriginalPost post={ancestor} />
           <Divider mx={-16} />
-        </>
-      )}
+        </Fragment>
+      ))}
 
       {currentPost && <OriginalPost post={currentPost.post} />}
 

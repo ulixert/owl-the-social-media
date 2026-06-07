@@ -4,6 +4,7 @@ import { axiosInstance } from '@/api/axiosConfig.ts';
 import { useQuery } from '@tanstack/react-query';
 
 import { useChildPosts } from './useChildPosts';
+import { usePostAncestors } from './usePostAncestors';
 import { Post } from './usePosts.tsx';
 
 type PostResponse = {
@@ -30,22 +31,12 @@ export function usePostWithChildPosts() {
 
   const parentPostId = currentPostData?.post.parentPostId;
 
-  // Fetch the actual parent post if the current post is a reply
+  // Fetch the full ancestor chain (root-first) when the current post is a reply.
   const {
-    data: parentPostData,
-    isLoading: isParentLoading,
-    isError: isParentError,
-  } = useQuery<PostResponse>({
-    queryKey: ['post', parentPostId],
-    queryFn: async () => {
-      const response = await axiosInstance.get<PostResponse>(
-        `posts/${parentPostId}`,
-      );
-      return response.data;
-    },
-    enabled: !!parentPostId,
-    staleTime: 1000 * 60 * 5,
-  });
+    data: ancestorsData,
+    isLoading: isAncestorsLoading,
+    isError: isAncestorsError,
+  } = usePostAncestors(postId, !!parentPostId);
 
   const {
     data: childPostsData,
@@ -57,9 +48,9 @@ export function usePostWithChildPosts() {
 
   return {
     currentPost: currentPostData,
-    parentPost: parentPostData,
-    isParentLoading: isCurrentLoading || (!!parentPostId && isParentLoading),
-    isParentError: isCurrentError || isParentError,
+    ancestors: ancestorsData?.ancestors ?? [],
+    isLoading: isCurrentLoading || (!!parentPostId && isAncestorsLoading),
+    isError: isCurrentError || isAncestorsError,
     childPostsData,
     isChildFetching,
     isChildError,
