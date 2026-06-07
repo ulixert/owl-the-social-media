@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+
 import { UnstyledButton } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
@@ -31,6 +33,7 @@ export function UserAvatarButton({
   size,
   withBadge = true,
 }: UserAvatarButtonProps) {
+  const navigate = useNavigate();
   const currentUser = useAuthStore((state) => state.userData);
   const isSelf = currentUser?.username === username;
 
@@ -50,10 +53,19 @@ export function UserAvatarButton({
           ? null
           : 'follow';
 
-  const openCard = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     // Sit inside a post (which navigates on click) — don't bubble to it.
     e.preventDefault();
     e.stopPropagation();
+
+    // No badge means there's no follow action to offer (already following, your
+    // own avatar, or a list row) — go straight to the profile. Otherwise open
+    // the card modal so you can follow from there.
+    if (!badge) {
+      void navigate(`/user/${username}`);
+      return;
+    }
+
     const id = 'user-card-modal';
     modals.open({
       modalId: id,
@@ -70,7 +82,7 @@ export function UserAvatarButton({
 
   return (
     <UnstyledButton
-      onClick={openCard}
+      onClick={handleClick}
       className={classes.wrap}
       aria-label={`View ${username}'s profile`}
     >
