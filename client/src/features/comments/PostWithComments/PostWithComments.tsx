@@ -1,9 +1,20 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
+import { CommentSort } from '@/hooks/useChildPosts.ts';
 import { usePostWithChildPosts } from '@/hooks/usePostWithChildPosts.ts';
-import { Center, Divider, Loader, Stack } from '@mantine/core';
+import {
+  Center,
+  Divider,
+  Group,
+  Loader,
+  Menu,
+  Stack,
+  Text,
+  UnstyledButton,
+} from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
+import { IconArrowsSort, IconChevronDown } from '@tabler/icons-react';
 
 import { useCreatePostModal } from '../../posts/hooks/useCreatePostModal.tsx';
 import { CreatePost } from '../../posts/CreatePost/CreatePost.tsx';
@@ -11,7 +22,13 @@ import { PostItem } from '../../posts/PostItem/PostItem.tsx';
 import { OriginalPost } from '../OriginalPost/OriginalPost.tsx';
 import classes from './PostWithComments.module.css';
 
+const SORT_LABELS: Record<CommentSort, string> = {
+  recent: 'Recent',
+  top: 'Top',
+};
+
 export function PostWithComments() {
+  const [sort, setSort] = useState<CommentSort>('recent');
   const {
     currentPost,
     ancestors,
@@ -22,7 +39,7 @@ export function PostWithComments() {
     isChildError,
     hasNextPage,
     fetchNextPage,
-  } = usePostWithChildPosts();
+  } = usePostWithChildPosts(sort);
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { openCreatePostModal } = useCreatePostModal();
@@ -90,6 +107,34 @@ export function PostWithComments() {
             parentPost={currentPost.post}
             onExpand={() => openCreatePostModal(currentPost.post)}
           />
+        )}
+
+        {/* Sort control — only meaningful once there are replies. */}
+        {currentPost && currentPost.post.commentsCount > 0 && (
+          <>
+            <Group justify="space-between" align="center">
+              <Menu position="bottom-start" width={160}>
+                <Menu.Target>
+                  <UnstyledButton>
+                    <Group gap={6}>
+                      <IconArrowsSort size={16} />
+                      <Text size="sm" fw={600}>
+                        {SORT_LABELS[sort]}
+                      </Text>
+                      <IconChevronDown size={14} />
+                    </Group>
+                  </UnstyledButton>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item onClick={() => setSort('top')}>Top</Menu.Item>
+                  <Menu.Item onClick={() => setSort('recent')}>
+                    Recent
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
+            <Divider mx={-16} />
+          </>
         )}
 
         {/* Render Child Posts. A reply with its own replies gets a connector

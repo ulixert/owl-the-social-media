@@ -299,50 +299,51 @@ export async function getChildPosts(req: Request, res: Response) {
       return;
     }
 
-    const { cursor, limit } = input.data;
+    const { cursor, limit, sort } = input.data;
 
-    const childPosts = await prisma.post.findMany({
-      where: {
-        parentPostId: postId,
-        isDeleted: false,
-        ...(cursor ? { id: { lt: cursor } } : {}),
-      },
-      orderBy: { id: 'desc' },
-      take: limit,
-      include: {
-        postedBy: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            profilePic: true,
-          },
+    const include = {
+      postedBy: {
+        select: {
+          id: true,
+          username: true,
+          name: true,
+          profilePic: true,
         },
-        parentPost: {
-          select: {
-            postedBy: {
-              select: {
-                username: true,
-              },
+      },
+      parentPost: {
+        select: {
+          postedBy: {
+            select: {
+              username: true,
             },
           },
         },
-        likes: req.user
-          ? {
-              where: {
-                userId: req.user.id,
-              },
-            }
-          : undefined,
-        reposts: req.user
-          ? {
-              where: {
-                userId: req.user.id,
-              },
-            }
-          : undefined,
       },
-    });
+      likes: req.user ? { where: { userId: req.user.id } } : undefined,
+      reposts: req.user ? { where: { userId: req.user.id } } : undefined,
+    };
+
+    // `recent` keysets on id (id < cursor). `top` orders by like count with id
+    // as the tiebreak, paginated via Prisma's row cursor (skip the cursor row).
+    const childPosts =
+      sort === 'top'
+        ? await prisma.post.findMany({
+            where: { parentPostId: postId, isDeleted: false },
+            orderBy: [{ likesCount: 'desc' }, { id: 'desc' }],
+            take: limit,
+            ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+            include,
+          })
+        : await prisma.post.findMany({
+            where: {
+              parentPostId: postId,
+              isDeleted: false,
+              ...(cursor ? { id: { lt: cursor } } : {}),
+            },
+            orderBy: { id: 'desc' },
+            take: limit,
+            include,
+          });
 
     const postsWithIsLiked = childPosts.map((post) => {
       const { likes, reposts, ...rest } = post;
