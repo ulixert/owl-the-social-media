@@ -235,7 +235,9 @@ export function CreatePost({
               placeholder={`Reply to ${parentPost.postedBy.username}`}
               value={text}
               onChange={(e) => setText(e.currentTarget.value)}
-              styles={{ input: { padding: 0 } }}
+              styles={{
+                input: { padding: 0, minHeight: 0, lineHeight: 1.4 },
+              }}
             />
             {images.length > 0 && (
               <Group gap="xs" mt="xs">
