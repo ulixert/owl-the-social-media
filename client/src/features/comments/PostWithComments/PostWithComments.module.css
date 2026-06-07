@@ -5,8 +5,8 @@
    small gap below the card's rounded top. */
 .thread {
   min-height: calc(100dvh - 60px);
-  /* Pin below the fixed header + the sticky rounded cap. */
-  scroll-margin-top: 96px;
+  /* Pin below the fixed header + the sticky rounded cap (window scroll). */
+  scroll-margin-top: 84px;
 
   @media (max-width: 48em) {
     min-height: calc(100dvh - 50px);

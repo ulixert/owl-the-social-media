@@ -59,9 +59,18 @@ export function PostList({ endpoint }: PostListProps) {
           <Loader size="sm" type="dots" />
         </Center>
       )}
-      {data?.pages.map((page) =>
-        page.posts.map((post) => <PostItem key={post.id} post={post} />),
-      )}
+      {(() => {
+        const posts = data?.pages.flatMap((page) => page.posts) ?? [];
+        return posts.map((post, i) => (
+          <PostItem
+            key={post.id}
+            post={post}
+            // No trailing divider on the final post (it would double up with the
+            // card's bottom border).
+            hideDivider={!hasNextPage && i === posts.length - 1}
+          />
+        ));
+      })()}
 
       {hasNextPage && (
         <div ref={ref}>

@@ -30,9 +30,9 @@ export function PostItem({
   hideDivider,
 }: PostProps) {
   const navigate = useNavigate();
-  // Chained ancestors (connector + no divider) get bottom padding so the line
-  // has room to run down to the next avatar.
-  const isChained = connectBottom && hideDivider;
+  // Divider-less items (chained ancestors/replies) get bottom padding for
+  // spacing — and so a connector line has room to run down to the next avatar.
+  const isChained = hideDivider;
   return (
     <>
       <div

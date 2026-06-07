@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import { CommentSort } from '@/hooks/useChildPosts.ts';
@@ -141,12 +141,18 @@ export function PostWithComments() {
           <Divider mx={-16} />
         )}
 
-        {/* Replies — all of them, with nested replies shown inline. */}
-        {childPostsData?.pages.map((page) =>
-          page.childPosts.map((post) => (
-            <ReplyThread key={post.id} post={post} />
-          )),
-        )}
+        {/* Replies — a divider separates each top-level reply; a single-reply
+            chain stays connected by the thread line (no divider within it). */}
+        <Stack gap={0}>
+          {childPostsData?.pages
+            .flatMap((page) => page.childPosts)
+            .map((post, i) => (
+              <Fragment key={post.id}>
+                {i > 0 && <Divider mx={-16} />}
+                <ReplyThread post={post} />
+              </Fragment>
+            ))}
+        </Stack>
 
         {/* Infinite Scroll Loader */}
         {hasNextPage && (

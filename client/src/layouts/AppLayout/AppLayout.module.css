@@ -8,6 +8,7 @@
 .header {
   background-color: var(--bg-color);
   color: var(--text-color);
+  z-index: 10;
 }
 
 .footer {
@@ -16,9 +17,8 @@
   border-top: 1px solid var(--border-color);
 }
 
-/* Scroll region right of the sidebar — the page (window) scrolls normally,
-   Threads-style. The feed column is centered and dropped a little below the
-   top bar. */
+/* The page (window) scrolls — single scrollbar. The feed starts flush under the
+   header, with the wrapper holding the sticky rounded top border. */
 .main {
   background-color: var(--bg-color);
   color: var(--text-color);
@@ -26,22 +26,18 @@
   min-height: calc(100vh - 60px);
   display: flex;
   justify-content: center;
-  padding-top: var(--mantine-spacing-sm);
 
   @media (max-width: 48em) {
     margin-top: 50px;
-    padding-top: 0;
   }
 }
 
-/* Holds the card + the footer below it, centered. The navbar's reserved width
-   is subtracted on the right so the column lands in the middle of the window. */
+/* Holds the feed + footer, centered (navbar's width reserved). */
 .columnWrap {
-  --card-radius: 1.75rem;
+  --card-radius: 1.5rem;
+  position: relative;
   width: 100%;
   max-width: 640px;
-  display: flex;
-  flex-direction: column;
 
   @media (min-width: 48em) and (max-width: 74.99em) {
     margin-right: rem(80px); /* icon-rail width */
@@ -55,39 +51,66 @@
   }
 }
 
-/* The card body, same colour as the surrounding page. Square top with no top
-   border — the sticky .cap above it draws the top edge + rounded corners — so
-   there's exactly one top border and no straight border in the corners. */
+/* Sticky rounded top, pinned just under the header.
+
+   The whole thing is painted from gradients with NO border / NO border-radius —
+   on purpose. border-radius clips an element's background to the rounded shape,
+   which would clip away the exact outer-corner wedges we need to fill, leaving
+   the full-height side borders (on .column) to poke out as straight stubs above
+   the curve. Drawing it as gradients instead means nothing is clipped.
+
+   Each radial gradient paints, from the inside out: transparent (so content
+   shows through), a 1px border-coloured arc, then a solid page-bg wedge that
+   fills the outer corner and hides the side borders scrolling up behind it.
+   The linear gradient is the straight top border joining the two arcs. */
+.columnWrap::before {
+  content: '';
+  position: sticky;
+  display: block;
+  top: 60px;
+  height: var(--card-radius);
+  margin-bottom: calc(-1 * var(--card-radius));
+  background:
+    radial-gradient(
+        circle at var(--card-radius) var(--card-radius),
+        transparent calc(var(--card-radius) - 1px),
+        var(--border-color) calc(var(--card-radius) - 1px),
+        var(--border-color) var(--card-radius),
+        var(--bg-color) var(--card-radius)
+      )
+      left top / var(--card-radius) var(--card-radius) no-repeat,
+    radial-gradient(
+        circle at 0 var(--card-radius),
+        transparent calc(var(--card-radius) - 1px),
+        var(--border-color) calc(var(--card-radius) - 1px),
+        var(--border-color) var(--card-radius),
+        var(--bg-color) var(--card-radius)
+      )
+      right top / var(--card-radius) var(--card-radius) no-repeat,
+    linear-gradient(var(--border-color), var(--border-color)) top center /
+      calc(100% - 2 * var(--card-radius) + 2px) 1px no-repeat;
+  pointer-events: none;
+  z-index: 2;
+
+  @media (max-width: 48em) {
+    display: none;
+  }
+}
+
+/* The feed body keeps natural document height (the window scrolls). Real,
+   continuous left/right/bottom borders run the full height; the sticky cap
+   above covers their top ends inside the rounded corners. */
 .column {
-  position: relative;
-  min-height: calc(100vh - 106px);
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-top: none;
+  min-height: calc(100vh - 60px);
+  background: var(--bg-color);
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   border-radius: 0 0 var(--card-radius) var(--card-radius);
 
   @media (max-width: 48em) {
     min-height: calc(100vh - 50px);
     border: none;
     border-radius: 0;
-  }
-}
-
-/* Sticky rounded cap = the card's top edge (top + side borders, rounded top).
-   A sibling directly above .column so the borders form one continuous shape;
-   sticks just under the fixed header so the rounded corner stays visible while
-   content scrolls behind it. */
-.cap {
-  position: sticky;
-  top: 60px;
-  height: var(--card-radius);
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-bottom: none;
-  border-radius: var(--card-radius) var(--card-radius) 0 0;
-  z-index: 2;
-
-  @media (max-width: 48em) {
-    display: none;
   }
 }
