@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Post } from '@/hooks/usePosts.tsx';
 import { getPostTime } from '@/utils/getPostTime.ts';
@@ -30,6 +30,12 @@ export function PostItem({
   hideDivider,
 }: PostProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  // From a post detail page, opening another post replaces the current history
+  // entry so Back returns to the feed instead of walking the whole post→post
+  // chain. From a list (feed, search, profile) it's a normal push (drill-down).
+  const replace = location.pathname.startsWith('/posts/');
+  const openPost = () => navigate(`/posts/${post.id}`, { replace });
   // Divider-less items (chained ancestors/replies) get bottom padding for
   // spacing — and so a connector line has room to run down to the next avatar.
   const isChained = hideDivider;
@@ -38,8 +44,8 @@ export function PostItem({
       <div
         role="link"
         tabIndex={0}
-        onClick={() => navigate(`/posts/${post.id}`)}
-        onKeyDown={(e) => e.key === 'Enter' && navigate(`/posts/${post.id}`)}
+        onClick={openPost}
+        onKeyDown={(e) => e.key === 'Enter' && openPost()}
         className={classes.post}
       >
         <Flex gap={12}>

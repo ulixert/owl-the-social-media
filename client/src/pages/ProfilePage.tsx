@@ -29,8 +29,11 @@ export function ProfilePage() {
         tab={activeTab}
         // Stay on the profile being viewed. `/profile/...` redirects to the
         // logged-in user, so switching tabs on someone else's profile would
-        // otherwise bounce to your own.
-        onTabChange={(tab) => navigate(`/user/${username}/${tab}`)}
+        // otherwise bounce to your own. Replace history on tab switch so the
+        // back button leaves the profile instead of cycling through tabs.
+        onTabChange={(tab) =>
+          navigate(`/user/${username}/${tab}`, { replace: true })
+        }
         user={user}
       />
       <PostList endpoint={endpoint} />

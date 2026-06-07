@@ -33,7 +33,9 @@ export function OriginalPost({ post, hideReplyContext }: OriginalPostProps) {
       return;
     }
     if (isCurrent) return;
-    void navigate(`/posts/${post.id}`);
+    // Always on a post detail page here, so replace (see PostItem) to keep Back
+    // returning to the feed rather than stacking post→post entries.
+    void navigate(`/posts/${post.id}`, { replace: true });
   };
 
   if (post.isDeleted) {
@@ -52,7 +54,9 @@ export function OriginalPost({ post, hideReplyContext }: OriginalPostProps) {
       tabIndex={isCurrent ? undefined : 0}
       onClick={handleClick}
       onKeyDown={(e) =>
-        !isCurrent && e.key === 'Enter' && navigate(`/posts/${post.id}`)
+        !isCurrent &&
+        e.key === 'Enter' &&
+        navigate(`/posts/${post.id}`, { replace: true })
       }
       className={classes.originalPost}
       style={isCurrent ? { cursor: 'default' } : undefined}
