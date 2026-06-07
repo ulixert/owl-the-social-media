@@ -12,6 +12,8 @@
     "build": "pnpm --stream -r run build",
     "lint": "pnpm --stream -r run lint",
     "clean": "pnpm --stream -r run clean",
+    "lb:up": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml up -d --scale server=2 db redis server caddy",
+    "lb:down": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml rm -sf server caddy",
     "cdc:up": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml up -d db redis redpanda console connect connect-setup",
     "cdc:down": "docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.cdc.yml down",
     "cdc:status": "curl -s http://localhost:8083/connectors/owl-postgres/status",

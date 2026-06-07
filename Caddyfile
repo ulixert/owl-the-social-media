@@ -1,7 +1,21 @@
 :80 {
-	# Proxy API requests to Express
+	# Proxy API requests to Express, round-robin across every `server` replica.
+	# `dynamic a` re-resolves Docker's embedded DNS (127.0.0.11) for the service
+	# name, so scaling with `--scale server=N` is picked up live. With a single
+	# instance this behaves exactly like a plain `reverse_proxy server:3000`.
 	handle /api/v1/* {
-		reverse_proxy server:3000
+		reverse_proxy {
+			lb_policy round_robin
+			dynamic a {
+				name server
+				port 3000
+				refresh 1s
+				resolvers 127.0.0.11
+			}
+			# Surface which replica served the request (each has a distinct
+			# container IP) so the load balancing is visible client-side.
+			header_down X-Upstream {http.reverse_proxy.upstream.hostport}
+		}
 	}
 
 	# Serve SPA — try_files equivalent for React Router
