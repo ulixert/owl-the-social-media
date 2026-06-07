@@ -16,34 +16,40 @@
   border-top: 1px solid var(--border-color);
 }
 
-/* Scroll region right of the sidebar. The feed column is centered (balanced gaps
-   on both sides) and dropped a little below the top bar, with rounded top corners
-   — a clean card rather than a heavy floating one. */
+/* Fixed-height region right of the sidebar that does NOT scroll itself — the
+   inner .column scrolls instead, so the card's rounded top stays pinned under
+   the header (Threads-style) while content moves. */
 .main {
   background-color: var(--bg-color);
   color: var(--text-color);
   margin-top: 60px;
-  min-height: calc(100vh - 60px);
+  height: calc(100vh - 60px);
+  overflow: hidden;
   display: flex;
   justify-content: center;
   padding-top: var(--mantine-spacing-sm);
 
   @media (max-width: 48em) {
     margin-top: 50px;
+    height: calc(100vh - 50px);
     padding-top: 0;
   }
 }
 
+/* The scroll container: a floating card, same colour as the surrounding page,
+   rounded on all corners, with a little gap below it. Content scrolls inside so
+   the rounded corners stay visible. */
 .column {
   width: 100%;
   max-width: 640px;
-  min-height: calc(100vh - 60px);
-  background-color: var(--alt-bg-color);
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: var(--bg-color);
   border: 1px solid var(--border-color);
-  border-radius: var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0;
-  /* Clip children (e.g. the composer's hover background) to the rounded top
-     corners. Menus/hovercards render in portals, so they're unaffected. */
-  overflow: hidden;
+  border-radius: var(--mantine-radius-lg);
+  /* Float: leave a gap below the card before the bottom of the viewport. */
+  margin-bottom: var(--mantine-spacing-sm);
 
   /* Viewport-center the column: reserve the navbar's reserved width on the right
      so the centered column lands in the middle of the whole window (the rail is
@@ -59,5 +65,6 @@
     max-width: none;
     border: none;
     border-radius: 0;
+    margin-bottom: 0;
   }
 }

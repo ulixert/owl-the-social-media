@@ -72,7 +72,7 @@ export function AppLayout() {
         </AppShell.Header>
 
         <AppShell.Main className={classes.main}>
-          <div className={classes.column}>
+          <div id="main-scroll" className={classes.column}>
             <Suspense fallback={<Loading />}>
               <Outlet />
             </Suspense>
