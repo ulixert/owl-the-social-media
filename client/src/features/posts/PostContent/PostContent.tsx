@@ -13,6 +13,8 @@ import {
 } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight, IconX } from '@tabler/icons-react';
 
+import { isVideoUrl } from '@/utils/media.ts';
+
 type PostContentProps = {
   postText?: string;
   postImages?: string[];
@@ -44,6 +46,26 @@ export function PostContent({ postText, postImages }: PostContentProps) {
     if (!postImages || imageCount === 0) return null;
 
     if (imageCount === 1) {
+      // A post's video is always its sole media — play it inline (no lightbox).
+      if (isVideoUrl(postImages[0])) {
+        return (
+          <video
+            src={postImages[0]}
+            controls
+            preload="metadata"
+            // Don't let clicking the player controls navigate to the post.
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              display: 'block',
+              width: '100%',
+              maxHeight: 500,
+              borderRadius: 'var(--mantine-radius-lg)',
+              backgroundColor: '#000',
+            }}
+          />
+        );
+      }
+
       return (
         <Image
           src={postImages[0]}

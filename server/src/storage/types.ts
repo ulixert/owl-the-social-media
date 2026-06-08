@@ -25,3 +25,16 @@ export const ALLOWED_IMAGE_TYPES: Record<string, string> = {
   'image/gif': 'gif',
   'image/svg+xml': 'svg',
 };
+
+// Web-playable video types. The stored extension lets the client tell video from
+// image by URL (no schema change), and <video> can play both natively.
+export const ALLOWED_VIDEO_TYPES: Record<string, string> = {
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+};
+
+// Everything the upload endpoint + storage accept.
+export const ALLOWED_UPLOAD_TYPES: Record<string, string> = {
+  ...ALLOWED_IMAGE_TYPES,
+  ...ALLOWED_VIDEO_TYPES,
+};

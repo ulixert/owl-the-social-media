@@ -7,6 +7,7 @@ import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
 import { useUploadImages } from '@/hooks/useUploadImages.ts';
+import { isVideoFile, isVideoUrl } from '@/utils/media.ts';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import {
   showErrorNotification,
@@ -85,26 +86,47 @@ export function CreatePost({
   const remaining = MAX_CHARS - text.length;
   const isOverLimit = remaining < 0;
   const isEmpty = text.trim().length === 0 && images.length === 0;
+  // A post's media is either up to MAX_IMAGES images or a single video.
+  const hasVideo = images.some(isVideoUrl);
 
   const handleFiles = useCallback(
     async (fileList: FileList | null) => {
       if (!fileList || fileList.length === 0) return;
-      const files = Array.from(fileList);
+      const picked = Array.from(fileList);
+      setError(null);
+
+      // A video is exclusive: one per post, never alongside images.
+      const video = picked.find(isVideoFile);
+      if (video) {
+        if (images.length > 0) {
+          setError('A video must be posted on its own.');
+          return;
+        }
+        try {
+          setImages(await uploadImages.mutateAsync([video]));
+        } catch {
+          setError('Upload failed. Please try again.');
+        }
+        return;
+      }
+
+      if (hasVideo) {
+        setError('Remove the video to add images.');
+        return;
+      }
       const room = MAX_IMAGES - images.length;
       if (room <= 0) {
         setError(`You can attach up to ${MAX_IMAGES} images`);
         return;
       }
-
-      setError(null);
       try {
-        const urls = await uploadImages.mutateAsync(files.slice(0, room));
+        const urls = await uploadImages.mutateAsync(picked.slice(0, room));
         setImages((prev) => [...prev, ...urls]);
       } catch {
         setError('Upload failed. Please try again.');
       }
     },
-    [images.length, uploadImages],
+    [images.length, hasVideo, uploadImages],
   );
 
   const removeImage = (url: string) => {
@@ -212,7 +234,7 @@ export function CreatePost({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/mp4,video/webm"
           multiple
           hidden
           onChange={(e) => {
@@ -252,7 +274,21 @@ export function CreatePost({
               <Group gap="xs" mt="xs">
                 {images.map((url) => (
                   <Box key={url} pos="relative" className={classes.imageWrap}>
-                    <Image src={url} w={60} h={60} fit="cover" />
+                    {isVideoUrl(url) ? (
+                      <video
+                        src={url}
+                        muted
+                        style={{
+                          width: 60,
+                          height: 60,
+                          objectFit: 'cover',
+                          borderRadius: 'var(--mantine-radius-sm)',
+                          backgroundColor: '#000',
+                        }}
+                      />
+                    ) : (
+                      <Image src={url} w={60} h={60} fit="cover" />
+                    )}
                     <CloseButton
                       size="xs"
                       pos="absolute"
@@ -273,8 +309,8 @@ export function CreatePost({
               radius="xl"
               onClick={() => fileInputRef.current?.click()}
               loading={uploadImages.isPending}
-              disabled={images.length >= MAX_IMAGES}
-              aria-label="Add image"
+              disabled={images.length >= MAX_IMAGES || hasVideo}
+              aria-label="Add image or video"
             >
               <IconPhoto size={18} />
             </ActionIcon>
@@ -454,14 +490,29 @@ export function CreatePost({
             <Box mt="xs">
               {images.length === 1 && (
                 <Box pos="relative" className={classes.imageWrap}>
-                  <Image
-                    src={images[0]}
-                    alt="attachment"
-                    radius="lg"
-                    h={260}
-                    fit="cover"
-                    fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                  />
+                  {isVideoUrl(images[0]) ? (
+                    <video
+                      src={images[0]}
+                      controls
+                      preload="metadata"
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        maxHeight: 320,
+                        borderRadius: 'var(--mantine-radius-lg)',
+                        backgroundColor: '#000',
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      src={images[0]}
+                      alt="attachment"
+                      radius="lg"
+                      h={260}
+                      fit="cover"
+                      fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
+                    />
+                  )}
                   <CloseButton
                     size="sm"
                     variant="filled"
@@ -470,7 +521,7 @@ export function CreatePost({
                     top={6}
                     left={6}
                     onClick={() => removeImage(images[0])}
-                    aria-label="Remove image"
+                    aria-label="Remove media"
                     className={classes.imageClose}
                   />
                 </Box>
@@ -612,7 +663,7 @@ export function CreatePost({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/webm"
               multiple
               hidden
               onChange={(e) => {
@@ -625,17 +676,20 @@ export function CreatePost({
               color="blue"
               size="md"
               onClick={() => fileInputRef.current?.click()}
-              aria-label="Add image"
+              aria-label="Add image or video"
               loading={uploadImages.isPending}
-              disabled={images.length >= MAX_IMAGES}
+              disabled={images.length >= MAX_IMAGES || hasVideo}
             >
               <IconPhoto size={18} />
             </ActionIcon>
 
             {images.length > 0 && (
               <Text size="xs" c="dimmed">
-                {images.length}/{MAX_IMAGES} image
-                {images.length !== 1 ? 's' : ''}
+                {hasVideo
+                  ? '1 video'
+                  : `${images.length}/${MAX_IMAGES} image${
+                      images.length !== 1 ? 's' : ''
+                    }`}
               </Text>
             )}
 
