@@ -11,16 +11,17 @@ type PostUpdater = (post: Post) => Post;
 // Query keys whose cached data can contain Post objects we need to keep in sync.
 const ENGAGEMENT_KEYS = ['posts', 'post', 'childPosts', 'search', 'postAncestors'];
 
-const matchesEngagement = (query: Query): boolean =>
-  typeof query.queryKey?.[0] === 'string' &&
-  ENGAGEMENT_KEYS.includes(query.queryKey[0] as string);
+const matchesEngagement = (query: Query): boolean => {
+  const key = query.queryKey[0];
+  return typeof key === 'string' && ENGAGEMENT_KEYS.includes(key);
+};
 
 // Apply `update` to any Post with the given id, across the cache shapes our
 // queries use: infinite feeds ({ pages: [{ posts | childPosts }] }), the post
 // detail ({ post }), and the ancestor chain ({ ancestors }).
 function mapCached(data: unknown, postId: number, update: PostUpdater): unknown {
   if (!data || typeof data !== 'object') return data;
-  const mapPost = (p: Post): Post => (p && p.id === postId ? update(p) : p);
+  const mapPost = (p: Post): Post => (p?.id === postId ? update(p) : p);
 
   const d = data as {
     pages?: { posts?: Post[]; childPosts?: Post[] }[];

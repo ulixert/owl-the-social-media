@@ -8,12 +8,14 @@ export function useDelayedFlag(active: boolean, delayMs = 250): boolean {
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
-    if (!active) {
-      setShown(false);
-      return;
-    }
+    if (!active) return;
     const id = setTimeout(() => setShown(true), delayMs);
-    return () => clearTimeout(id);
+    // Reset in cleanup (runs when `active` flips off or on unmount) rather than
+    // synchronously in the effect body, which would cascade renders.
+    return () => {
+      clearTimeout(id);
+      setShown(false);
+    };
   }, [active, delayMs]);
 
   return shown;
