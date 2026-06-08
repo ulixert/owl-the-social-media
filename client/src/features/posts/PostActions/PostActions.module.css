@@ -42,7 +42,8 @@
   stroke: var(--mantine-color-red-5);
 }
 
+/* Reposted is shown as an emphasized (full text colour) icon rather than green. */
 .reposted {
-  color: var(--mantine-color-green-6);
-  stroke: var(--mantine-color-green-6);
+  color: var(--text-color);
+  stroke: var(--text-color);
 }
