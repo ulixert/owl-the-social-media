@@ -1,0 +1,35 @@
+.wrap {
+  position: relative;
+  display: block;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  border-radius: var(--mantine-radius-lg);
+  background-color: #000;
+}
+
+/* Translucent dark circle with a white icon, pinned bottom-right. */
+.muteButton {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background-color 150ms ease;
+}
+
+.muteButton:hover {
+  background-color: rgba(0, 0, 0, 0.72);
+}

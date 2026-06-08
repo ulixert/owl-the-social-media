@@ -8,6 +8,7 @@ import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
 import { useUploadImages } from '@/hooks/useUploadImages.ts';
 import { isVideoFile, isVideoUrl } from '@/utils/media.ts';
+import { PostVideo } from '../PostVideo/PostVideo.tsx';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import {
   showErrorNotification,
@@ -277,7 +278,10 @@ export function CreatePost({
                     {isVideoUrl(url) ? (
                       <video
                         src={url}
+                        autoPlay
+                        loop
                         muted
+                        playsInline
                         style={{
                           width: 60,
                           height: 60,
@@ -491,18 +495,7 @@ export function CreatePost({
               {images.length === 1 && (
                 <Box pos="relative" className={classes.imageWrap}>
                   {isVideoUrl(images[0]) ? (
-                    <video
-                      src={images[0]}
-                      controls
-                      preload="metadata"
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        maxHeight: 320,
-                        borderRadius: 'var(--mantine-radius-lg)',
-                        backgroundColor: '#000',
-                      }}
-                    />
+                    <PostVideo src={images[0]} maxHeight={320} />
                   ) : (
                     <Image
                       src={images[0]}
