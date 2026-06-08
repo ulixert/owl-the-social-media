@@ -1,169 +1,127 @@
 import { useState } from 'react';
 
-import {
-  ActionIcon,
-  Box,
-  Grid,
-  Group,
-  Image,
-  Modal,
-  SimpleGrid,
-  Stack,
-  Text,
-} from '@mantine/core';
+import { ActionIcon, Box, Group, Image, Modal, Text } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight, IconX } from '@tabler/icons-react';
 
 import { isVideoUrl } from '@/utils/media.ts';
 import { PostVideo } from '../PostVideo/PostVideo.tsx';
+import classes from './PostContent.module.css';
 
 type PostContentProps = {
   postText?: string;
   postImages?: string[];
 };
 
+// Height of each slide in the swipeable carousel (multi-media posts).
+const SLIDE_HEIGHT = 430;
+// Max height for a single, full-width media item before it's capped.
+const SINGLE_MAX_HEIGHT = 520;
+
 export function PostContent({ postText, postImages }: PostContentProps) {
   const [opened, setOpened] = useState(false);
-  const [videoOpened, setVideoOpened] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const imageCount = postImages?.length ?? 0;
+  const mediaCount = postImages?.length ?? 0;
 
-  const handleImageClick = (e: React.MouseEvent, index: number) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const openLightbox = (index: number) => {
     setSelectedIndex(index);
     setOpened(true);
   };
 
+  const handleMediaClick = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openLightbox(index);
+  };
+
   const handlePrevious = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : imageCount - 1));
+    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : mediaCount - 1));
   };
 
   const handleNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setSelectedIndex((prev) => (prev < imageCount - 1 ? prev + 1 : 0));
+    setSelectedIndex((prev) => (prev < mediaCount - 1 ? prev + 1 : 0));
   };
 
-  const renderImages = () => {
-    if (!postImages || imageCount === 0) return null;
+  const renderMedia = () => {
+    if (!postImages || mediaCount === 0) return null;
 
-    if (imageCount === 1) {
-      // A post's video is always its sole media. Plays inline; clicking it opens
-      // a full-browser-window viewer (not OS fullscreen).
+    // A single item gets a full-width treatment (image contained to a max
+    // height; video plays inline). Clicking it opens the full-window viewer.
+    if (mediaCount === 1) {
       if (isVideoUrl(postImages[0])) {
         return (
           <PostVideo
             src={postImages[0]}
             maxHeight={500}
-            onExpand={() => setVideoOpened(true)}
+            onExpand={() => openLightbox(0)}
           />
         );
       }
 
       return (
+        // No fixed width or backdrop: the image sizes to its own aspect ratio
+        // (capped by height and the card width), so portrait media never gets
+        // letterbox bars around it.
         <Image
           src={postImages[0]}
           radius="lg"
           h="auto"
-          mah={500}
-          fit="contain"
-          style={{
-            backgroundColor: 'var(--mantine-color-gray-1)',
-            cursor: 'pointer',
-          }}
+          w="auto"
+          mah={SINGLE_MAX_HEIGHT}
+          maw="100%"
+          style={{ cursor: 'pointer' }}
           fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-          onClick={(e) => handleImageClick(e, 0)}
+          onClick={(e) => handleMediaClick(e, 0)}
         />
       );
     }
 
-    if (imageCount === 2) {
-      return (
-        <SimpleGrid cols={2} spacing="xs">
-          {postImages.map((url, index) => (
-            <Image
-              key={url}
-              src={url}
-              radius="lg"
-              h={280}
-              fit="cover"
-              fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-              style={{ cursor: 'pointer' }}
-              onClick={(e) => handleImageClick(e, index)}
-            />
-          ))}
-        </SimpleGrid>
-      );
-    }
-
-    if (imageCount === 3) {
-      return (
-        <Grid gap="xs">
-          <Grid.Col span={6}>
-            <Image
-              src={postImages[0]}
-              radius="lg"
-              h={320}
-              fit="cover"
-              fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-              style={{ cursor: 'pointer' }}
-              onClick={(e) => handleImageClick(e, 0)}
-            />
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Stack gap="xs">
-              <Image
-                src={postImages[1]}
-                radius="lg"
-                h={155}
-                fit="cover"
-                fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                style={{ cursor: 'pointer' }}
-                onClick={(e) => handleImageClick(e, 1)}
-              />
-              <Image
-                src={postImages[2]}
-                radius="lg"
-                h={155}
-                fit="cover"
-                fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                style={{ cursor: 'pointer' }}
-                onClick={(e) => handleImageClick(e, 2)}
-              />
-            </Stack>
-          </Grid.Col>
-        </Grid>
-      );
-    }
-
-    // 4 or more images
+    // Two or more: a horizontally swipeable row. Each slide keeps its own
+    // aspect ratio at a shared height; images and videos can mix freely.
     return (
-      <SimpleGrid cols={2} spacing="xs">
-        {postImages.slice(0, 4).map((url, index) => (
-          <Image
-            key={url}
-            src={url}
-            radius="lg"
-            h={160}
-            fit="cover"
-            fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-            style={{ cursor: 'pointer' }}
-            onClick={(e) => handleImageClick(e, index)}
-          />
-        ))}
-      </SimpleGrid>
+      <div className={classes.carousel}>
+        {postImages.map((url, index) =>
+          isVideoUrl(url) ? (
+            <div key={url} className={classes.slide}>
+              <PostVideo
+                src={url}
+                height={SLIDE_HEIGHT}
+                onExpand={() => openLightbox(index)}
+              />
+            </div>
+          ) : (
+            <div key={url} className={classes.slide}>
+              <Image
+                src={url}
+                h={SLIDE_HEIGHT}
+                w="auto"
+                maw="none"
+                fit="cover"
+                fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
+                style={{ cursor: 'pointer', display: 'block' }}
+                onClick={(e) => handleMediaClick(e, index)}
+              />
+            </div>
+          ),
+        )}
+      </div>
     );
   };
+
+  const current = postImages?.[selectedIndex];
+  const currentIsVideo = current ? isVideoUrl(current) : false;
 
   return (
     <Box mt={4}>
       {postText && (
-        <Text size="sm" mb={imageCount > 0 ? 'xs' : 0}>
+        <Text size="sm" mb={mediaCount > 0 ? 'xs' : 0}>
           {postText}
         </Text>
       )}
-      {renderImages()}
+      {renderMedia()}
 
+      {/* Full-window viewer: steps through every item (image or video). */}
       <Modal
         opened={opened}
         onClose={() => setOpened(false)}
@@ -177,7 +135,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
         onClick={() => setOpened(false)}
         styles={{
           content: {
-            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            backgroundColor: 'rgba(0, 0, 0, 0.95)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -209,7 +167,7 @@ export function PostContent({ postText, postImages }: PostContentProps) {
           <IconX size={32} />
         </ActionIcon>
 
-        {imageCount > 1 && (
+        {mediaCount > 1 && (
           <>
             <ActionIcon
               pos="absolute"
@@ -257,74 +215,36 @@ export function PostContent({ postText, postImages }: PostContentProps) {
           </>
         )}
 
-        {postImages && (
-          <Image
-            src={postImages[selectedIndex]}
-            fit="contain"
-            mah="100%"
-            maw="100%"
-            w="auto"
-            h="auto"
-            fallbackSrc="https://placehold.co/800x600?text=Invalid+URL"
-            // Clicking the image keeps the lightbox open; only the backdrop
-            // (and the X button) closes it.
-            onClick={(e) => e.stopPropagation()}
-          />
-        )}
-      </Modal>
-
-      {/* Video viewer: fills the browser window (not OS fullscreen). */}
-      <Modal
-        opened={videoOpened}
-        onClose={() => setVideoOpened(false)}
-        fullScreen
-        padding={0}
-        withCloseButton={false}
-        onClick={() => setVideoOpened(false)}
-        styles={{
-          content: {
-            backgroundColor: 'rgba(0, 0, 0, 0.95)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          },
-          body: {
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          },
-        }}
-      >
-        <ActionIcon
-          pos="absolute"
-          top={20}
-          left={20}
-          variant="subtle"
-          color="white"
-          size="xl"
-          radius="xl"
-          onClick={(e) => {
-            e.stopPropagation();
-            setVideoOpened(false);
-          }}
-          style={{ zIndex: 1000 }}
-        >
-          <IconX size={32} />
-        </ActionIcon>
-
-        {videoOpened && postImages && isVideoUrl(postImages[0]) && (
-          <video
-            src={postImages[0]}
-            controls
-            autoPlay
-            loop
-            playsInline
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxHeight: '100%', maxWidth: '100%', outline: 'none' }}
-          />
-        )}
+        {current &&
+          (currentIsVideo ? (
+            <video
+              key={current}
+              src={current}
+              controls
+              autoPlay
+              loop
+              playsInline
+              onClick={(e) => e.stopPropagation()}
+              // Fill the window, preserving aspect ratio (letterboxed).
+              style={{
+                height: '100%',
+                width: '100%',
+                objectFit: 'contain',
+                outline: 'none',
+              }}
+            />
+          ) : (
+            <Image
+              src={current}
+              fit="contain"
+              h="100%"
+              w="100%"
+              fallbackSrc="https://placehold.co/800x600?text=Invalid+URL"
+              // Clicking the media keeps the viewer open; only the backdrop
+              // (and the X button) closes it.
+              onClick={(e) => e.stopPropagation()}
+            />
+          ))}
       </Modal>
     </Box>
   );

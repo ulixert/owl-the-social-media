@@ -1,0 +1,25 @@
+/* Threads-style media: a single full-width item, or a horizontally swipeable
+   row of fixed-height slides (mixed images and videos) that scroll-snap. */
+.carousel {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  /* Hide the scrollbar; the peeking next slide signals there's more. */
+  scrollbar-width: none;
+}
+
+.carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  border-radius: var(--mantine-radius-lg);
+  overflow: hidden;
+  background-color: var(--mantine-color-gray-1);
+  /* The slide shrink-wraps its media (height fixed in TSX, width intrinsic),
+     so each item keeps its own aspect ratio — no cropping or distortion. */
+}

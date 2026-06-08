@@ -7,6 +7,9 @@ import classes from './PostVideo.module.css';
 type PostVideoProps = {
   src: string;
   maxHeight?: number;
+  // Fixed height (px) for carousel slides: the video sizes to this height with
+  // its width following the aspect ratio. Takes precedence over maxHeight.
+  height?: number;
   // When set, clicking the video (not the mute button) opens it — used to expand
   // into a full-browser-window viewer. Omitted in the composer preview.
   onExpand?: () => void;
@@ -15,7 +18,12 @@ type PostVideoProps = {
 // Inline video, Threads-style: plays muted and loops while on screen (so it
 // reads like a gif), pauses when scrolled out of view, and has a mute/unmute
 // toggle bottom-right that also signals "this is a video with sound, not a gif".
-export function PostVideo({ src, maxHeight = 500, onExpand }: PostVideoProps) {
+export function PostVideo({
+  src,
+  maxHeight = 500,
+  height,
+  onExpand,
+}: PostVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
 
@@ -64,7 +72,13 @@ export function PostVideo({ src, maxHeight = 500, onExpand }: PostVideoProps) {
         playsInline
         preload="metadata"
         className={classes.video}
-        style={{ maxHeight, cursor: onExpand ? 'pointer' : undefined }}
+        // Size to the video's own aspect ratio (height-driven, width auto) so
+        // portrait videos don't get black letterbox bars. The wrap shrinks to
+        // match, keeping the mute button on the video's edge.
+        style={{
+          ...(height ? { height } : { maxHeight }),
+          cursor: onExpand ? 'pointer' : undefined,
+        }}
         onClick={onExpand}
       />
       <button
