@@ -124,18 +124,27 @@ export function PostContent({ postText, postImages }: PostContentProps) {
       )}
       {renderMedia()}
 
-      {/* Full-window viewer: steps through every item (image or video). */}
-      <Modal
-        opened={opened}
-        onClose={() => setOpened(false)}
-        fullScreen
-        padding={0}
-        withCloseButton={false}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowLeft') handlePrevious();
-          if (e.key === 'ArrowRight') handleNext();
-        }}
-        onClick={() => setOpened(false)}
+      {/* Full-window viewer: steps through every item (image or video).
+          The Modal renders in a portal, but React bubbles its events through
+          the component tree, so any click inside would also reach the enclosing
+          PostItem's onClick and navigate to the post. This wrapper stops that at
+          the boundary — whatever is clicked inside the viewer, it never reaches
+          the feed item. (display: contents so the wrapper adds no box.) */}
+      <Box
+        onClick={(e) => e.stopPropagation()}
+        style={{ display: 'contents' }}
+      >
+        <Modal
+          opened={opened}
+          onClose={() => setOpened(false)}
+          fullScreen
+          padding={0}
+          withCloseButton={false}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') handlePrevious();
+            if (e.key === 'ArrowRight') handleNext();
+          }}
+          onClick={() => setOpened(false)}
         styles={{
           content: {
             backgroundColor: 'rgba(0, 0, 0, 0.95)',
@@ -234,18 +243,25 @@ export function PostContent({ postText, postImages }: PostContentProps) {
               style={{ maxHeight: '100%', maxWidth: '100%', outline: 'none' }}
             />
           ) : (
-            // Fills the window (preserving aspect ratio). No stopPropagation:
-            // a click anywhere — the image or the letterbox — bubbles to the
-            // modal backdrop and closes the viewer.
+            // Fills the window (preserving aspect ratio), so the image element
+            // covers the whole viewport — clicking anywhere (image or the
+            // letterbox) closes. stopPropagation keeps the click from bubbling
+            // (through the portal) to the enclosing PostItem and navigating.
             <Image
               src={current}
               fit="contain"
               h="100%"
               w="100%"
               fallbackSrc="https://placehold.co/800x600?text=Invalid+URL"
+              style={{ cursor: 'zoom-out' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpened(false);
+              }}
             />
           ))}
-      </Modal>
+        </Modal>
+      </Box>
     </Box>
   );
 }
