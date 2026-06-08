@@ -266,9 +266,9 @@ export function PostContent({ postText, postImages }: PostContentProps) {
             w="auto"
             h="auto"
             fallbackSrc="https://placehold.co/800x600?text=Invalid+URL"
-            // No stopPropagation: a click/tap anywhere (image or backdrop)
-            // closes the lightbox. The arrows and X button keep their own
-            // stopPropagation so they still work.
+            // Clicking the image keeps the lightbox open; only the backdrop
+            // (and the X button) closes it.
+            onClick={(e) => e.stopPropagation()}
           />
         )}
       </Modal>
