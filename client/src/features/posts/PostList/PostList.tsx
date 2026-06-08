@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
 
 import { Loading } from '@/components/Loading/Loading.tsx';
+import { useDelayedFlag } from '@/hooks/useDelayedFlag.ts';
 import { usePosts } from '@/hooks/usePosts.tsx';
 import { Center, Loader, Stack } from '@mantine/core';
 
@@ -20,11 +21,14 @@ export function PostList({ endpoint }: PostListProps) {
     isError,
     hasNextPage,
     fetchNextPage,
-    isFetching,
     isFetchingNextPage,
   } = usePosts(endpoint);
   const { ref, inView } = useInView();
   const location = useLocation();
+
+  // Only show the cold-load indicator if the fetch is slow enough to perceive,
+  // so fast responses don't flash a spinner that vanishes a frame later.
+  const showColdLoader = useDelayedFlag(isPending);
 
   useEffect(() => {
     if (inView && hasNextPage) {
@@ -33,7 +37,7 @@ export function PostList({ endpoint }: PostListProps) {
   }, [inView, hasNextPage, fetchNextPage]);
 
   if (isPending) {
-    return <Loading />;
+    return showColdLoader ? <Loading /> : null;
   }
 
   if (isError) {
@@ -48,17 +52,12 @@ export function PostList({ endpoint }: PostListProps) {
     return <FollowingEmpty />;
   }
 
-  // A full-feed refetch (e.g. clicking the active feed to reload) — show a small
-  // spinner at the top while it's in flight, distinct from infinite-scroll.
-  const isReloading = isFetching && !isFetchingNextPage;
+  // A background refetch (clicking the active feed, or revisiting a tab after
+  // it goes stale) keeps the existing posts on screen with no spinner — a
+  // flash-and-gone indicator on an already-populated feed reads as a glitch.
 
   return (
     <Stack p="md" pb={0}>
-      {isReloading && (
-        <Center py={4}>
-          <Loader size="sm" type="dots" />
-        </Center>
-      )}
       {(() => {
         const posts = data?.pages.flatMap((page) => page.posts) ?? [];
         return posts.map((post, i) => (
@@ -74,7 +73,7 @@ export function PostList({ endpoint }: PostListProps) {
 
       {hasNextPage && (
         <div ref={ref}>
-          {isFetching && (
+          {isFetchingNextPage && (
             <Center>
               <Loader type="bars" />
             </Center>
