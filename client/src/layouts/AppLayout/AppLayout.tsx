@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
-import { Outlet, useNavigation } from 'react-router-dom';
+import { Suspense, useLayoutEffect } from 'react';
+import { Outlet, useLocation, useNavigation } from 'react-router-dom';
 
 import { Loading } from '@/components/Loading/Loading.tsx';
 import { useNotificationSocket } from '@/hooks/useNotificationSocket.ts';
@@ -15,6 +15,16 @@ import classes from './AppLayout.module.css';
 
 export function AppLayout() {
   const navigation = useNavigation();
+  const { pathname } = useLocation();
+
+  // The window scrolls, and the layout persists across route changes, so React
+  // Router keeps the old scroll position when switching pages (e.g. For you ->
+  // Following). Reset to the top on navigation. Skip /posts/ — the detail page
+  // manages its own scroll (it jumps to the focused reply within a thread).
+  useLayoutEffect(() => {
+    if (pathname.startsWith('/posts/')) return;
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   // Keep one live notification socket open for the whole authenticated session.
   useNotificationSocket();
