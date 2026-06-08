@@ -7,19 +7,37 @@ import classes from './PostVideo.module.css';
 type PostVideoProps = {
   src: string;
   maxHeight?: number;
+  // When set, clicking the video (not the mute button) opens it — used to expand
+  // into a full-browser-window viewer. Omitted in the composer preview.
+  onExpand?: () => void;
 };
 
-// Inline video, Threads-style: autoplays muted and loops (so it reads like a
-// gif), with a mute/unmute toggle bottom-right that also signals "this is a
-// video with sound, not a gif". Muted autoplay is the only kind browsers allow.
-export function PostVideo({ src, maxHeight = 500 }: PostVideoProps) {
+// Inline video, Threads-style: plays muted and loops while on screen (so it
+// reads like a gif), pauses when scrolled out of view, and has a mute/unmute
+// toggle bottom-right that also signals "this is a video with sound, not a gif".
+export function PostVideo({ src, maxHeight = 500, onExpand }: PostVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
 
   // React doesn't reliably set the `muted` *property* (only the attribute), which
-  // some browsers need before they'll autoplay — set it on the element directly.
+  // browsers need before they'll play muted without a gesture.
   useEffect(() => {
     if (ref.current) ref.current.muted = true;
+  }, []);
+
+  // Play only while visible — keeps off-screen videos from running in the feed.
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void video.play().catch(() => undefined);
+        else video.pause();
+      },
+      { threshold: 0.5 },
+    );
+    io.observe(video);
+    return () => io.disconnect();
   }, []);
 
   const toggleMute = (e: React.MouseEvent) => {
@@ -29,22 +47,25 @@ export function PostVideo({ src, maxHeight = 500 }: PostVideoProps) {
     if (!video) return;
     video.muted = !video.muted;
     setMuted(video.muted);
-    // Unmuting after an autoplay can leave it paused in some browsers.
-    if (!video.muted) void video.play();
+    if (!video.muted) void video.play().catch(() => undefined);
   };
 
   return (
-    <div className={classes.wrap} onClick={(e) => e.stopPropagation()}>
+    <div
+      className={classes.wrap}
+      // Don't let a click bubble to the post (which navigates on click).
+      onClick={(e) => e.stopPropagation()}
+    >
       <video
         ref={ref}
         src={src}
-        autoPlay
         loop
         muted
         playsInline
         preload="metadata"
         className={classes.video}
-        style={{ maxHeight }}
+        style={{ maxHeight, cursor: onExpand ? 'pointer' : undefined }}
+        onClick={onExpand}
       />
       <button
         type="button"

@@ -23,6 +23,7 @@ type PostContentProps = {
 
 export function PostContent({ postText, postImages }: PostContentProps) {
   const [opened, setOpened] = useState(false);
+  const [videoOpened, setVideoOpened] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const imageCount = postImages?.length ?? 0;
 
@@ -47,9 +48,16 @@ export function PostContent({ postText, postImages }: PostContentProps) {
     if (!postImages || imageCount === 0) return null;
 
     if (imageCount === 1) {
-      // A post's video is always its sole media — play it inline (no lightbox).
+      // A post's video is always its sole media. Plays inline; clicking it opens
+      // a full-browser-window viewer (not OS fullscreen).
       if (isVideoUrl(postImages[0])) {
-        return <PostVideo src={postImages[0]} maxHeight={500} />;
+        return (
+          <PostVideo
+            src={postImages[0]}
+            maxHeight={500}
+            onExpand={() => setVideoOpened(true)}
+          />
+        );
       }
 
       return (
@@ -261,6 +269,60 @@ export function PostContent({ postText, postImages }: PostContentProps) {
             // No stopPropagation: a click/tap anywhere (image or backdrop)
             // closes the lightbox. The arrows and X button keep their own
             // stopPropagation so they still work.
+          />
+        )}
+      </Modal>
+
+      {/* Video viewer: fills the browser window (not OS fullscreen). */}
+      <Modal
+        opened={videoOpened}
+        onClose={() => setVideoOpened(false)}
+        fullScreen
+        padding={0}
+        withCloseButton={false}
+        onClick={() => setVideoOpened(false)}
+        styles={{
+          content: {
+            backgroundColor: 'rgba(0, 0, 0, 0.95)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          body: {
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+        }}
+      >
+        <ActionIcon
+          pos="absolute"
+          top={20}
+          left={20}
+          variant="subtle"
+          color="white"
+          size="xl"
+          radius="xl"
+          onClick={(e) => {
+            e.stopPropagation();
+            setVideoOpened(false);
+          }}
+          style={{ zIndex: 1000 }}
+        >
+          <IconX size={32} />
+        </ActionIcon>
+
+        {videoOpened && postImages && isVideoUrl(postImages[0]) && (
+          <video
+            src={postImages[0]}
+            controls
+            autoPlay
+            loop
+            playsInline
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxHeight: '100%', maxWidth: '100%', outline: 'none' }}
           />
         )}
       </Modal>
