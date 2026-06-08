@@ -96,10 +96,13 @@ export function PostContent({ postText, postImages }: PostContentProps) {
                 src={url}
                 h={SLIDE_HEIGHT}
                 w="auto"
-                maw="none"
+                maw="100%"
                 fit="cover"
                 fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                style={{ cursor: 'pointer', display: 'block' }}
+                // min-width: 0 lets a too-wide image be capped to the slide so
+                // object-fit: cover can center-crop it (flex items don't shrink
+                // below content width otherwise).
+                style={{ cursor: 'pointer', display: 'block', minWidth: 0 }}
                 onClick={(e) => handleMediaClick(e, index)}
               />
             </div>

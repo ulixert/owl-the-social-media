@@ -10,6 +10,10 @@
   display: block;
   width: auto;
   max-width: 100%;
+  /* cover so a carousel slide that caps a wide video center-crops it rather
+     than distorting; a no-op for the single full-width video (its box already
+     matches the aspect ratio). */
+  object-fit: cover;
   border-radius: var(--mantine-radius-lg);
   background-color: #000;
 }

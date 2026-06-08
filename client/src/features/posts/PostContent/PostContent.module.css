@@ -2,6 +2,10 @@
    row of fixed-height slides (mixed images and videos). */
 .carousel {
   display: flex;
+  /* Don't stretch slides to the tallest one — a video slide is a hair taller
+     (its wrapper's baseline descender), which would show a sliver of slide
+     background under the shorter image slides. */
+  align-items: flex-start;
   gap: 8px;
   overflow-x: auto;
   /* No scroll-snap: it re-snapped the last slide flush on release, eating the
@@ -30,6 +34,13 @@
 
 .slide {
   flex: 0 0 auto;
+  /* flex (not block) so the video's inline-block wrapper is a flex item with no
+     line box — kills the baseline descender that made video slides 7px taller. */
+  display: flex;
+  /* Cap a slide's width so a very wide (landscape) image can't fill the whole
+     viewport — the next slide always peeks, signalling it's a carousel. Wider
+     images are center-cropped (object-fit: cover) rather than letterboxed. */
+  max-width: 88%;
   border-radius: var(--mantine-radius-lg);
   overflow: hidden;
   background-color: var(--mantine-color-gray-1);
