@@ -1,16 +1,21 @@
 /* Threads-style media: a single full-width item, or a horizontally swipeable
-   row of fixed-height slides (mixed images and videos) that scroll-snap. */
+   row of fixed-height slides (mixed images and videos). */
 .carousel {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
+  /* No scroll-snap: it re-snapped the last slide flush on release, eating the
+     trailing padding-right (the end gap appeared, then sprang back). Free scroll
+     lets the padded end position hold. */
   -webkit-overflow-scrolling: touch;
   /* Hide the scrollbar; the peeking next slide signals there's more. */
   scrollbar-width: none;
   /* Bleed to the card's right edge (cancel the feed container's md padding),
      Threads-style — the left stays aligned with the text. */
   margin-right: calc(var(--mantine-spacing-md) * -1);
+  /* Trailing scroll space so the last slide isn't jammed against the edge when
+     fully scrolled — it stops a gutter short, aligned with the left edge. */
+  padding-right: var(--mantine-spacing-md);
 }
 
 .carousel::-webkit-scrollbar {
@@ -19,7 +24,6 @@
 
 .slide {
   flex: 0 0 auto;
-  scroll-snap-align: start;
   border-radius: var(--mantine-radius-lg);
   overflow: hidden;
   background-color: var(--mantine-color-gray-1);
