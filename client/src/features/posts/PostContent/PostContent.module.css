@@ -11,11 +11,17 @@
   /* Hide the scrollbar; the peeking next slide signals there's more. */
   scrollbar-width: none;
   /* Bleed to the card's right edge (cancel the feed container's md padding),
-     Threads-style — the left stays aligned with the text. */
+     Threads-style. */
   margin-right: calc(var(--mantine-spacing-md) * -1);
   /* Trailing scroll space so the last slide isn't jammed against the edge when
      fully scrolled — it stops a gutter short, aligned with the left edge. */
   padding-right: var(--mantine-spacing-md);
+  /* Bleed left to the card edge too, so slides scroll off past the avatar
+     gutter instead of clipping at the text. The padding keeps the first slide
+     aligned with the text at rest; --media-bleed-left is set per context
+     (the feed's avatar gutter vs. none), defaulting to off. */
+  margin-left: calc(var(--media-bleed-left, 0px) * -1);
+  padding-left: var(--media-bleed-left, 0px);
 }
 
 .carousel::-webkit-scrollbar {
