@@ -116,7 +116,7 @@ export function NavLink({
       className={classes.link}
       data-active={active ? 'true' : undefined}
     >
-      {renderIcon(30)}
+      {renderIcon(26)}
     </UnstyledButton>
   );
 }

@@ -14,8 +14,8 @@
 }
 
 .link {
-  width: rem(50px);
-  height: rem(50px);
+  width: rem(44px);
+  height: rem(44px);
   border-radius: var(--mantine-radius-md);
   display: flex;
   align-items: center;
