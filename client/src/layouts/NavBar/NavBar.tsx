@@ -171,7 +171,7 @@ export function NavBar({ expanded }: NavBarProps) {
           {expanded ? (
             <UnstyledButton className={navClasses.linkExpanded}>
               <IconMenu2
-                style={{ width: rem(26), height: rem(26) }}
+                style={{ width: rem(24), height: rem(24) }}
                 stroke={1.5}
               />
               <Text className={navClasses.linkLabel}>More</Text>
@@ -179,7 +179,7 @@ export function NavBar({ expanded }: NavBarProps) {
           ) : (
             <UnstyledButton className={navClasses.link} style={{ alignSelf: 'center' }}>
               <IconMenu2
-                style={{ width: rem(26), height: rem(26) }}
+                style={{ width: rem(24), height: rem(24) }}
                 stroke={1.5}
               />
             </UnstyledButton>
