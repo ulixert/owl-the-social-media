@@ -224,25 +224,22 @@ export function PostContent({ postText, postImages }: PostContentProps) {
               autoPlay
               loop
               playsInline
+              // Sized to its own bounds (not full-bleed) so the surrounding
+              // area is true backdrop; stop propagation so clicking the video
+              // or its controls doesn't close the viewer.
               onClick={(e) => e.stopPropagation()}
-              // Fill the window, preserving aspect ratio (letterboxed).
-              style={{
-                height: '100%',
-                width: '100%',
-                objectFit: 'contain',
-                outline: 'none',
-              }}
+              style={{ maxHeight: '100%', maxWidth: '100%', outline: 'none' }}
             />
           ) : (
+            // Fills the window (preserving aspect ratio). No stopPropagation:
+            // a click anywhere — the image or the letterbox — bubbles to the
+            // modal backdrop and closes the viewer.
             <Image
               src={current}
               fit="contain"
               h="100%"
               w="100%"
               fallbackSrc="https://placehold.co/800x600?text=Invalid+URL"
-              // Clicking the media keeps the viewer open; only the backdrop
-              // (and the X button) closes it.
-              onClick={(e) => e.stopPropagation()}
             />
           ))}
       </Modal>
