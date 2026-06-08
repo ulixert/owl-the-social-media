@@ -8,6 +8,9 @@
   -webkit-overflow-scrolling: touch;
   /* Hide the scrollbar; the peeking next slide signals there's more. */
   scrollbar-width: none;
+  /* Bleed to the card's right edge (cancel the feed container's md padding),
+     Threads-style — the left stays aligned with the text. */
+  margin-right: calc(var(--mantine-spacing-md) * -1);
 }
 
 .carousel::-webkit-scrollbar {
