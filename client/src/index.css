@@ -32,3 +32,14 @@ body {
     background-color: var(--bg-color);
   }
 }
+
+/* iOS Safari zooms the page when a focused field's font-size is under 16px.
+   Force 16px on touch devices (where that happens) — desktop keeps its smaller
+   designed size. !important is required to beat the composer's inline font-size. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
