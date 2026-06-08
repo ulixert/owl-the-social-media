@@ -8,6 +8,10 @@
   border-radius: var(--mantine-radius-md);
   margin: 0 -12px;
   padding: 0 12px;
+  /* Bleed the media carousel left to the card edge here too. The detail page
+     has no avatar gutter (media is full-width), so it's just the container's md
+     padding — mirroring the right edge. */
+  --media-bleed-left: var(--mantine-spacing-md);
 }
 
 /* No hover background on the detail page (the main post isn't a navigation

@@ -7,6 +7,7 @@ import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
 import { useUploadImages } from '@/hooks/useUploadImages.ts';
+import { isVideoUrl } from '@/utils/media.ts';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import {
   showErrorNotification,
@@ -19,23 +20,22 @@ import {
   CloseButton,
   Divider,
   Flex,
-  Grid,
   Group,
   Image,
-  SimpleGrid,
   Stack,
   Text,
   Textarea,
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { useAuthStore } from '@stores/authStore.ts';
-import { IconPhoto } from '@tabler/icons-react';
+import { IconArrowsDiagonal, IconPhoto } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import classes from './CreatePost.module.css';
 
 const MAX_CHARS = 500;
-const MAX_IMAGES = 4;
+// A post can carry up to this many media items, images and videos mixed.
+const MAX_MEDIA = 10;
 
 type CreatePostInput = {
   text?: string;
@@ -54,6 +54,10 @@ type CreatePostProps = {
   onSuccess?: (post: CreatedPost) => void;
   onCancel?: () => void;
   isModal?: boolean;
+  // Collapsed reply bar only: opens the full composer in a modal (the wired-up
+  // caller passes the useCreatePostModal opener). When absent, the expand icon
+  // is hidden.
+  onExpand?: () => void;
 };
 
 export function CreatePost({
@@ -62,6 +66,7 @@ export function CreatePost({
   onSuccess,
   onCancel,
   isModal,
+  onExpand,
 }: CreatePostProps) {
   const userData = useAuthStore((s) => s.userData);
   const queryClient = useQueryClient();
@@ -84,16 +89,17 @@ export function CreatePost({
   const handleFiles = useCallback(
     async (fileList: FileList | null) => {
       if (!fileList || fileList.length === 0) return;
-      const files = Array.from(fileList);
-      const room = MAX_IMAGES - images.length;
+      const picked = Array.from(fileList);
+      setError(null);
+
+      // Images and videos can mix freely; the only cap is MAX_MEDIA total.
+      const room = MAX_MEDIA - images.length;
       if (room <= 0) {
-        setError(`You can attach up to ${MAX_IMAGES} images`);
+        setError(`You can attach up to ${MAX_MEDIA} items`);
         return;
       }
-
-      setError(null);
       try {
-        const urls = await uploadImages.mutateAsync(files.slice(0, room));
+        const urls = await uploadImages.mutateAsync(picked.slice(0, room));
         setImages((prev) => [...prev, ...urls]);
       } catch {
         setError('Upload failed. Please try again.');
@@ -161,7 +167,10 @@ export function CreatePost({
         if (isModal) {
           modals.closeAll();
         }
-        if (!editingPost) {
+        // Inline reply: stay put and let the refetched list show the new reply.
+        // New posts (and modal replies) navigate to the created post.
+        const isInlineReply = parentPost && !isModal;
+        if (!editingPost && !isInlineReply) {
           void navigate(`/posts/${post.id}`);
         }
       },
@@ -195,29 +204,154 @@ export function CreatePost({
 
   const buttonLabel = editingPost ? 'Save' : parentPost ? 'Reply' : 'Post';
 
-  // Collapsed inline composer: avatar + placeholder + button on one row. Clicking
-  // expands to the full composer (which autofocuses the textarea).
-  if (!isModal && !editingPost && !focused) {
+  // Inline reply composer (detail page): an always-editable Threads-style pill.
+  // Typing happens right here — no style change, no navigation on submit. The
+  // expand icon opens the full composer in a modal for richer editing.
+  if (parentPost && !isModal && !editingPost) {
     return (
       <Box>
-        <Flex
-          gap={12}
-          align="center"
-          onClick={() => setFocused(true)}
-          style={{ cursor: 'text' }}
-        >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/mp4,video/webm"
+          multiple
+          hidden
+          onChange={(e) => {
+            void handleFiles(e.target.files);
+            e.target.value = '';
+          }}
+        />
+        <Flex gap={12} align="center" className={classes.replyPill}>
           <UserAvatar
             username={userData?.username ?? 'You'}
             avatar={userData?.profilePic ?? null}
+            size="sm"
           />
-          <Text c="dimmed" size="sm" style={{ flex: 1 }}>
-            {parentPost ? 'Post your reply' : "What's new?"}
+          <Box style={{ flex: 1, minWidth: 0 }}>
+            <Textarea
+              variant="unstyled"
+              autosize
+              minRows={1}
+              maxRows={8}
+              placeholder={`Reply to ${parentPost.postedBy.username}`}
+              value={text}
+              onChange={(e) => setText(e.currentTarget.value)}
+              onKeyDown={(e) => {
+                // Enter sends; Shift+Enter inserts a newline.
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (!postDisabled) {
+                    handlePost();
+                  }
+                }
+              }}
+              styles={{
+                input: { padding: 0, minHeight: 0, lineHeight: 1.4 },
+              }}
+            />
+            {images.length > 0 && (
+              <Group gap="xs" mt="xs">
+                {images.map((url) => (
+                  <Box key={url} pos="relative" className={classes.imageWrap}>
+                    {isVideoUrl(url) ? (
+                      <video
+                        src={url}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        style={{
+                          width: 60,
+                          height: 60,
+                          objectFit: 'cover',
+                          borderRadius: 'var(--mantine-radius-sm)',
+                          backgroundColor: '#000',
+                        }}
+                      />
+                    ) : (
+                      <Image src={url} w={60} h={60} fit="cover" />
+                    )}
+                    <CloseButton
+                      size="xs"
+                      pos="absolute"
+                      top={2}
+                      right={2}
+                      className={classes.imageClose}
+                      onClick={() => removeImage(url)}
+                    />
+                  </Box>
+                ))}
+              </Group>
+            )}
+          </Box>
+          <Group gap={2} align="center">
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              radius="xl"
+              onClick={() => fileInputRef.current?.click()}
+              loading={uploadImages.isPending}
+              disabled={images.length >= MAX_MEDIA}
+              aria-label="Add image or video"
+            >
+              <IconPhoto size={18} />
+            </ActionIcon>
+            {onExpand && (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                radius="xl"
+                onClick={onExpand}
+                aria-label="Open full composer"
+              >
+                <IconArrowsDiagonal size={18} />
+              </ActionIcon>
+            )}
+            {!isEmpty && (
+              <Button
+                radius="xl"
+                size="compact-sm"
+                color="mono"
+                onClick={handlePost}
+                disabled={postDisabled}
+                loading={createPostMutation.isPending}
+              >
+                Reply
+              </Button>
+            )}
+          </Group>
+        </Flex>
+        {error && (
+          <Text c="red" size="sm" mt={6}>
+            {error}
+          </Text>
+        )}
+      </Box>
+    );
+  }
+
+  // Collapsed new-post composer (no parent): placeholder pill that expands on click.
+  if (!isModal && !editingPost && !focused) {
+    return (
+      <Box>
+        <Flex gap={12} align="center" className={classes.replyPill}>
+          <UserAvatar
+            username={userData?.username ?? 'You'}
+            avatar={userData?.profilePic ?? null}
+            size="sm"
+          />
+          <Text
+            c="dimmed"
+            size="sm"
+            style={{ flex: 1, cursor: 'text' }}
+            onClick={() => setFocused(true)}
+          >
+            What&apos;s new?
           </Text>
           <Button radius="xl" size="compact-sm" color="mono" disabled>
             {buttonLabel}
           </Button>
         </Flex>
-        <Divider mt="md" mx={-16} />
       </Box>
     );
   }
@@ -335,17 +469,30 @@ export function CreatePost({
           />
 
           {images.length > 0 && (
-            <Box mt="xs">
-              {images.length === 1 && (
-                <Box pos="relative" className={classes.imageWrap}>
-                  <Image
-                    src={images[0]}
-                    alt="attachment"
-                    radius="lg"
-                    h={260}
-                    fit="cover"
-                    fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                  />
+            <div className={classes.previewRow}>
+              {images.map((url) => (
+                <Box key={url} pos="relative" className={classes.previewItem}>
+                  {isVideoUrl(url) ? (
+                    <video
+                      src={url}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className={classes.previewMedia}
+                    />
+                  ) : (
+                    <Image
+                      src={url}
+                      alt="attachment"
+                      h={200}
+                      w="auto"
+                      maw="none"
+                      fit="cover"
+                      className={classes.previewMedia}
+                      fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
+                    />
+                  )}
                   <CloseButton
                     size="sm"
                     variant="filled"
@@ -353,150 +500,20 @@ export function CreatePost({
                     pos="absolute"
                     top={6}
                     left={6}
-                    onClick={() => removeImage(images[0])}
-                    aria-label="Remove image"
+                    onClick={() => removeImage(url)}
+                    aria-label="Remove media"
                     className={classes.imageClose}
                   />
                 </Box>
-              )}
-
-              {images.length === 2 && (
-                <SimpleGrid cols={2} spacing="xs">
-                  {images.map((url) => (
-                    <Box key={url} pos="relative" className={classes.imageWrap}>
-                      <Image
-                        src={url}
-                        alt="attachment"
-                        radius="lg"
-                        h={200}
-                        fit="cover"
-                        fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                      />
-                      <CloseButton
-                        size="sm"
-                        variant="filled"
-                        color="dark"
-                        pos="absolute"
-                        top={6}
-                        left={6}
-                        onClick={() => removeImage(url)}
-                        aria-label="Remove image"
-                        className={classes.imageClose}
-                      />
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              )}
-
-              {images.length === 3 && (
-                <Grid gap="xs">
-                  <Grid.Col span={6}>
-                    <Box pos="relative" className={classes.imageWrap}>
-                      <Image
-                        src={images[0]}
-                        alt="attachment"
-                        radius="lg"
-                        h={245}
-                        fit="cover"
-                        fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                      />
-                      <CloseButton
-                        size="sm"
-                        variant="filled"
-                        color="dark"
-                        pos="absolute"
-                        top={6}
-                        right={6}
-                        onClick={() => removeImage(images[0])}
-                        aria-label="Remove image"
-                        className={classes.imageClose}
-                      />
-                    </Box>
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <Stack gap="xs">
-                      <Box pos="relative" className={classes.imageWrap}>
-                        <Image
-                          src={images[1]}
-                          alt="attachment"
-                          radius="lg"
-                          h={118}
-                          fit="cover"
-                          fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                        />
-                        <CloseButton
-                          size="sm"
-                          variant="filled"
-                          color="dark"
-                          pos="absolute"
-                          top={6}
-                          left={6}
-                          onClick={() => removeImage(images[1])}
-                          aria-label="Remove image"
-                          className={classes.imageClose}
-                        />
-                      </Box>
-                      <Box pos="relative" className={classes.imageWrap}>
-                        <Image
-                          src={images[2]}
-                          alt="attachment"
-                          radius="lg"
-                          h={118}
-                          fit="cover"
-                          fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                        />
-                        <CloseButton
-                          size="sm"
-                          variant="filled"
-                          color="dark"
-                          pos="absolute"
-                          top={6}
-                          left={6}
-                          onClick={() => removeImage(images[2])}
-                          aria-label="Remove image"
-                          className={classes.imageClose}
-                        />
-                      </Box>
-                    </Stack>
-                  </Grid.Col>
-                </Grid>
-              )}
-
-              {images.length >= 4 && (
-                <SimpleGrid cols={2} spacing="xs">
-                  {images.slice(0, 4).map((url) => (
-                    <Box key={url} pos="relative" className={classes.imageWrap}>
-                      <Image
-                        src={url}
-                        alt="attachment"
-                        radius="lg"
-                        h={120}
-                        fit="cover"
-                        fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                      />
-                      <CloseButton
-                        size="sm"
-                        variant="filled"
-                        color="dark"
-                        pos="absolute"
-                        top={6}
-                        left={6}
-                        onClick={() => removeImage(url)}
-                        aria-label="Remove image"
-                        className={classes.imageClose}
-                      />
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              )}
-            </Box>
+              ))}
+            </div>
           )}
 
           <Group gap="xs" mt="sm">
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/webm"
               multiple
               hidden
               onChange={(e) => {
@@ -509,17 +526,16 @@ export function CreatePost({
               color="blue"
               size="md"
               onClick={() => fileInputRef.current?.click()}
-              aria-label="Add image"
+              aria-label="Add image or video"
               loading={uploadImages.isPending}
-              disabled={images.length >= MAX_IMAGES}
+              disabled={images.length >= MAX_MEDIA}
             >
               <IconPhoto size={18} />
             </ActionIcon>
 
             {images.length > 0 && (
               <Text size="xs" c="dimmed">
-                {images.length}/{MAX_IMAGES} image
-                {images.length !== 1 ? 's' : ''}
+                {images.length}/{MAX_MEDIA}
               </Text>
             )}
 

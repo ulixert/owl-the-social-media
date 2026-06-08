@@ -3,6 +3,8 @@ import { z } from 'zod';
 export const postQuerySchema = z.object({
   cursor: z.coerce.number().int().default(0),
   limit: z.coerce.number().int().positive().default(10),
+  // Comment ordering: newest-first (default) or most-liked.
+  sort: z.enum(['recent', 'top']).default('recent'),
 });
 
 export const postParamsSchema = z.object({

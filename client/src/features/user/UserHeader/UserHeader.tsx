@@ -21,7 +21,11 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openLoginModal = useOpenLoginModal();
   const isCurrentUser = currentUser?.userId === user.id;
-  const followMutation = useFollowMutation(user.id, user.username);
+  const followMutation = useFollowMutation(
+    user.id,
+    user.username,
+    user.isFollowing,
+  );
 
   const handleEditProfile = () => {
     const modalId = 'edit-profile-modal';
@@ -73,14 +77,6 @@ export function UserHeader({ tab, onTabChange, user }: UserHeaderProps) {
         <Flex gap={8} align={'center'} c="gray.6" className={classes.follow}>
           <Anchor c="inherit" size="sm">
             <span>{user.followersCount}</span> followers
-          </Anchor>
-          <Text>&bull;</Text>
-          <Anchor c="inherit" size="sm">
-            <span>{user.followingCount}</span> following
-          </Anchor>
-          <Text>&bull;</Text>
-          <Anchor c="inherit" size="sm">
-            <span>{user.likesCount}</span> likes
           </Anchor>
         </Flex>
         <Flex gap={12}>

@@ -1,5 +1,5 @@
 import { Post } from '@/hooks/usePosts.tsx';
-import { Center, Group, Text } from '@mantine/core';
+import { Group } from '@mantine/core';
 import {
   IconHeart,
   IconMessageCircle,
@@ -58,53 +58,36 @@ export function PostActions({ post }: ActionsProps) {
   };
 
   return (
-    <Group ml={-6} gap={14}>
-      <Center>
-        <PostAction
-          color="red"
-          onClick={() => handleProtectedAction(() => likeMutation.mutate())}
-          type="like"
-        >
-          <IconHeart className={post.isLiked ? classes.liked : ''} />
-        </PostAction>
-        <Text className={classes.count}>
-          {post.likesCount === 0 ? '' : post.likesCount}
-        </Text>
-      </Center>
+    <Group ml={-8} gap={2}>
+      <PostAction
+        label="Like"
+        count={post.likesCount}
+        onClick={() => handleProtectedAction(() => likeMutation.mutate())}
+      >
+        <IconHeart className={post.isLiked ? classes.liked : ''} />
+      </PostAction>
 
-      <Center>
-        <PostAction
-          color="blue"
-          type="reply"
-          onClick={() =>
-            handleProtectedAction(() => {
-              openCreatePostModal(post);
-            })
-          }
-        >
-          <IconMessageCircle />
-        </PostAction>
-        <Text className={classes.count}>
-          {post.commentsCount === 0 ? '' : post.commentsCount}
-        </Text>
-      </Center>
+      <PostAction
+        label="Reply"
+        count={post.commentsCount}
+        onClick={() =>
+          handleProtectedAction(() => {
+            openCreatePostModal(post);
+          })
+        }
+      >
+        <IconMessageCircle />
+      </PostAction>
 
-      <Center>
-        <PostAction
-          type="repost"
-          color="green"
-          onClick={() =>
-            handleProtectedAction(() => repostMutation.mutate())
-          }
-        >
-          <IconRepeat className={post.isReposted ? classes.reposted : ''} />
-        </PostAction>
-        <Text className={classes.count}>
-          {post.repostsCount === 0 ? '' : post.repostsCount}
-        </Text>
-      </Center>
+      <PostAction
+        label="Repost"
+        count={post.repostsCount}
+        onClick={() => handleProtectedAction(() => repostMutation.mutate())}
+      >
+        <IconRepeat className={post.isReposted ? classes.reposted : ''} />
+      </PostAction>
 
-      <PostAction type="share" color="yellow" onClick={() => void handleShare()}>
+      <PostAction label="Share" onClick={() => void handleShare()}>
         <IconSend />
       </PostAction>
     </Group>

@@ -37,23 +37,30 @@ export async function likeUnlikePost(req: Request, res: Response) {
       },
     });
 
-    // The like count is now a derived view: we only write the source of truth
-    // (the Like row). The CDC consumer updates post:{id}:likes in Redis, which
-    // the read path serves. No counter to keep in sync here.
+    // Keep likesCount authoritative in the DB (incremented in the same
+    // transaction as the Like row), mirroring repost. The CDC consumer still
+    // maintains the post:{id}:likes Redis serving view that the read path
+    // prefers when present; both count the same Like rows, so they agree. In
+    // prod (no consumer/Redis key) the read path falls back to this column.
     if (isLiked) {
-      await prisma.like.delete({
-        where: {
-          userId_postId: {
-            postId,
-            userId: currentUserId,
-          },
-        },
-      });
+      await prisma.$transaction([
+        prisma.like.delete({
+          where: { userId_postId: { postId, userId: currentUserId } },
+        }),
+        prisma.post.update({
+          where: { id: postId },
+          data: { likesCount: { decrement: 1 } },
+        }),
+      ]);
     } else {
-      // Like + notification commit together; we publish only on the positive
-      // action (never on unlike), so toggling can't spam the author.
+      // Like + count + notification commit together; we publish only on the
+      // positive action (never on unlike), so toggling can't spam the author.
       const notification = await prisma.$transaction(async (tx) => {
         await tx.like.create({ data: { userId: currentUserId, postId } });
+        await tx.post.update({
+          where: { id: postId },
+          data: { likesCount: { increment: 1 } },
+        });
         return createNotification(tx, {
           recipientId: post.postedById,
           actorId: currentUserId,

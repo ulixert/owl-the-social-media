@@ -1,21 +1,19 @@
-import { ActionIcon, Tooltip } from '@mantine/core';
-import { useHover } from '@mantine/hooks';
+import { Tooltip, UnstyledButton } from '@mantine/core';
+
+import { formatCount } from '@/utils/formatCount.ts';
+import classes from './PostActions.module.css';
 
 type PostActionProps = {
   children: React.ReactNode;
-  color: string;
+  label: string;
   onClick: () => void;
-  type: string;
+  count?: number;
 };
 
-export function PostAction({
-  children,
-  color,
-  onClick,
-  type,
-}: PostActionProps) {
-  const { hovered, ref } = useHover();
-
+// One action = a Threads-style pill: icon (+ optional count) with a single
+// neutral gray hover background — no per-action colour. Active states (liked,
+// reposted) colour the icon itself, set by the caller.
+export function PostAction({ children, label, onClick, count }: PostActionProps) {
   function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     e.stopPropagation();
@@ -24,7 +22,7 @@ export function PostAction({
 
   return (
     <Tooltip
-      label={type}
+      label={label}
       position="bottom"
       openDelay={500}
       closeDelay={100}
@@ -33,19 +31,14 @@ export function PostAction({
       pt={0}
       pb={2}
     >
-      <div ref={ref}>
-        <ActionIcon
-          onClick={handleClick}
-          radius={100}
-          p={4}
-          w={32}
-          h={32}
-          variant="subtle"
-          color={hovered ? color : 'gray.6'}
-        >
-          {children}
-        </ActionIcon>
-      </div>
+      <UnstyledButton
+        className={classes.action}
+        onClick={handleClick}
+        aria-label={label}
+      >
+        {children}
+        {count ? <span className={classes.count}>{formatCount(count)}</span> : null}
+      </UnstyledButton>
     </Tooltip>
   );
 }

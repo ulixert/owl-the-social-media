@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { ALLOWED_IMAGE_TYPES, Storage, StoredFile } from './types.js';
+import { ALLOWED_UPLOAD_TYPES, Storage, StoredFile } from './types.js';
 
 // Writes uploads to a directory on the local filesystem and serves them back as
 // relative URLs under the API prefix (so the same path works through the Vite
@@ -15,8 +15,8 @@ export class DiskStorage implements Storage {
   ) {}
 
   async save(buffer: Buffer, contentType: string): Promise<StoredFile> {
-    const ext = ALLOWED_IMAGE_TYPES[contentType];
-    if (!ext) throw new Error(`Unsupported image type: ${contentType}`);
+    const ext = ALLOWED_UPLOAD_TYPES[contentType];
+    if (!ext) throw new Error(`Unsupported upload type: ${contentType}`);
 
     await mkdir(this.dir, { recursive: true });
     const key = `${randomUUID()}.${ext}`;

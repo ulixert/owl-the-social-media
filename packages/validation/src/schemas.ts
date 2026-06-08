@@ -69,7 +69,10 @@ export const PostSchema = z.object({
   postedById: z.number().int(),
   parentPostId: z.number().int().nullable(),
   text: z.string().max(280).optional(),
-  images: z.array(mediaUrl).optional(),
+  images: z
+    .array(mediaUrl)
+    .max(10, 'A post can have at most 10 media items')
+    .optional(),
   likesCount: z.number().default(0),
   commentsCount: z.number().default(0),
   repostsCount: z.number().default(0),

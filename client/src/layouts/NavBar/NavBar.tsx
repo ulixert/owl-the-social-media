@@ -74,6 +74,7 @@ export function NavBar({ expanded }: NavBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const userData = useAuthStore((state) => state.userData);
   const { data: unreadCount } = useUnreadCount();
   const reloadFeeds = useReloadFeed();
 
@@ -85,6 +86,15 @@ export function NavBar({ expanded }: NavBarProps) {
     path === '/'
       ? location.pathname === '/' || location.pathname === '/for-you'
       : location.pathname.startsWith(path);
+
+  // "Profile" navigates to /profile, which redirects to /user/<me>, so also
+  // treat the logged-in user's own /user/<me> pages as the active Profile tab.
+  const myProfile = userData ? `/user/${userData.username}` : null;
+  const isProfileActive =
+    location.pathname.startsWith('/profile') ||
+    (myProfile !== null &&
+      (location.pathname === myProfile ||
+        location.pathname.startsWith(`${myProfile}/`)));
 
   return (
     <Stack h="100%" gap={4} px={4}>
@@ -130,7 +140,11 @@ export function NavBar({ expanded }: NavBarProps) {
             path={item.path}
             type={item.type}
             needLogin={item.needLogin}
-            active={isMainActive(item.path)}
+            active={
+              item.path === '/profile'
+                ? isProfileActive
+                : isMainActive(item.path)
+            }
             badge={item.path === '/activity' ? unreadCount : undefined}
             expanded={expanded}
           />
@@ -171,7 +185,7 @@ export function NavBar({ expanded }: NavBarProps) {
           {expanded ? (
             <UnstyledButton className={navClasses.linkExpanded}>
               <IconMenu2
-                style={{ width: rem(26), height: rem(26) }}
+                style={{ width: rem(24), height: rem(24) }}
                 stroke={1.5}
               />
               <Text className={navClasses.linkLabel}>More</Text>
@@ -179,7 +193,7 @@ export function NavBar({ expanded }: NavBarProps) {
           ) : (
             <UnstyledButton className={navClasses.link} style={{ alignSelf: 'center' }}>
               <IconMenu2
-                style={{ width: rem(26), height: rem(26) }}
+                style={{ width: rem(24), height: rem(24) }}
                 stroke={1.5}
               />
             </UnstyledButton>

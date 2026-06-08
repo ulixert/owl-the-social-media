@@ -3,6 +3,33 @@
   overflow: hidden;
 }
 
+/* Composer attachment preview: a horizontally swipeable row of thumbnails
+   (images and videos), each keeping its aspect ratio at a shared height. */
+.previewRow {
+  display: flex;
+  gap: 8px;
+  margin-top: var(--mantine-spacing-xs);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.previewRow::-webkit-scrollbar {
+  display: none;
+}
+
+.previewItem {
+  flex: 0 0 auto;
+  border-radius: var(--mantine-radius-lg);
+  overflow: hidden;
+  background-color: #000;
+}
+
+.previewMedia {
+  display: block;
+  height: 200px;
+  width: auto;
+}
+
 .imageClose {
   opacity: 0.85;
   transition: opacity 150ms ease;
@@ -17,4 +44,12 @@
   background-color: var(--mantine-color-gray-3);
   flex: 1;
   margin-top: 4px;
+}
+
+/* Collapsed reply bar: a rounded Threads-style pill, subtly filled. */
+.replyPill {
+  background-color: var(--alt-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--mantine-radius-xl);
+  padding: 6px 8px 6px 12px;
 }

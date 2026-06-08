@@ -1,0 +1,43 @@
+.wrap {
+  position: relative;
+  /* Shrink-wrap the video so the mute button sits on the video's edge (not a
+     full-width box) and portrait videos show no side bars. */
+  display: inline-block;
+  max-width: 100%;
+}
+
+.video {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  /* cover so a carousel slide that caps a wide video center-crops it rather
+     than distorting; a no-op for the single full-width video (its box already
+     matches the aspect ratio). */
+  object-fit: cover;
+  border-radius: var(--mantine-radius-lg);
+  background-color: #000;
+}
+
+/* Translucent dark circle with a white icon, pinned bottom-right. */
+.muteButton {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background-color 150ms ease;
+}
+
+.muteButton:hover {
+  background-color: rgba(0, 0, 0, 0.72);
+}

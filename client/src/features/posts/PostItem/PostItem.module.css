@@ -2,6 +2,10 @@
   text-decoration: none;
   color: inherit;
   cursor: pointer;
+  /* Let the media carousel bleed left to the card edge (past the avatar
+     gutter), matching the right. Gutter = md padding + avatar (md, 38px) + the
+     12px Flex gap between the avatar column and the content. */
+  --media-bleed-left: calc(var(--mantine-spacing-md) + 38px + 12px);
 }
 
 .postContent {

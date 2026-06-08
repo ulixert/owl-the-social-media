@@ -18,6 +18,7 @@ import {
   deletePost,
   getChildPosts,
   getHotPosts,
+  getPostAncestors,
   getPostById,
   getTrendingPosts,
   searchPosts,
@@ -44,6 +45,7 @@ postRouter.get('/for-you', protectRoute, getRecommendedPosts);
 
 postRouter.get('/:postId', optionalProtectRoute, getPostById);
 postRouter.get('/:postId/comments', optionalProtectRoute, getChildPosts);
+postRouter.get('/:postId/ancestors', optionalProtectRoute, getPostAncestors);
 
 postRouter.post('/:parentPostId', protectRoute, createPost);
 postRouter.post('/', protectRoute, createPost);

@@ -1,0 +1,17 @@
+/* The focused post + its replies. Min-height ≥ the scroll container's visible
+   height guarantees the focused post can always be scrolled up to the top of
+   the card even with few replies (so the parent chain above is reachable by
+   scrolling up). The column itself scrolls, so scroll-margin-top is just a
+   small gap below the card's rounded top. */
+.thread {
+  min-height: calc(100dvh - 60px);
+  /* Pin the focused post just under the fixed header (60px) plus the connector
+     line's bottom margin (10px, see PostLeftBar .line). That tucks the parent's
+     thread line up under the header so no line stub peeks above the avatar. */
+  scroll-margin-top: 70px;
+
+  @media (max-width: 48em) {
+    min-height: calc(100dvh - 50px);
+    scroll-margin-top: 58px;
+  }
+}

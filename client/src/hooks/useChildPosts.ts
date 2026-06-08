@@ -10,17 +10,23 @@ type ChildPostsResponse = {
   nextCursor: number | null;
 };
 
-export function useChildPosts(parentPostId: number) {
+export type CommentSort = 'recent' | 'top';
+
+export function useChildPosts(
+  parentPostId: number,
+  sort: CommentSort = 'recent',
+  enabled = true,
+) {
   const location = useLocation();
 
   const { data, isPending, isError, hasNextPage, fetchNextPage, isFetching } =
     useInfiniteQuery({
-      queryKey: ['childPosts', location.pathname, parentPostId],
+      queryKey: ['childPosts', location.pathname, parentPostId, sort],
       queryFn: async ({ pageParam }): Promise<ChildPostsResponse> => {
         const response = await axiosInstance.get<ChildPostsResponse>(
           `posts/${parentPostId}/comments`,
           {
-            params: { cursor: pageParam == 0 ? undefined : pageParam },
+            params: { cursor: pageParam == 0 ? undefined : pageParam, sort },
           },
         );
 
@@ -28,6 +34,7 @@ export function useChildPosts(parentPostId: number) {
       },
       initialPageParam: 0,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
+      enabled,
     });
 
   return {

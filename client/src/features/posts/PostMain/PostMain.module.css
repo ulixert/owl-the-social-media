@@ -1,3 +1,6 @@
 .main {
   flex: 1;
+  /* Without this, a wide flex child (e.g. the media carousel) forces the column
+     to grow past the card instead of letting the carousel scroll within it. */
+  min-width: 0;
 }

@@ -1,28 +1,49 @@
-import { useEffect } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
+import { CommentSort } from '@/hooks/useChildPosts.ts';
 import { usePostWithChildPosts } from '@/hooks/usePostWithChildPosts.ts';
-import { Center, Divider, Loader, Stack } from '@mantine/core';
+import {
+  Center,
+  Divider,
+  Group,
+  Loader,
+  Menu,
+  Stack,
+  Text,
+  UnstyledButton,
+} from '@mantine/core';
 import { useAuthStore } from '@stores/authStore.ts';
+import { IconArrowsSort, IconChevronDown } from '@tabler/icons-react';
 
+import { useCreatePostModal } from '../../posts/hooks/useCreatePostModal.tsx';
 import { CreatePost } from '../../posts/CreatePost/CreatePost.tsx';
 import { PostItem } from '../../posts/PostItem/PostItem.tsx';
 import { OriginalPost } from '../OriginalPost/OriginalPost.tsx';
+import { ReplyThread } from '../ReplyThread/ReplyThread.tsx';
+import classes from './PostWithComments.module.css';
+
+const SORT_LABELS: Record<CommentSort, string> = {
+  recent: 'Recent',
+  top: 'Top',
+};
 
 export function PostWithComments() {
+  const [sort, setSort] = useState<CommentSort>('recent');
   const {
     currentPost,
-    parentPost,
-    isParentLoading,
-    isParentError,
+    ancestors,
+    isLoading,
+    isError,
     childPostsData,
     isChildFetching,
     isChildError,
     hasNextPage,
     fetchNextPage,
-  } = usePostWithChildPosts();
+  } = usePostWithChildPosts(sort);
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { openCreatePostModal } = useCreatePostModal();
 
   const { ref, inView } = useInView();
 
@@ -32,7 +53,51 @@ export function PostWithComments() {
     }
   }, [inView, hasNextPage, fetchNextPage]);
 
-  if (isParentLoading) {
+  // Position the focused post on navigation. react-router doesn't reset scroll
+  // between routes, so without this the feed's old scroll offset carries over and
+  // the focused post ends up scrolled off the top.
+  //   - With parents: pin the focused post to the top of the column so the
+  //     ancestor chain sits above it and is revealed by scrolling up (Threads-style).
+  //   - Without parents: it's the root of the thread, so scroll to the very top.
+  const focusedPostId = currentPost?.post.id;
+  const threadRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const hasAncestors = ancestors.length > 0;
+  useLayoutEffect(() => {
+    if (!hasAncestors) {
+      window.scrollTo(0, 0);
+      return;
+    }
+    const thread = threadRef.current;
+    const content = contentRef.current;
+    if (!thread) return;
+
+    const pin = () => thread.scrollIntoView({ block: 'start' });
+    pin();
+
+    // The focused post can't reach the top until the page is tall enough — and
+    // the layout keeps changing after mount: ancestor media (images, and
+    // especially videos, whose height isn't known until metadata loads) grow
+    // the chain above it, while replies load in below it and provide the room
+    // needed to scroll it up. Re-pin on any content resize until the user
+    // scrolls (then stop so we never fight them; also cleaned up on unmount).
+    if (!content) return;
+    const stop = () => {
+      ro.disconnect();
+      window.removeEventListener('wheel', stop);
+      window.removeEventListener('touchmove', stop);
+      window.removeEventListener('keydown', stop);
+    };
+    const ro = new ResizeObserver(() => pin());
+    ro.observe(content);
+    window.addEventListener('wheel', stop, { passive: true });
+    window.addEventListener('touchmove', stop, { passive: true });
+    window.addEventListener('keydown', stop);
+
+    return stop;
+  }, [focusedPostId, hasAncestors]);
+
+  if (isLoading) {
     return (
       <Center mt="xl">
         <Loader />
@@ -40,47 +105,105 @@ export function PostWithComments() {
     );
   }
 
-  if (isParentError) {
+  if (isError) {
     return <div>Error loading post</div>;
   }
 
   return (
-    <Stack p="md" pb={0}>
-      {parentPost && (
-        <>
-          <OriginalPost post={parentPost.post} />
+    <Stack ref={contentRef} p="md" pb={0} gap={0}>
+      {/* Ancestor chain, root-first, connected to the focused post by the
+          thread line (rendered flush, no dividers). */}
+      {ancestors.map((ancestor) => (
+        <PostItem
+          key={ancestor.id}
+          post={ancestor}
+          hideReplyContext
+          connectBottom
+          hideDivider
+        />
+      ))}
+
+      {/* Focused post + replies. Given its own min-height so it can always be
+          scrolled up to the top when there are parents above. */}
+      <Stack
+        ref={threadRef}
+        gap="md"
+        className={hasAncestors ? classes.thread : undefined}
+      >
+        {currentPost && (
+          <OriginalPost post={currentPost.post} hideReplyContext={hasAncestors} />
+        )}
+
+        <Divider mx={-16} />
+
+        {/* Row above the composer: sort control when there are replies,
+            otherwise "No replies yet" (Threads-style). */}
+        {currentPost &&
+          (currentPost.post.commentsCount > 0 ? (
+            <Menu position="bottom-start" width={160}>
+              <Menu.Target>
+                <UnstyledButton w="fit-content">
+                  <Group gap={6}>
+                    <IconArrowsSort size={16} />
+                    <Text size="sm" fw={600}>
+                      {SORT_LABELS[sort]}
+                    </Text>
+                    <IconChevronDown size={14} />
+                  </Group>
+                </UnstyledButton>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item onClick={() => setSort('top')}>Top</Menu.Item>
+                <Menu.Item onClick={() => setSort('recent')}>Recent</Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          ) : (
+            <Text c="dimmed" size="sm" fw={600}>
+              No replies yet
+            </Text>
+          ))}
+
+        {isAuthenticated && currentPost && (
+          <CreatePost
+            parentPost={currentPost.post}
+            onExpand={() => openCreatePostModal(currentPost.post)}
+          />
+        )}
+
+        {currentPost && currentPost.post.commentsCount > 0 && (
           <Divider mx={-16} />
-        </>
-      )}
+        )}
 
-      {currentPost && <OriginalPost post={currentPost.post} />}
+        {/* Replies — a divider separates each top-level reply; a single-reply
+            chain stays connected by the thread line (no divider within it).
+            Each post carries 12px below its content (PostMain pb), so the
+            divider gets 12px below it too — keeping it centered and giving every
+            reply, not just the first, equal breathing room above its avatar. */}
+        <Stack gap={0}>
+          {childPostsData?.pages
+            .flatMap((page) => page.childPosts)
+            .map((post, i) => (
+              <Fragment key={post.id}>
+                {i > 0 && <Divider mx={-16} mb={12} />}
+                <ReplyThread post={post} />
+              </Fragment>
+            ))}
+        </Stack>
 
-      <Divider mx={-16} />
+        {/* Infinite Scroll Loader */}
+        {hasNextPage && (
+          <div ref={ref}>
+            {isChildFetching && (
+              <Center>
+                <Loader />
+              </Center>
+            )}
+          </div>
+        )}
 
-      {isAuthenticated && currentPost && (
-        <CreatePost parentPost={currentPost.post} />
-      )}
-
-      {/* Render Child Posts */}
-      {childPostsData?.pages.map((page) =>
-        page.childPosts.map((post) => (
-          <PostItem key={post.id} post={post} hideReplyContext />
-        )),
-      )}
-
-      {/* Infinite Scroll Loader */}
-      {hasNextPage && (
-        <div ref={ref}>
-          {isChildFetching && (
-            <Center>
-              <Loader />
-            </Center>
-          )}
-        </div>
-      )}
-
-      {/* Error Handling for Child Posts */}
-      {isChildError && <div>Error loading child posts</div>}
+        {/* Error Handling for Child Posts */}
+        {isChildError && <div>Error loading child posts</div>}
+      </Stack>
     </Stack>
   );
 }
