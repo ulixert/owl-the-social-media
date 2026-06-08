@@ -1,3 +1,42 @@
+/* Threads-style action pill: icon (+ count) with one neutral gray hover, no
+   per-action colour. */
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 9px;
+  border-radius: 999px;
+  color: var(--mantine-color-gray-6);
+  transition: background-color 120ms ease;
+}
+
+.action:hover {
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-5)
+  );
+}
+
+.action:active {
+  background-color: light-dark(
+    var(--mantine-color-gray-2),
+    var(--mantine-color-dark-4)
+  );
+}
+
+.action svg {
+  width: 20px;
+  height: 20px;
+}
+
+.count {
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-2));
+}
+
+/* Active states colour the icon itself. */
 .liked {
   fill: var(--mantine-color-red-5);
   stroke: var(--mantine-color-red-5);
@@ -6,9 +45,4 @@
 .reposted {
   color: var(--mantine-color-green-6);
   stroke: var(--mantine-color-green-6);
-}
-
-.count {
-  margin-bottom: 2px;
-  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-2));
 }
