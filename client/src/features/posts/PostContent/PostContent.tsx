@@ -144,7 +144,6 @@ export function PostContent({ postText, postImages }: PostContentProps) {
             if (e.key === 'ArrowLeft') handlePrevious();
             if (e.key === 'ArrowRight') handleNext();
           }}
-          onClick={() => setOpened(false)}
         styles={{
           content: {
             backgroundColor: 'rgba(0, 0, 0, 0.95)',
@@ -227,39 +226,64 @@ export function PostContent({ postText, postImages }: PostContentProps) {
           </>
         )}
 
-        {current &&
-          (currentIsVideo ? (
-            <video
-              key={current}
-              src={current}
-              controls
-              autoPlay
-              loop
-              playsInline
-              // Sized to its own bounds (not full-bleed) so the surrounding
-              // area is true backdrop; stop propagation so clicking the video
-              // or its controls doesn't close the viewer.
-              onClick={(e) => e.stopPropagation()}
-              style={{ maxHeight: '100%', maxWidth: '100%', outline: 'none' }}
-            />
-          ) : (
-            // Fills the window (preserving aspect ratio), so the image element
-            // covers the whole viewport — clicking anywhere (image or the
-            // letterbox) closes. stopPropagation keeps the click from bubbling
-            // (through the portal) to the enclosing PostItem and navigating.
-            <Image
-              src={current}
-              fit="contain"
-              h="100%"
-              w="100%"
-              fallbackSrc="https://placehold.co/800x600?text=Invalid+URL"
-              style={{ cursor: 'zoom-out' }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpened(false);
-              }}
-            />
-          ))}
+        {/* Backdrop fills the viewer and closes on click; the media is sized to
+            its own bounds (not full-bleed) so the area around it is real
+            backdrop. The media stops propagation, so clicking it does nothing. */}
+        <Box
+          onClick={() => setOpened(false)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {current &&
+            (currentIsVideo ? (
+              <video
+                key={current}
+                src={current}
+                controls
+                autoPlay
+                loop
+                playsInline
+                onClick={(e) => e.stopPropagation()}
+                style={{ maxHeight: '100%', maxWidth: '100%', outline: 'none' }}
+              />
+            ) : (
+              <Image
+                src={current}
+                fit="contain"
+                h="100%"
+                w="100%"
+                fallbackSrc="https://placehold.co/800x600?text=Invalid+URL"
+                // Fills the window (scales up to fit), so the element covers the
+                // whole viewport. We always stop propagation (no navigation),
+                // then close only when the click landed on the letterbox margin
+                // — not on the painted image — so clicking the image keeps it
+                // open while clicking outside it closes.
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const el = e.currentTarget;
+                  const rect = el.getBoundingClientRect();
+                  const nw = el.naturalWidth || rect.width;
+                  const nh = el.naturalHeight || rect.height;
+                  const scale = Math.min(rect.width / nw, rect.height / nh);
+                  const shownW = nw * scale;
+                  const shownH = nh * scale;
+                  const x = e.clientX - rect.left;
+                  const y = e.clientY - rect.top;
+                  const onImage =
+                    x >= (rect.width - shownW) / 2 &&
+                    x <= (rect.width + shownW) / 2 &&
+                    y >= (rect.height - shownH) / 2 &&
+                    y <= (rect.height + shownH) / 2;
+                  if (!onImage) setOpened(false);
+                }}
+              />
+            ))}
+        </Box>
         </Modal>
       </Box>
     </Box>
