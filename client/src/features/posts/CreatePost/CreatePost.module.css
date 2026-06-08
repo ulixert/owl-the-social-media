@@ -3,6 +3,33 @@
   overflow: hidden;
 }
 
+/* Composer attachment preview: a horizontally swipeable row of thumbnails
+   (images and videos), each keeping its aspect ratio at a shared height. */
+.previewRow {
+  display: flex;
+  gap: 8px;
+  margin-top: var(--mantine-spacing-xs);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.previewRow::-webkit-scrollbar {
+  display: none;
+}
+
+.previewItem {
+  flex: 0 0 auto;
+  border-radius: var(--mantine-radius-lg);
+  overflow: hidden;
+  background-color: #000;
+}
+
+.previewMedia {
+  display: block;
+  height: 200px;
+  width: auto;
+}
+
 .imageClose {
   opacity: 0.85;
   transition: opacity 150ms ease;

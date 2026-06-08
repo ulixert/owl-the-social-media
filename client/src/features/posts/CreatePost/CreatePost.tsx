@@ -7,8 +7,7 @@ import { UserAvatar } from '@/components/UserAvatar/UserAvatar.tsx';
 import { UserHoverCard } from '@/features/user/UserHoverCard/UserHoverCard.tsx';
 import { Post } from '@/hooks/usePosts.tsx';
 import { useUploadImages } from '@/hooks/useUploadImages.ts';
-import { isVideoFile, isVideoUrl } from '@/utils/media.ts';
-import { PostVideo } from '../PostVideo/PostVideo.tsx';
+import { isVideoUrl } from '@/utils/media.ts';
 import { getPostTime } from '@/utils/getPostTime.ts';
 import {
   showErrorNotification,
@@ -21,10 +20,8 @@ import {
   CloseButton,
   Divider,
   Flex,
-  Grid,
   Group,
   Image,
-  SimpleGrid,
   Stack,
   Text,
   Textarea,
@@ -37,7 +34,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import classes from './CreatePost.module.css';
 
 const MAX_CHARS = 500;
-const MAX_IMAGES = 4;
+// A post can carry up to this many media items, images and videos mixed.
+const MAX_MEDIA = 10;
 
 type CreatePostInput = {
   text?: string;
@@ -87,8 +85,6 @@ export function CreatePost({
   const remaining = MAX_CHARS - text.length;
   const isOverLimit = remaining < 0;
   const isEmpty = text.trim().length === 0 && images.length === 0;
-  // A post's media is either up to MAX_IMAGES images or a single video.
-  const hasVideo = images.some(isVideoUrl);
 
   const handleFiles = useCallback(
     async (fileList: FileList | null) => {
@@ -96,28 +92,10 @@ export function CreatePost({
       const picked = Array.from(fileList);
       setError(null);
 
-      // A video is exclusive: one per post, never alongside images.
-      const video = picked.find(isVideoFile);
-      if (video) {
-        if (images.length > 0) {
-          setError('A video must be posted on its own.');
-          return;
-        }
-        try {
-          setImages(await uploadImages.mutateAsync([video]));
-        } catch {
-          setError('Upload failed. Please try again.');
-        }
-        return;
-      }
-
-      if (hasVideo) {
-        setError('Remove the video to add images.');
-        return;
-      }
-      const room = MAX_IMAGES - images.length;
+      // Images and videos can mix freely; the only cap is MAX_MEDIA total.
+      const room = MAX_MEDIA - images.length;
       if (room <= 0) {
-        setError(`You can attach up to ${MAX_IMAGES} images`);
+        setError(`You can attach up to ${MAX_MEDIA} items`);
         return;
       }
       try {
@@ -127,7 +105,7 @@ export function CreatePost({
         setError('Upload failed. Please try again.');
       }
     },
-    [images.length, hasVideo, uploadImages],
+    [images.length, uploadImages],
   );
 
   const removeImage = (url: string) => {
@@ -313,7 +291,7 @@ export function CreatePost({
               radius="xl"
               onClick={() => fileInputRef.current?.click()}
               loading={uploadImages.isPending}
-              disabled={images.length >= MAX_IMAGES || hasVideo}
+              disabled={images.length >= MAX_MEDIA}
               aria-label="Add image or video"
             >
               <IconPhoto size={18} />
@@ -491,18 +469,27 @@ export function CreatePost({
           />
 
           {images.length > 0 && (
-            <Box mt="xs">
-              {images.length === 1 && (
-                <Box pos="relative" className={classes.imageWrap}>
-                  {isVideoUrl(images[0]) ? (
-                    <PostVideo src={images[0]} maxHeight={320} />
+            <div className={classes.previewRow}>
+              {images.map((url) => (
+                <Box key={url} pos="relative" className={classes.previewItem}>
+                  {isVideoUrl(url) ? (
+                    <video
+                      src={url}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className={classes.previewMedia}
+                    />
                   ) : (
                     <Image
-                      src={images[0]}
+                      src={url}
                       alt="attachment"
-                      radius="lg"
-                      h={260}
+                      h={200}
+                      w="auto"
+                      maw="none"
                       fit="cover"
+                      className={classes.previewMedia}
                       fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
                     />
                   )}
@@ -513,143 +500,13 @@ export function CreatePost({
                     pos="absolute"
                     top={6}
                     left={6}
-                    onClick={() => removeImage(images[0])}
+                    onClick={() => removeImage(url)}
                     aria-label="Remove media"
                     className={classes.imageClose}
                   />
                 </Box>
-              )}
-
-              {images.length === 2 && (
-                <SimpleGrid cols={2} spacing="xs">
-                  {images.map((url) => (
-                    <Box key={url} pos="relative" className={classes.imageWrap}>
-                      <Image
-                        src={url}
-                        alt="attachment"
-                        radius="lg"
-                        h={200}
-                        fit="cover"
-                        fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                      />
-                      <CloseButton
-                        size="sm"
-                        variant="filled"
-                        color="dark"
-                        pos="absolute"
-                        top={6}
-                        left={6}
-                        onClick={() => removeImage(url)}
-                        aria-label="Remove image"
-                        className={classes.imageClose}
-                      />
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              )}
-
-              {images.length === 3 && (
-                <Grid gap="xs">
-                  <Grid.Col span={6}>
-                    <Box pos="relative" className={classes.imageWrap}>
-                      <Image
-                        src={images[0]}
-                        alt="attachment"
-                        radius="lg"
-                        h={245}
-                        fit="cover"
-                        fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                      />
-                      <CloseButton
-                        size="sm"
-                        variant="filled"
-                        color="dark"
-                        pos="absolute"
-                        top={6}
-                        right={6}
-                        onClick={() => removeImage(images[0])}
-                        aria-label="Remove image"
-                        className={classes.imageClose}
-                      />
-                    </Box>
-                  </Grid.Col>
-                  <Grid.Col span={6}>
-                    <Stack gap="xs">
-                      <Box pos="relative" className={classes.imageWrap}>
-                        <Image
-                          src={images[1]}
-                          alt="attachment"
-                          radius="lg"
-                          h={118}
-                          fit="cover"
-                          fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                        />
-                        <CloseButton
-                          size="sm"
-                          variant="filled"
-                          color="dark"
-                          pos="absolute"
-                          top={6}
-                          left={6}
-                          onClick={() => removeImage(images[1])}
-                          aria-label="Remove image"
-                          className={classes.imageClose}
-                        />
-                      </Box>
-                      <Box pos="relative" className={classes.imageWrap}>
-                        <Image
-                          src={images[2]}
-                          alt="attachment"
-                          radius="lg"
-                          h={118}
-                          fit="cover"
-                          fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                        />
-                        <CloseButton
-                          size="sm"
-                          variant="filled"
-                          color="dark"
-                          pos="absolute"
-                          top={6}
-                          left={6}
-                          onClick={() => removeImage(images[2])}
-                          aria-label="Remove image"
-                          className={classes.imageClose}
-                        />
-                      </Box>
-                    </Stack>
-                  </Grid.Col>
-                </Grid>
-              )}
-
-              {images.length >= 4 && (
-                <SimpleGrid cols={2} spacing="xs">
-                  {images.slice(0, 4).map((url) => (
-                    <Box key={url} pos="relative" className={classes.imageWrap}>
-                      <Image
-                        src={url}
-                        alt="attachment"
-                        radius="lg"
-                        h={120}
-                        fit="cover"
-                        fallbackSrc="https://placehold.co/400x300?text=Invalid+URL"
-                      />
-                      <CloseButton
-                        size="sm"
-                        variant="filled"
-                        color="dark"
-                        pos="absolute"
-                        top={6}
-                        left={6}
-                        onClick={() => removeImage(url)}
-                        aria-label="Remove image"
-                        className={classes.imageClose}
-                      />
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              )}
-            </Box>
+              ))}
+            </div>
           )}
 
           <Group gap="xs" mt="sm">
@@ -671,18 +528,14 @@ export function CreatePost({
               onClick={() => fileInputRef.current?.click()}
               aria-label="Add image or video"
               loading={uploadImages.isPending}
-              disabled={images.length >= MAX_IMAGES || hasVideo}
+              disabled={images.length >= MAX_MEDIA}
             >
               <IconPhoto size={18} />
             </ActionIcon>
 
             {images.length > 0 && (
               <Text size="xs" c="dimmed">
-                {hasVideo
-                  ? '1 video'
-                  : `${images.length}/${MAX_IMAGES} image${
-                      images.length !== 1 ? 's' : ''
-                    }`}
+                {images.length}/{MAX_MEDIA}
               </Text>
             )}
 
