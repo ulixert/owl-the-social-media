@@ -61,13 +61,40 @@ export function PostWithComments() {
   //   - Without parents: it's the root of the thread, so scroll to the very top.
   const focusedPostId = currentPost?.post.id;
   const threadRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const hasAncestors = ancestors.length > 0;
   useLayoutEffect(() => {
-    if (hasAncestors) {
-      threadRef.current?.scrollIntoView({ block: 'start' });
-    } else {
+    if (!hasAncestors) {
       window.scrollTo(0, 0);
+      return;
     }
+    const thread = threadRef.current;
+    const content = contentRef.current;
+    if (!thread) return;
+
+    const pin = () => thread.scrollIntoView({ block: 'start' });
+    pin();
+
+    // The focused post can't reach the top until the page is tall enough — and
+    // the layout keeps changing after mount: ancestor media (images, and
+    // especially videos, whose height isn't known until metadata loads) grow
+    // the chain above it, while replies load in below it and provide the room
+    // needed to scroll it up. Re-pin on any content resize until the user
+    // scrolls (then stop so we never fight them; also cleaned up on unmount).
+    if (!content) return;
+    const stop = () => {
+      ro.disconnect();
+      window.removeEventListener('wheel', stop);
+      window.removeEventListener('touchmove', stop);
+      window.removeEventListener('keydown', stop);
+    };
+    const ro = new ResizeObserver(() => pin());
+    ro.observe(content);
+    window.addEventListener('wheel', stop, { passive: true });
+    window.addEventListener('touchmove', stop, { passive: true });
+    window.addEventListener('keydown', stop);
+
+    return stop;
   }, [focusedPostId, hasAncestors]);
 
   if (isLoading) {
@@ -83,7 +110,7 @@ export function PostWithComments() {
   }
 
   return (
-    <Stack p="md" pb={0} gap={0}>
+    <Stack ref={contentRef} p="md" pb={0} gap={0}>
       {/* Ancestor chain, root-first, connected to the focused post by the
           thread line (rendered flush, no dividers). */}
       {ancestors.map((ancestor) => (
