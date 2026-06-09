@@ -11,9 +11,9 @@ client file picker ──> POST /api/v1/upload (multipart, protectRoute)
                        storage.save(buffer, contentType)      ← the seam
                               │
               ┌───────────────┴────────────────┐
-        DiskStorage                        S3Storage (stub)
+        DiskStorage                        S3Storage
    writes UPLOAD_DIR/<uuid>.<ext>     PutObject to a bucket
-   returns /api/v1/media/<uuid>.<ext>  returns the CDN URL
+   returns /api/v1/media/<uuid>.<ext>  returns the CDN (or bucket) URL
                               │
         GET /api/v1/media/<file> ──> express.static(UPLOAD_DIR)   (disk only)
 ```
@@ -26,10 +26,11 @@ client file picker ──> POST /api/v1/upload (multipart, protectRoute)
   MIME → extension map.
 - **`diskStorage.ts`** — writes bytes to a directory, serves them back as relative
   URLs under the API prefix.
-- **`s3Storage.ts`** — a documented stub. Turning it on is self-contained: implement
-  the two methods, add `@aws-sdk/client-s3`, set `STORAGE_DRIVER=s3`. Nothing in the
-  controllers, the client, or the seed knows which backend ran — they only see the
-  returned `url`.
+- **`s3Storage.ts`** — the S3 backend (also works against S3-compatible stores like
+  Cloudflare R2 or MinIO via `S3_ENDPOINT`). Turning it on is self-contained: set
+  `STORAGE_DRIVER=s3` and `S3_BUCKET`. The AWS SDK is imported lazily, so a disk-only
+  deploy never loads it. Nothing in the controllers, the client, or the seed knows
+  which backend ran — they only see the returned `url`.
 - **`index.ts`** — the factory that picks a backend from `STORAGE_DRIVER` (default
   `disk`) plus the path/URL config.
 
@@ -43,7 +44,16 @@ S3 the stored URL just becomes the bucket/CDN URL and this static route goes idl
 | Env | Default | Notes |
 | --- | --- | --- |
 | `STORAGE_DRIVER` | `disk` | `disk` or `s3` |
-| `UPLOAD_DIR` | `./uploads` (cwd) | Disk-backend write dir. Absolute in prod. |
+| `UPLOAD_DIR` | `./uploads` (cwd) | Disk backend: write dir. Absolute in prod. |
+| `S3_BUCKET` | — | S3 backend: target bucket (required when `s3`). |
+| `AWS_REGION` | `us-east-1` | S3 backend: region (and URL construction). |
+| `S3_CDN_URL` | — | Public CDN base in front of the bucket (e.g. CloudFront). Falls back to the bucket URL. |
+| `S3_KEY_PREFIX` | — | Optional "folder" within the bucket, e.g. `media`. |
+| `S3_ENDPOINT` | — | Custom endpoint for S3-compatible stores (R2, MinIO). |
+| `S3_FORCE_PATH_STYLE` | `false` | `true` for stores that need path-style URLs (MinIO). |
+
+Credentials come from the standard AWS chain (env vars, shared config, or the
+instance/task IAM role) — they are never read or stored by the app directly.
 
 The upload endpoint accepts up to 4 image files (`jpeg/png/webp/gif/svg`), 5 MB each.
 
