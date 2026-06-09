@@ -12,6 +12,7 @@ The product itself is a complete social app (auth, posts, threads, feeds, search
 - [Architecture](#architecture)
   - [Design decisions & tradeoffs](#design-decisions--tradeoffs)
   - [Deliberate simplifications](#deliberate-simplifications)
+- [Performance](#performance)
 - [Tech stack](#tech-stack)
 - [Repository layout](#repository-layout)
 - [Getting started](#getting-started)
@@ -129,6 +130,16 @@ These are scoped-out on purpose, not oversights — clear places the design coul
 - **At-least-once delivery with idempotent projections.** Consumers tolerate replays by writing idempotently rather than relying on exactly-once.
 - **Reconciliation is on-demand.** The rebuild scripts (`*:reconcile`) exist and work, but are run manually rather than scheduled or driven by drift detection.
 - **Static celebrity threshold.** The fan-out cutoff for high-follower accounts is a fixed constant — a simple stand-in for an adaptive hybrid policy.
+
+---
+
+## Performance
+
+Headline numbers from [`docs/benchmarks.md`](docs/benchmarks.md) (local, single-node — measured for *shape*, not as production SLAs), each backing a decision above:
+
+- **Streaming trending stays fresh:** ~0.8 s end-to-end from a Postgres commit through CDC → Redpanda → Flink → Redis (window-wait removed). Flink runs ~2–3% busy at ~5k likes/s with zero backpressure — it earns its place on windowing *correctness*, not because the volume demands it.
+- **Real-time fan-out scales on one node:** a single API instance holds 10k live WebSocket connections and broadcasts to all of them at p99 < 100 ms, 100% delivery. The ~16k ceiling was the test client's ephemeral ports, not the server.
+- **Indexes + keyset pagination earn their keep:** replies dropped 270 ms → 0.08 ms (~3300×) once `Post(parentPostId, id)` replaced a 1M-row sequential scan; the For-You social-proof query went ~846 ms → ~1 ms with a covering index. Measured on a Zipf-distributed **100k users / 1M posts / 6.7M likes** seed.
 
 ---
 
