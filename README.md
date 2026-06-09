@@ -1,5 +1,15 @@
 # OWL
 
+[![CI](https://github.com/ulixert/owl-the-social-media/actions/workflows/ci.yml/badge.svg)](https://github.com/ulixert/owl-the-social-media/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)](https://redis.io/)
+[![Apache Flink](https://img.shields.io/badge/Apache%20Flink-E6526F?logo=apacheflink&logoColor=white)](https://flink.apache.org/)
+[![Elasticsearch](https://img.shields.io/badge/Elasticsearch-005571?logo=elasticsearch&logoColor=white)](https://www.elastic.co/elasticsearch)
+
 A full-stack, Twitter/Threads-style social media app — built as a playground for exploring **production read-path system design**: change data capture (CDC), event streaming, stream processing, and Redis-backed derived state.
 
 The product itself is a complete social app (auth, posts, threads, feeds, search, notifications). What makes it interesting is the architecture underneath: writes go to PostgreSQL, and the heavy read paths (timeline feeds, like counts, trending, full-text search) are served from **derived state** kept up to date by streaming changes out of Postgres via Debezium → Redpanda → consumers/Flink → Redis & Elasticsearch.
